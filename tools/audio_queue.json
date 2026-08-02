@@ -9,6 +9,15 @@
   "doneAt": null
  },
  {
+  "text": "يْ",
+  "category": "syllable",
+  "style_hint": null,
+  "requestedBy": "manager-zayt-fix",
+  "priority": 10,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
   "text": "الفتحة قبل الألف تُمَدّ، والضمة قبل الواو، والكسرة قبل الياء.",
   "category": "sentence",
   "requestedBy": "session-4",
