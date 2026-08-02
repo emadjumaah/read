@@ -41,7 +41,7 @@ HARAKAT = {"fatha": "َ", "kasra": "ِ", "damma": "ُ"}
 
 GEMINI_HOST = "https://generativelanguage.googleapis.com"
 DEFAULT_MODEL = "gemini-3.1-flash-tts-preview"
-DEFAULT_VOICE = "Kore"
+DEFAULT_VOICE = "Sulafat"          # اختيار المالك بالأذن (٢ أغسطس ٢٠٢٦) بعد صفحة المفاضلة
 
 # تعليمة الأداء تُكتب قبل النص فتوجّه الأداء ولا تُنطق (سلوك مثبَّت في Gemini TTS).
 STYLE = {
@@ -116,6 +116,55 @@ class TTSError(RuntimeError):
     pass
 
 
+class QuotaExhausted(TTSError):
+    """الحصة اليومية (RPD) للنموذج نفدت — لا تُعاد المحاولة، يُنتظر التجدد."""
+
+    def __init__(self, seconds: int, detail: str = ""):
+        super().__init__(f"الحصة اليومية نفدت — التجدد بعد {seconds} ثانية. {detail}".strip())
+        self.seconds = seconds
+
+
+_MIN_INTERVAL = 0.0     # ثوانٍ بين طلب وآخر (يضبطها --rpm)
+_LAST_REQUEST = 0.0
+
+
+def set_rpm(rpm: float) -> None:
+    """سقف الطلبات في الدقيقة — أدنى من حدّ النموذج كي لا تُحرق محاولات على 429."""
+    global _MIN_INTERVAL
+    _MIN_INTERVAL = 60.0 / rpm if rpm > 0 else 0.0
+
+
+def _pace() -> None:
+    global _LAST_REQUEST
+    if _MIN_INTERVAL:
+        wait = _LAST_REQUEST + _MIN_INTERVAL - time.monotonic()
+        if wait > 0:
+            time.sleep(wait)
+    _LAST_REQUEST = time.monotonic()
+
+
+def parse_429(body: str) -> tuple[bool, int]:
+    """يفكّ جسم خطأ 429: (أهي حصة يومية؟، ثوانٍ حتى التجدد)."""
+    per_day, seconds = False, 0
+    try:
+        err = json.loads(body).get("error", {})
+    except json.JSONDecodeError:
+        return "per_day" in body or "PerDay" in body, 0
+    for det in err.get("details", []):
+        for v in det.get("violations", []):
+            qid = f'{v.get("quotaId", "")} {v.get("quotaMetric", "")}'
+            if "PerDay" in qid or "per_day" in qid:
+                per_day = True
+        if det.get("@type", "").endswith("RetryInfo"):
+            m = re.match(r"(\d+)", str(det.get("retryDelay", "")))
+            if m:
+                seconds = int(m.group(1))
+    if not per_day:
+        msg = err.get("message", "")
+        per_day = "per_day" in msg or "per day" in msg
+    return per_day, seconds
+
+
 def gemini_pcm(text: str, category: str, model: str, voice: str, api_key: str,
                retries: int = 5) -> tuple[bytes, int]:
     """يعيد (PCM خام 16-bit little-endian، معدّل العيّنات). يعيد المحاولة عند 429/5xx."""
@@ -138,14 +187,22 @@ def gemini_pcm(text: str, category: str, model: str, voice: str, api_key: str,
             "x-goog-api-key": api_key,
         })
         try:
+            _pace()
             with urllib.request.urlopen(req, timeout=180) as resp:
                 payload = json.loads(resp.read().decode("utf-8"))
             return extract_audio(payload)
         except urllib.error.HTTPError as e:
             code = e.code
-            detail = e.read().decode("utf-8", "replace")[:300]
+            body = e.read().decode("utf-8", "replace")
+            detail = body[:300]
             # لا نطبع الرابط (يخلو من المفتاح أصلاً) ولا الترويسات.
             last = TTSError(f"HTTP {code}: {detail}")
+            if code == 429:
+                per_day, seconds = parse_429(body)
+                if per_day:                     # لا فائدة من إعادة المحاولة قبل التجدد
+                    raise QuotaExhausted(seconds or 3600)
+                if seconds:                     # حدّ الدقيقة: انتظر ما يطلبه الخادم
+                    delay = max(delay, min(seconds + 1, 120))
             if code not in (408, 429, 500, 502, 503, 504):
                 raise last
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
@@ -216,17 +273,29 @@ def pcm_to_mp3(pcm: bytes, rate: int, path: Path) -> None:
 
 # ————————————————————————— التوليد —————————————————————————
 
-def synthesize_gemini(texts: dict, model: str, voice: str, force: bool, api_key: str) -> int:
+def is_same_as(path: Path, ref_dir: Path) -> bool:
+    """هل الملف ما زال نسخته القديمة في مجلد المرجع؟ (لم يُعَد توليده بعد)"""
+    ref = ref_dir / path.name
+    return ref.exists() and ref.read_bytes() == path.read_bytes()
+
+
+def synthesize_gemini(texts: dict, model: str, voice: str, force: bool, api_key: str,
+                      replace_same_as: Path | None = None, dry_run: bool = False) -> int:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    manifest, made, skipped, failed = {}, 0, 0, 0
+    # الفهرس يُبنى كاملاً قبل التوليد كي يبقى صحيحاً حتى لو توقّف التوليد في منتصفه.
+    manifest = {key_for(t): t for t in texts}
+    made = skipped = failed = 0
     total = len(texts)
 
     for i, (text, cat) in enumerate(texts.items(), 1):
-        key = key_for(text)
-        manifest[key] = text
-        path = OUT_DIR / f"{key}.mp3"
-        if path.exists() and not force:
+        path = OUT_DIR / f"{key_for(text)}.mp3"
+        stale = replace_same_as is not None and path.exists() and is_same_as(path, replace_same_as)
+        if path.exists() and not force and not stale:
             skipped += 1
+            continue
+        if dry_run:
+            made += 1
+            print(f"  [{i}/{total}] ⟶ {text} ({CATEGORY_AR[cat]}) → {path.name}")
             continue
         try:
             pcm, rate = gemini_pcm(text, cat, model, voice, api_key)
@@ -234,10 +303,17 @@ def synthesize_gemini(texts: dict, model: str, voice: str, force: bool, api_key:
             made += 1
             print(f"  [{i}/{total}] ✓ {text} ({CATEGORY_AR[cat]}) → {path.name} "
                   f"{path.stat().st_size // 1024}KB")
+        except QuotaExhausted as e:
+            print(f"\n  ⏸ {e}  (توقّف عند {i}/{total} بلا إحراق محاولات)", file=sys.stderr)
+            print(f"RETRY_AFTER_SECONDS={e.seconds}")
+            break
         except Exception as e:  # noqa: BLE001
             failed += 1
             print(f"  [{i}/{total}] ✗ {text}: {e}", file=sys.stderr)
 
+    if dry_run:
+        print(f"\nسيولَّد: {made}، ويُترك: {skipped}. (تجربة جافّة — لم يُطلب شيء)")
+        return 0
     write_manifest(manifest)
     print(f"\nتم: {made} مولّد، {skipped} موجود مسبقاً، {failed} فشل.")
     return failed
@@ -439,6 +515,12 @@ def main():
     ap.add_argument("--tts-voice", default=DEFAULT_VOICE, help="صوت Gemini (مثل Kore)")
     ap.add_argument("--voice", default="ar-SA-HamedNeural", help="صوت edge-tts")
     ap.add_argument("--force", action="store_true", help="إعادة توليد الموجود")
+    ap.add_argument("--replace-same-as", metavar="DIR", nargs="?", const="archive/audio-edge",
+                    help="إكمال تبديل الصوت: يعيد توليد كل ملف ما زال مطابقاً لنسخته في DIR "
+                         "(أي لم يُبدَّل بعد) ويترك ما بُدِّل — يستأنف بعد انقطاع الحصة")
+    ap.add_argument("--dry-run", action="store_true", help="عرض ما سيُولَّد بلا أي طلب")
+    ap.add_argument("--rpm", type=float, default=8.0,
+                    help="سقف الطلبات في الدقيقة (افتراضي ٨ — دون حدّ النموذج ١٠)")
     ap.add_argument("--verify-only", action="store_true", help="تحقّق ختامي بلا توليد")
     ap.add_argument("--archive-current", metavar="DIR", nargs="?", const="archive/audio-edge",
                     help="نسخ أصوات app/audio الحالية إلى مجلد أرشيف ثم الخروج")
@@ -481,8 +563,18 @@ def main():
     if engine == "gemini":
         if not api_key:
             sys.exit("لا مفتاح GEMINI_API_KEY (البيئة أو .env) — استعمل --engine edge")
-        print(f"المحرّك: Gemini · النموذج {args.model} · الصوت {args.tts_voice}")
-        failed = synthesize_gemini(texts, args.model, args.tts_voice, args.force, api_key)
+        set_rpm(args.rpm)
+        print(f"المحرّك: Gemini · النموذج {args.model} · الصوت {args.tts_voice} "
+              f"· ≤{args.rpm:g} طلب/دقيقة")
+        ref = None
+        if args.replace_same_as:
+            ref = ROOT / args.replace_same_as
+            if not ref.is_dir():
+                sys.exit(f"مجلد المرجع غير موجود: {ref}")
+        failed = synthesize_gemini(texts, args.model, args.tts_voice, args.force, api_key,
+                                   ref, args.dry_run)
+        if args.dry_run:
+            return
     else:
         try:
             import edge_tts  # noqa: F401
