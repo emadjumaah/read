@@ -1,7 +1,7 @@
 // أدوات واجهة مشتركة بين الشاشات (بلا إطار عمل): بناء DOM، أرقام عربية، رسائل عابرة.
 // لا تلمس هذه الوحدة الـDOM وقت التحميل، فتبقى قابلة للاستيراد في اختبارات node.
 
-import { GROUPS, LETTERS } from './curriculum.js';
+import { GROUPS, LETTERS, QURAN } from './curriculum.js';
 
 export const DEV = typeof location !== 'undefined'
   && new URLSearchParams(location.search).get('dev') === '1';
@@ -11,6 +11,9 @@ export const ACCENTS = ['#e8590c', '#2f9e44', '#1971c2', '#9c36b5', '#0c8599', '
 
 /** لون محطات ما بين المجموعات (المهارات والقصص) — يميّزها عن محطات الحروف. */
 export const PAUSE_ACCENT = '#5f3dc4';
+
+/** لون المرحلة القرآنية — خضرة تميّز خاتمة الرحلة عن كل ما قبلها. */
+export const QURAN_ACCENT = '#1b7a43';
 
 export function accentFor(group) {
   return ACCENTS[Math.max(0, GROUPS.indexOf(group)) % ACCENTS.length];
@@ -36,20 +39,22 @@ export const letterTitle = (ch) => `حرف ${LETTERS[ch]?.name ?? ch}`;
 /** الكلمة كما تُعرض للطفل: تركيب مقاطعها المشكولة. */
 export const wordText = (word) => word.tiles.join('');
 
-/** اسم عقدة الخريطة كما يُعرض للطفل ولوليّ أمره (حرف · لعبة · مهارة · قصة). */
+/** اسم عقدة الخريطة كما يُعرض للطفل ولوليّ أمره (حرف · لعبة · مهارة · قصة · قرآن). */
 export function nodeTitle(node) {
   if (node.type === 'letter') return letterTitle(node.letter);
   if (node.type === 'words') return 'لعبة الكلمات';
   if (node.type === 'skill') return node.skill.title;
   if (node.type === 'story') return `قصة «${node.story.title}»`;
+  if (node.type === 'quran') return node.title;
   return '';
 }
 
-/** موضع العقدة في الرحلة: اسم مجموعتها، أو محطة ما بين المجموعتين. */
+/** موضع العقدة في الرحلة: اسم مجموعتها، أو محطة ما بين المجموعتين، أو الخاتمة. */
 export function nodeWhere(node) {
   if (node.type === 'letter' || node.type === 'words') {
     return GROUPS.find((g) => g.id === node.groupId)?.title ?? '';
   }
+  if (node.type === 'quran') return QURAN.title;
   return 'محطة المهارات والقصص';
 }
 
@@ -59,6 +64,7 @@ export function nodeFace(node) {
   if (node.type === 'words') return '🧩';
   if (node.type === 'skill') return node.skill.face;
   if (node.type === 'story') return node.story.emoji;
+  if (node.type === 'quran') return node.face;
   return '';
 }
 

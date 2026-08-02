@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><title>اختبار المرحلة القرآنية والعمل دون إنترنت</title></head>
+<body>
+<pre id="out" style="font:14px/1.6 monospace"></pre>
+<iframe id="frame" src="index.html" style="width:420px;height:900px;border:1px solid #ccc"></iframe>
+<script>
+const report = (what) => navigator.sendBeacon('/result',
+  new Blob([JSON.stringify([{ ok: false, msg: 'استثناء في صفحة الاختبار: ' + what }])],
+    { type: 'text/plain' }));
+window.addEventListener('error', (e) => report(e.message));
+window.addEventListener('unhandledrejection', (e) => report(e.reason?.stack || e.reason));
+</script>
+<script type="module">
+const out = document.getElementById('out');
+const results = [];
+const post = () => navigator.sendBeacon('/result',
+  new Blob([JSON.stringify(results, null, 1)], { type: 'text/plain' }));
+const ok = (cond, msg) => {
+  results.push({ ok: !!cond, msg });
+  out.textContent += `${cond ? '✓' : '✗'} ${msg}\n`;
+  post();
+};
+setTimeout(() => { ok(false, 'انتهت المهلة الكلية'); post(); }, 110000);
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function waitFor(fn, label = '', ms = 4000) {
+  const t0 = Date.now();
+  for (;;) {
+    let v; try { v = fn(); } catch { v = null; }
+    if (v) return v;
+    if (Date.now() - t0 > ms) throw new Error('انتظار طويل: ' + label);
+    await sleep(25);
+  }
+}
+
+const { QURAN, quranSilentTexts, quranSpokenTexts } = await import('./js/curriculum.js');
+const { allNodes } = await import('./js/progress.js');
+const manifest = await (await fetch('audio/manifest.json')).json();
+const pendingAudio = new Set(await (await fetch('/__queue.json')).json());
+const frame = document.getElementById('frame');
+
+const played = [], spoken = [], heardLog = [], jsErrors = [];
+let win, doc;
+
+function attach() {
+  win = frame.contentWindow;
+  doc = frame.contentDocument;
+  win.addEventListener('error', (e) => jsErrors.push(String(e.message)));
+  win.addEventListener('unhandledrejection', (e) => jsErrors.push('رفض غير معالَج: ' + e.reason));
+  win.Audio = class extends win.EventTarget {
+    constructor(src = '') { super(); this.src = src; this.preload = ''; this.currentTime = 0; }
+    play() {
+      const key = (this.src.split('/').pop() || '').replace('.mp3', '');
+      const text = manifest[key] ?? `?${key}`;
+      played.push(text);
+      heardLog.push(text);
+      setTimeout(() => this.dispatchEvent(new Event('ended')), 5);
+      return Promise.resolve();
+    }
+    pause() {}
+  };
+  win.SpeechSynthesisUtterance = class {
+    constructor(text) { this.text = text; spoken.push(text); heardLog.push(text); }
+  };
+  const synth = { cancel() {}, speak(u) { setTimeout(() => u.onend && u.onend(), 5); } };
+  Object.defineProperty(win, 'speechSynthesis', { configurable: true, get: () => synth });
+}
+
+function idsBefore(id) {
+  const out = [];
+  for (const node of allNodes()) {
+    if (node.id === id) return out;
+    out.push(node.id);
+  }
+  return out;
+}
+
+async function seed(nodeIds) {
+  localStorage.setItem('muallim.progress.v1', JSON.stringify({
+    v: 2,
+    stars: Object.fromEntries(nodeIds.map((k) => [k, 3])),
+    skills: {}, days: {}, reviews: {}, seconds: 0,
+    startedAt: Date.now(), updatedAt: Date.now(),
+  }));
+  const done = new Promise((r) => frame.addEventListener('load', r, { once: true }));
+  frame.src = 'index.html';
+  await done;
+  attach();
+  await sleep(150);
+}
+
+const stored = () => JSON.parse(localStorage.getItem('muallim.progress.v1'));
+const $ = (sel) => doc.querySelector(sel);
+const $$ = (sel) => [...doc.querySelectorAll(sel)];
+const texts = (sel) => $$(sel).map((el) => el.textContent.trim());
+const lastHeard = () => heardLog[heardLog.length - 1];
+const btn = (label) => $$('.btn').find((b) => b.textContent.includes(label));
+const continueCard = () => $$('.continue').find((c) => c.textContent.includes('تابع من هنا'));
+const arNum = (n) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d]);
+
+async function goto(hash) {
+  win.location.hash = hash;
+  await sleep(150);
+}
+
+function checkTargets(where) {
+  const small = $$('.screen-card button')
+    .map((el) => [el, el.getBoundingClientRect()])
+    .filter(([, r]) => r.width && (r.height < 48 || r.width < 48))
+    .map(([el]) => el.className);
+  ok(small.length === 0, `${where}: أهداف اللمس ≥٤٨ بكسل${small.length ? ' — ' + small.join('،') : ''}`);
+}
+
+/** يلعب خطوة «اقرأ واختر» كاملةً: خطأ مقصود في جولة ثم الصواب في كلٍّ. */
+async function playReadQuiz(items, { mistakeAt = 1 } = {}) {
+  for (let round = 1; round <= items.length; round++) {
+    const mark = heardLog.length;
+    await waitFor(() => $$('.vchip--word').length === 3, `خيارات الجولة ${round}`);
+    const emoji = $('.quran-pic').textContent.trim();
+    const target = items.find((w) => w.emoji === emoji);
+    const faces = texts('.vchip-face');
+    if (round === 1) {
+      ok(!!target && faces.includes(target.read),
+        `الجولة ١: صورة «${emoji}» وكلمتها بين الخيارات (${faces.join('|')})`);
+      ok(heardLog.length === mark,
+        'ولا يُسمَع شيء قبل الاختيار — الحكم على القراءة لا على السمع');
+    }
+    if (round === mistakeAt) {
+      const wrong = $$('.vchip--word')[faces.findIndex((f) => f !== target.read)];
+      wrong.click();
+      await sleep(120);
+      ok(wrong.classList.contains('bad'), 'الخطأ يُعلَّم ولا ينقل إلى الكلمة التالية');
+      ok($$('.vchip--word').length === 3, 'والجولة نفسها باقية');
+      await sleep(200);
+    }
+    $$('.vchip--word')[texts('.vchip-face').indexOf(target.read)].click();
+    await sleep(900);
+  }
+}
+
+try {
+  // ————— ١) الخريطة: محطة الخاتمة —————
+  await seed([]);
+  await waitFor(() => $('.station'), 'الخريطة');
+  ok($$('.station--quran').length === 1, 'الخريطة فيها محطة قرآنية واحدة خاتمة');
+  ok($('.station--quran').classList.contains('station--locked'),
+    'وهي مقفلة في بداية الرحلة');
+  ok($('.map').lastElementChild.classList.contains('station--quran')
+    || [...$('.map').children].at(-1).classList.contains('dev'),
+    'وموضعها آخر الخريطة');
+  ok($$('.station--quran .node').length === QURAN.surahs.length + 4,
+    `وفيها ${arNum(QURAN.surahs.length + 4)} عقد (حرفان، كلمات، رسم، مقطَّعة، وأربع سور)`);
+
+  await goto('#/quran/s1');
+  ok(!!$('.station') && !$('.story'), 'الدخول المباشر على سورة مقفلة يعيده إلى الخريطة');
+
+  await seed(idsBefore('quran:letters'));
+  await waitFor(() => $('.station--quran'), 'الخريطة بعد إتمام الرحلة');
+  ok(!$('.station--quran').classList.contains('station--locked'),
+    'وتُفتح بإتمام كل ما قبلها');
+  ok(continueCard().textContent.includes(QURAN.letters.title),
+    `«تابع من هنا» يشير إلى ${QURAN.letters.title}`);
+
+  // ————— ٢) درس الهمزة والتاء المربوطة —————
+  await goto('#/quran/letters');
+  await waitFor(() => $('.lesson'), 'شاشة درس الحرفين');
+  ok($$('.sign-card').length === 2, 'بطاقتان: الهمزة والتاء المربوطة');
+  ok(texts('.sign-face').join('') === 'ءة', `وجه كل حرف كبيراً (${texts('.sign-face').join('،')})`);
+  ok(texts('.sign-shape').join('') === QURAN.letters.signs.flatMap((s) => s.shapes).join(''),
+    `وصور الهمزة معروضة (${texts('.sign-shape').join(' ')})`);
+
+  const beforeRule = heardLog.length;
+  btn('اسمع القاعدة').click();
+  await waitFor(() => heardLog.length > beforeRule, 'صوت القاعدة');
+  ok(lastHeard() === QURAN.letters.rule, 'زر القاعدة يُسمعها');
+
+  const words = $$('.example-word');
+  ok(words.length === 6, `ست كلمات مصوَّرة (${words.length})`);
+  words[0].click();
+  await sleep(60);
+  ok(lastHeard() === 'مَاءْ', `نقرة الكلمة تُسمعها (${lastHeard()})`);
+  checkTargets('درس الحرفين');
+
+  $('.next').click();
+  await waitFor(() => $('.vchip--word'), 'خطوة اقرأ واختر');
+  await playReadQuiz(QURAN.letters.signs.flatMap((s) => s.words));
+  await waitFor(() => $('.celebrate'), 'ختام درس الحرفين');
+  ok($$('.big-stars .on').length === 2, `خطأ واحد ⇒ نجمتان (${$$('.big-stars .on').length})`);
+  ok(stored().stars['quran:letters'] === 2, 'ونجوم الدرس محفوظة بمعرّف عقدته');
+  ok(Object.keys(stored().skills).length === 0,
+    'ولا قياس في المرحلة القرآنية (وحدة القياس حرف بحركة في تمرين)');
+
+  // ————— ٣) كلمات من القرآن —————
+  await seed(idsBefore('quran:words'));
+  await goto('#/quran/words');
+  await waitFor(() => $('.lesson'), 'شاشة الكلمات');
+  ok($$('.example-word').length === QURAN.words.items.length,
+    `${arNum(QURAN.words.items.length)} كلمات قرآنية مصوَّرة`);
+  $$('.example-word').at(-1).click();
+  await sleep(60);
+  ok(lastHeard() === QURAN.words.items.at(-1).read, `وتُسمع بنقرة (${lastHeard()})`);
+  $('.next').click();
+  await waitFor(() => $('.vchip--word'), 'اقرأ واختر');
+  await playReadQuiz(QURAN.words.items, { mistakeAt: 0 });
+  await waitFor(() => $('.celebrate'), 'ختام الكلمات');
+  ok($$('.big-stars .on').length === 3, 'بلا خطأ ⇒ ثلاث نجوم');
+
+  // ————— ٤) رسم المصحف —————
+  await seed(idsBefore('quran:rasm'));
+  await goto('#/quran/rasm');
+  await waitFor(() => $('.rasm-card'), 'شاشة الرسم');
+  ok($$('.rasm-card').length === QURAN.rasm.signs.length,
+    `${arNum(QURAN.rasm.signs.length)} علامات رسم، كلٌّ بمثالها`);
+  ok(texts('.rasm-example .mushaf').join('|') === QURAN.rasm.signs.map((s) => s.read).join('|'),
+    'وأمثلتها من المصحف حرفياً كما في المنهج');
+  const beforeSign = heardLog.length;
+  $$('.rasm-card')[0].click();
+  await waitFor(() => heardLog.length > beforeSign, 'صوت قاعدة العلامة');
+  ok(lastHeard() === QURAN.rasm.signs[0].rule, 'نقرة البطاقة تُسمع قاعدتها (كلامنا نحن)');
+  checkTargets('رسم المصحف');
+
+  $('.next').click();
+  await waitFor(() => $('.vchip--sign'), 'خطوة تمييز العلامة');
+  for (let round = 1; round <= 3; round++) {
+    await waitFor(() => $$('.vchip--sign').length === 3, `خيارات الجولة ${round}`);
+    const shown = $('.mushaf--big').textContent.trim();
+    const target = QURAN.rasm.signs.find((s) => s.read === shown);
+    ok(!!target, `الجولة ${round}: الكلمة المعروضة «${shown}» من أمثلة الدرس`);
+    const faces = texts('.vchip--sign .vchip-face');
+    $$('.vchip--sign')[faces.indexOf(target.sign)].click();
+    await sleep(900);
+  }
+  await waitFor(() => $('.celebrate'), 'ختام الرسم');
+  ok(stored().stars['quran:rasm'] === 3, 'ونجوم الدرس محفوظة');
+
+  // ————— ٥) الحروف المقطَّعة —————
+  await seed(idsBefore('quran:muqattaat'));
+  await goto('#/quran/muqattaat');
+  await waitFor(() => $('.muq-card'), 'شاشة المقطَّعة');
+  ok($$('.muq-card').length === QURAN.muqattaat.items.length,
+    `${arNum(QURAN.muqattaat.items.length)} مجموعات حروف مقطَّعة`);
+  ok(texts('.muq-head .mushaf').join('|') === QURAN.muqattaat.items.map((m) => m.read).join('|'),
+    `وهي كما في المصحف (${texts('.muq-head .mushaf').join('، ')})`);
+  const names = $$('.vchip--name');
+  ok(names.length === QURAN.muqattaat.items.reduce((s, m) => s + m.parts.length, 0),
+    `وأسماء حروفها أزرار (${names.length} اسماً)`);
+  for (const chip of names) { chip.click(); await sleep(40); }
+  ok(lastHeard() === 'نون', `نقرة الاسم تُسمعه (${lastHeard()})`);
+  ok($('.lesson-body').textContent.includes(`قرأتَ ${arNum(4)}`),
+    'وعدّاد المقروء يبلغ المجموعات كلها');
+  $('.next').click();
+  await waitFor(() => $('.celebrate'), 'ختام المقطَّعة');
+  ok($$('.big-stars .on').length === 3, 'من قرأها كلها بأسمائها ⇒ ثلاث نجوم');
+
+  // ————— ٦) سورة الفاتحة: قراءة بالعين —————
+  await seed(idsBefore('quran:s1'));
+  await goto('#/quran/s1');
+  await waitFor(() => $('.sheet--mushaf'), 'صفحة السورة');
+  const fatiha = QURAN.surahs[0];
+  ok($$('.ayah').length === fatiha.ayat.length, `آيات الفاتحة معروضة كلها (${$$('.ayah').length})`);
+  ok(texts('.ayah .mushaf').join('|') === fatiha.ayat.join('|'),
+    'ونصّها في الصفحة يطابق نصّ المنهج حرفاً بحرف');
+  ok(!$('.basmala'), 'ولا بسملة مستقلة فيها — هي آيتها الأولى');
+  ok($('.surah-title-text').textContent.includes(fatiha.name), `عنوانها: ${$('.surah-title-text').textContent}`);
+  checkTargets('صفحة السورة');
+
+  const heardBefore = heardLog.length;
+  const ayat = $$('.ayah');
+  for (const a of ayat) { a.click(); await sleep(30); }
+  ok(heardLog.length === heardBefore,
+    `لا صوت البتّة في صفحة السورة — التلاوة بصوت قارئ متقن (سُمع ${heardLog.length - heardBefore})`);
+  ok(ayat.every((a) => a.classList.contains('ayah--read')), 'والآية المقروءة تُعلَّم فيتتبّع موضعه');
+  ok($('.foot .hint').textContent.includes(`قرأتَ ${arNum(7)}`),
+    `وعدّاد المقروء يبلغ الآيات كلها (${$('.foot .hint').textContent})`);
+
+  $('.next').click();
+  await waitFor(() => $('.celebrate'), 'ختام السورة');
+  ok($$('.big-stars .on').length === 3, 'من قرأ آياتها كلها ⇒ ثلاث نجوم');
+  ok(stored().stars['quran:s1'] === 3, 'ونجومها محفوظة');
+
+  // ————— ٧) سورة الناس: البسملة سطر مستقلّ، وختام الرحلة —————
+  await seed(idsBefore('quran:s114'));
+  await goto('#/quran/s114');
+  await waitFor(() => $('.sheet--mushaf'), 'صفحة الناس');
+  const nas = QURAN.surahs.at(-1);
+  ok($('.basmala')?.textContent.trim() === QURAN.basmala,
+    'البسملة سطر مستقلّ فوق سور ما بعد الفاتحة');
+  ok(texts('.ayah .mushaf').join('|') === nas.ayat.join('|'), 'وآياتها تطابق المنهج حرفاً بحرف');
+  for (const a of $$('.ayah')) { a.click(); await sleep(20); }
+  $('.next').click();
+  await waitFor(() => $('.celebrate'), 'ختام الناس');
+  ok($('.celebrate').textContent.includes('أتممتَ الرحلة'),
+    'وبإتمامها يُبشَّر الطفل بإتمام الرحلة كلها');
+
+  $('.celebrate .btn--primary').click();
+  await waitFor(() => $('.station'), 'العودة للخريطة');
+  ok($('.map .note')?.textContent.includes('أتممتَ الرحلة'), 'والخريطة تعلن اكتمالها');
+
+  // ————— ٨) لا نطق آلي لنصّ المصحف، ولا صوت ناقص —————
+  const silent = new Set(quranSilentTexts());
+  const recited = heardLog.filter((t) => silent.has(t));
+  ok(recited.length === 0,
+    `لم يُنطق نصّ من المصحف ولا مرة (${heardLog.length} تشغيلاً في المرحلة كلها)`
+    + `${recited.length ? ' — ' + recited.join('، ') : ''}`);
+  const missing = played.filter((t) => t.startsWith('?'));
+  ok(missing.length === 0, `وكل ما شُغِّل من الملفات له ملف مولَّد (${played.length} تشغيلاً)`);
+  const stray = spoken.filter((t) => !pendingAudio.has(t));
+  ok(stray.length === 0,
+    `والنطق الآلي لم يُستعمل إلا لنصوص تنتظر التصريف (${spoken.length} نصاً)`
+    + `${stray.length ? ' — خارج القائمة: ' + stray.join('، ') : ''}`);
+  ok(spoken.concat(played).every((t) => quranSpokenTexts().includes(t) || !silent.has(t)),
+    'وما سُمع كلّه من المنطوق المأذون فيه');
+
+  // ————— ٩) العمل دون إنترنت: عامل الخدمة يُسجَّل ويخزن —————
+  const reg = await waitFor(async () => {
+    const regs = await win.navigator.serviceWorker.getRegistrations();
+    return regs.length ? regs[0] : null;
+  }, 'تسجيل عامل الخدمة', 15000);
+  ok(!!reg, `عامل الخدمة مسجَّل (${new URL(reg.scope).pathname})`);
+  const sw = reg.active || reg.installing || reg.waiting;
+  ok(!!sw, 'وهو قيد التنصيب أو نشط');
+  const cacheNames = await waitFor(async () => {
+    const names = await win.caches.keys();
+    return names.some((n) => n.startsWith('muallim-shell')) ? names : null;
+  }, 'مخزون الهيكل', 20000);
+  ok(cacheNames.some((n) => n.startsWith('muallim-shell')),
+    `ومخزون الهيكل مُنشأ (${cacheNames.join('، ')})`);
+  const shellCache = await win.caches.open(cacheNames.find((n) => n.startsWith('muallim-shell')));
+  const keys = await shellCache.keys();
+  const paths = keys.map((r) => new URL(r.url).pathname);
+  ok(paths.some((p) => p.endsWith('/js/quran.js')) && paths.some((p) => p.endsWith('/css/app.css')),
+    `والملفات مخزونة فعلاً (${paths.length} ملفاً في المخزون)`);
+  const cached = await shellCache.match(new URL('js/curriculum.js', win.location.href));
+  ok(!!cached && (await cached.text()).includes('QURAN'),
+    'ومحتواها صالح للقراءة من المخزون دون شبكة');
+
+  ok(jsErrors.length === 0, `لا أخطاء جافاسكربت (${jsErrors.join(' | ') || 'لا شيء'})`);
+} catch (e) {
+  ok(false, 'استثناء: ' + ((e && e.stack) || e));
+}
+
+await fetch('/result', { method: 'POST', body: JSON.stringify(results, null, 1) });
+</script>
+</body>
+</html>

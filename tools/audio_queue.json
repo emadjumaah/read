@@ -526,5 +526,213 @@
     "priority": 100,
     "status": "pending",
     "doneAt": null
+  },
+  {
+    "text": "الهمزة تُكتب وحدها «ء» أو على ألف «أ» و«إ»، والتاء المربوطة «ة» في آخر الكلمة تقف عليها هاءً.",
+    "category": "sentence",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "مَاءْ",
+    "category": "word",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أَسَدْ",
+    "category": "word",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "إِصْبَعْ",
+    "category": "word",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "وَرْدَةْ",
+    "category": "word",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "شَجَرَةْ",
+    "category": "word",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "بَقَرَةْ",
+    "category": "word",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "هذه كلمات تلقاها في القرآن، وأنت تقرؤها اليوم بحروفك كلها.",
+    "category": "sentence",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "كِتَابْ",
+    "category": "word",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "نُورْ",
+    "category": "word",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "سَمَاءْ",
+    "category": "word",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "جَنَّةْ",
+    "category": "word",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "بَحْرْ",
+    "category": "word",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "عَسَلْ",
+    "category": "word",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "نَمْلْ",
+    "category": "word",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "زَيْتُونْ",
+    "category": "word",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "المصحف يُكتب برسم خاص فيه علامات صغيرة ترشد القارئ، وحروفه هي حروفك التي تعرفها.",
+    "category": "sentence",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "ألف تنطقها إذا ابتدأت بها، وتصلها بما قبلها فلا تنطقها.",
+    "category": "sentence",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "ألف صغيرة فوق الحرف: تمدّها ألفاً وإن لم تُكتب كبيرة.",
+    "category": "sentence",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "علامة فوق الحرف تعني مدّاً أطول من المدّ الطبيعي.",
+    "category": "sentence",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الياء في آخر الكلمة تُكتب في المصحف بلا نقطتين، وتُقرأ ياءً.",
+    "category": "sentence",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "واو صغيرة بعد الهاء: تمدّ بها الضمة.",
+    "category": "sentence",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "ميم صغيرة ترشد القارئ إلى نطق التنوين ميماً.",
+    "category": "sentence",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "في أوائل بعض السور حروف تُقرأ بأسمائها لا بأصواتها: تقول أَلِف لَام مِيم ولا تقول أَلَمْ.",
+    "category": "sentence",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "هَا",
+    "category": "syllable",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "يَا",
+    "category": "syllable",
+    "requestedBy": "session-6",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
   }
 ]

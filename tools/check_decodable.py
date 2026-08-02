@@ -32,6 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CURRICULUM = ROOT / "app" / "js" / "curriculum.js"
 AUDIO_DIR = ROOT / "app" / "audio"
 QUEUE_FILE = ROOT / "tools" / "audio_queue.json"
+QURAN_SOURCE = ROOT / "tools" / "quran_source.txt"
 
 # العلامات المتاحة منذ المجموعة الأولى: الحركات الثلاث + السكون
 # (السكون يظهر في نهايات الكلمات من البداية «بابْ» ويُفرد بدرس بعد المجموعة ٣ — METHOD §٥.٣).
@@ -102,23 +103,34 @@ def sections(src: str) -> dict:
     return out
 
 
-def bracket_region(text: str, key: str) -> str:
-    """محتوى المصفوفة التي تلي مفتاحاً، بعدّ الأقواس (تحتمل التعشيش: pairs)."""
+def region(text: str, key: str, opener: str = "[", closer: str = "]") -> str:
+    """محتوى القوس الذي يلي مفتاحاً، بعدّ الأقواس (تحتمل التعشيش: pairs، signs…)."""
     i = text.find(key)
     if i < 0:
         return ""
-    start = text.find("[", i)
+    start = text.find(opener, i)
     if start < 0:
         return ""
     depth = 0
     for j in range(start, len(text)):
-        if text[j] == "[":
+        if text[j] == opener:
             depth += 1
-        elif text[j] == "]":
+        elif text[j] == closer:
             depth -= 1
             if depth == 0:
                 return text[start:j + 1]
     return text[start:]
+
+
+def bracket_region(text: str, key: str) -> str:
+    return region(text, key)
+
+
+def chunks_by_key(src: str, key: str):
+    """يقطّع نصّاً عند كل ظهور لمفتاح (sign: أو read:) — لقوائم الكائنات المتشابهة."""
+    marks = [m.start() for m in re.finditer(rf"\b{key}:", src)]
+    for i, pos in enumerate(marks):
+        yield src[pos:(marks[i + 1] if i + 1 < len(marks) else len(src))]
 
 
 def chunks_by_id(src: str):
@@ -170,6 +182,216 @@ def parse_stories(src: str) -> list:
             "sentences": sentences,
         })
     return out
+
+
+def parse_quran(src: str) -> dict:
+    """يقرأ قسم QURAN: الحرفان الجديدان، الكلمات، علامات الرسم، المقطَّعة، السور."""
+    # الأقسام بالترتيب: كل قسم يُقتطع مما بعد سابقه — فلا يلتبس `words:` الأعلى
+    # بـ`words:` الذي داخل بطاقة الحرف (الربط بالتسلسل لا بالتنسيق).
+    rest = src
+    cut = {}
+    for key in ("letters", "words", "rasm", "muqattaat"):
+        cut[key] = region(rest, f"{key}:", "{", "}")
+        i = rest.find(cut[key]) + len(cut[key]) if cut[key] else 0
+        rest = rest[i:]
+    letters, words, rasm, muq = (cut[k] for k in ("letters", "words", "rasm", "muqattaat"))
+    surahs_src = region(rest, "surahs:")
+
+    def worded(chunk):
+        return re.findall(r"read:\s*'([^']*)'\s*,\s*emoji:\s*'([^']*)'", chunk)
+
+    signs = []
+    for chunk in chunks_by_key(region(letters, "signs:"), "sign"):
+        signs.append({
+            "sign": one(r"sign:\s*'([^']*)'", chunk, ""),
+            "name": one(r"name:\s*'([^']*)'", chunk, ""),
+            "shapes": re.findall(r"'([^']*)'", bracket_region(chunk, "shapes:")),
+            "words": worded(chunk),
+        })
+
+    rasm_signs = []
+    for chunk in chunks_by_key(region(rasm, "signs:"), "sign"):
+        rasm_signs.append({
+            "sign": one(r"sign:\s*'([^']*)'", chunk, ""),
+            "name": one(r"name:\s*'([^']*)'", chunk, ""),
+            "rule": one(r"rule:\s*'([^']*)'", chunk, ""),
+            "read": one(r"read:\s*'([^']*)'", chunk, ""),
+            "from": one(r"from:\s*'([^']*)'", chunk, ""),
+        })
+
+    muq_items = []
+    for chunk in chunks_by_key(region(muq, "items:"), "read"):
+        muq_items.append({
+            "read": one(r"read:\s*'([^']*)'", chunk, ""),
+            "surah": one(r"surah:\s*'([^']*)'", chunk, ""),
+            "parts": re.findall(r"ch:\s*'([^']*)'\s*,\s*say:\s*'([^']*)'", chunk),
+        })
+
+    surahs = []
+    for ident, chunk in chunks_by_id(surahs_src):
+        surahs.append({
+            "id": ident,
+            "number": int(one(r"number:\s*(\d+)", chunk, "0")),
+            "name": one(r"name:\s*'([^']*)'", chunk, ""),
+            "emoji": one(r"emoji:\s*'([^']*)'", chunk, ""),
+            "basmalaIsAyah": one(r"basmalaIsAyah:\s*(true|false)", chunk, "false") == "true",
+            "ayat": re.findall(r"'([^']*)'", bracket_region(chunk, "ayat:")),
+        })
+
+    return {
+        "after": one(r"after:\s*'([^']+)'", src, ""),
+        "title": one(r"title:\s*'([^']*)'", src, ""),
+        "basmala": one(r"basmala:\s*'([^']*)'", src, ""),
+        "letters": {"title": one(r"title:\s*'([^']*)'", letters, ""),
+                    "face": one(r"face:\s*'([^']*)'", letters, ""),
+                    "rule": one(r"rule:\s*'([^']*)'", letters, ""),
+                    "signs": signs},
+        "words": {"title": one(r"title:\s*'([^']*)'", words, ""),
+                  "face": one(r"face:\s*'([^']*)'", words, ""),
+                  "rule": one(r"rule:\s*'([^']*)'", words, ""),
+                  "items": worded(words)},
+        "rasm": {"title": one(r"title:\s*'([^']*)'", rasm, ""),
+                 "face": one(r"face:\s*'([^']*)'", rasm, ""),
+                 "rule": one(r"rule:\s*'([^']*)'", rasm, ""),
+                 "signs": rasm_signs},
+        "muqattaat": {"title": one(r"title:\s*'([^']*)'", muq, ""),
+                      "face": one(r"face:\s*'([^']*)'", muq, ""),
+                      "rule": one(r"rule:\s*'([^']*)'", muq, ""),
+                      "items": muq_items},
+        "surahs": surahs,
+    }
+
+
+def quran_source() -> dict:
+    """نصّ المصحف المرجعي: «سورة:آية» ← النصّ حرفياً (مشروع تنزيل، الرسم العثماني)."""
+    if not QURAN_SOURCE.exists():
+        return {}
+    rows = {}
+    for line in QURAN_SOURCE.read_text(encoding="utf-8").splitlines():
+        if line.startswith("#") or "|" not in line:
+            continue
+        ref, text = line.split("|", 1)
+        rows[ref.strip()] = text
+    return rows
+
+
+def check_quran(quran, taught, letters, source):
+    """فحص المرحلة القرآنية: مفكوكيةُ الإملائي، وأصالةُ العثماني، وحرمةُ نطقه آلياً.
+
+    ثلاث قواعد يفرضها هذا الفحص:
+    ١) كلمات هذه المرحلة بالرسم الإملائي مفكوكة كغيرها (حروف مدروسة + الحرفان الجديدان).
+    ٢) كل رمز في نصّ المصحف إما حرفٌ مدروس أو علامةٌ معروضة في درس الرسم قبله —
+       فسورةٌ فيها علامة بلا درس لا تمرّ، والفاحص يشتقّ «المعروض» من البيانات نفسها.
+    ٣) كل نصّ عثماني يطابق tools/quran_source.txt حرفاً بحرف (لا يُكتب المصحف بيدنا).
+    """
+    errors, warnings = [], []
+    spoken, silent = [], []
+
+    # ١. الحرفان الجديدان يوسّعان الحروف المدروسة في هذه المرحلة وحدها
+    new_signs = [s["sign"] for s in quran["letters"]["signs"]]
+    shapes = [sh for s in quran["letters"]["signs"] for sh in s["shapes"]]
+    hamza_forms = set("".join(shapes)) - {TATWEEL}
+    quran_letters = dict(letters)
+    for ch in set(new_signs) | hamza_forms:
+        if ch and ch not in quran_letters:
+            quran_letters[ch] = "حرف المرحلة القرآنية"
+    quran_taught = set(taught) | set(new_signs) | hamza_forms
+
+    if not new_signs:
+        errors.append("[قرآن] لا حرف جديد معروض قبل السور")
+
+    # ٢. مادة القراءة بالرسم الإملائي: مفكوكة بكل قواعد المنهج
+    allowed = set(MARKS) | TANWEEN | {SHADDA, SUN_RULE}
+    imla = [(text, emoji, "درس الحرفين") for s in quran["letters"]["signs"] for text, emoji in s["words"]]
+    imla += [(text, emoji, "كلمات القرآن") for text, emoji in quran["words"]["items"]]
+    if len(quran["words"]["items"]) < 5:
+        errors.append("[قرآن] كلمات المرحلة أقلّ من خمس")
+    for text, emoji, where in imla:
+        errors += text_errors(text, f"[قرآن/{where}]", quran_taught, quran_letters, allowed)
+        spoken.append(text)
+        if not emoji:
+            warnings.append(f"[قرآن/{where}]: «{text}» بلا صورة (emoji)")
+
+    for sign in quran["letters"]["signs"]:
+        if not sign["words"]:
+            errors.append(f"[قرآن] الحرف «{sign['sign']}» بلا كلمات تمثّله")
+        for shape in sign["shapes"]:
+            outside = [c for c in shape if c not in quran_letters and c != TATWEEL]
+            if outside:
+                errors.append(f"[قرآن] صورة الحرف «{shape}» فيها رمز مجهول: "
+                              + "، ".join(f"«{c}»" for c in outside))
+
+    # ٣. رموز المصحف المسموح بها = حروفٌ مدروسة + علاماتٌ يعرضها درس الرسم
+    rasm_marks = set()
+    for s in quran["rasm"]["signs"]:
+        rasm_marks |= set(s["sign"])
+        spoken.append(s["rule"])
+    mushaf_allowed = (quran_taught | set(MARKS) | TANWEEN | {SHADDA, TATWEEL, " "} | rasm_marks)
+
+    def mushaf_errors(text, label):
+        bad = sorted({c for c in text if c not in mushaf_allowed})
+        if not bad:
+            return []
+        names = "، ".join(f"«{c}» (U+{ord(c):04X})" for c in bad)
+        return [f"{label}: «{text}» فيه رمز لم يُعرَض في درس الرسم ولا في الحروف: {names}"]
+
+    # ٤. أصالة النصّ: مطابقة حرفية للمصدر المرجعي
+    if not source:
+        warnings.append("لا يوجد tools/quran_source.txt — لم تُفحص أصالة نصّ المصحف")
+    else:
+        joined = "\n".join(source.values())
+        if quran["basmala"] and source.get("1:1") != quran["basmala"]:
+            errors.append("[قرآن] البسملة لا تطابق المصدر المرجعي حرفاً بحرف")
+        for surah in quran["surahs"]:
+            for i, ayah in enumerate(surah["ayat"], 1):
+                ref = f"{surah['number']}:{i}"
+                expected = source.get(ref)
+                if expected is None:
+                    errors.append(f"[قرآن/{surah['id']}] الآية {ref} ليست في المصدر المرجعي")
+                    continue
+                actual = (quran["basmala"] + " " + ayah) if (i == 1 and not surah["basmalaIsAyah"]) else ayah
+                if actual != expected:
+                    errors.append(f"[قرآن/{surah['id']}] الآية {ref} لا تطابق المصدر حرفاً بحرف")
+            missing = [r for r in source if r.startswith(f"{surah['number']}:")
+                       and int(r.split(':')[1]) > len(surah["ayat"])]
+            if missing:
+                errors.append(f"[قرآن/{surah['id']}] السورة ناقصة {len(missing)} آية عن المصدر")
+        for item in quran["muqattaat"]["items"]:
+            if item["read"] and item["read"] not in joined:
+                errors.append(f"[قرآن/المقطَّعة] «{item['read']}» ليست في المصدر المرجعي")
+        for s in quran["rasm"]["signs"]:
+            if s["read"] and s["read"] not in joined:
+                errors.append(f"[قرآن/الرسم] المثال «{s['read']}» ليس في المصدر المرجعي")
+
+    # ٥. رموز كل نصّ عثماني + جمعُه في قائمة «ما لا يُنطق آلياً»
+    if not quran["surahs"]:
+        errors.append("[قرآن] لا سورة في المرحلة")
+    for s in quran["rasm"]["signs"]:
+        errors += mushaf_errors(s["read"], "[قرآن/الرسم]")
+        silent.append(s["read"])
+    for item in quran["muqattaat"]["items"]:
+        errors += mushaf_errors(item["read"], "[قرآن/المقطَّعة]")
+        silent.append(item["read"])
+        for ch, say in item["parts"]:
+            if ch not in taught:
+                errors.append(f"[قرآن/المقطَّعة] الحرف «{ch}» غير مدروس")
+            if ch not in bare(item["read"]):
+                errors.append(f"[قرآن/المقطَّعة] الحرف «{ch}» ليس في «{item['read']}»")
+            spoken.append(say)
+        if not item["parts"]:
+            errors.append(f"[قرآن/المقطَّعة] «{item['read']}» بلا أسماء حروف")
+    silent.append(quran["basmala"])
+    for surah in quran["surahs"]:
+        for i, ayah in enumerate(surah["ayat"], 1):
+            errors += mushaf_errors(ayah, f"[قرآن/{surah['id']}:{i}]")
+        silent += surah["ayat"]
+
+    for text in (quran["letters"]["rule"], quran["words"]["rule"],
+                 quran["rasm"]["rule"], quran["muqattaat"]["rule"]):
+        if text:
+            spoken.append(text)
+
+    return errors, warnings, spoken, [t for t in silent if t]
 
 
 def parse_curriculum(src: str):
@@ -289,10 +511,11 @@ def text_errors(text, label, taught, letters, allowed):
     return errors
 
 
-def check(letters, groups, skills=(), stories=(), parts=None, quiet=False):
+def check(letters, groups, skills=(), stories=(), parts=None, quiet=False, quran=None):
     errors, warnings = [], []
     seen_letters = set()   # الحروف المدروسة تراكمياً
     audio_texts = set()
+    silent_texts = set()   # نصّ المصحف: يُعرض ولا يُنطق آلياً (METHOD §٥.٦)
     pending_audio = queue_pending()
 
     # ١. سلامة جدول الحروف والمجموعات
@@ -410,7 +633,30 @@ def check(letters, groups, skills=(), stories=(), parts=None, quiet=False):
                 audio_texts.update(sentence["words"])
                 audio_texts.add(" ".join(sentence["words"]))
 
-    # ٣ب. حارس المحلّل: كل نصّ عربي مكتوب في هذين القسمين لا بدّ أن يكون قد قُرئ،
+    # ٣ج. المرحلة القرآنية (§١.٢ و§٥.٦): خاتمة الرحلة — حصيلة الطفل فيها كاملة.
+    quran_literals = set()
+    if quran:
+        if quran["after"] != group_ids[-1]:
+            errors.append(f"[قرآن] موضعها «{quran['after']}» وليس بعد المجموعة الأخيرة")
+        q_errors, q_warnings, q_spoken, q_silent = check_quran(quran, taught, letters, quran_source())
+        errors += q_errors
+        warnings += q_warnings
+        audio_texts.update(q_spoken)
+        silent_texts.update(q_silent)
+        quran_literals = set(q_spoken) | set(q_silent) | {
+            quran["title"], quran["basmala"],
+            *[quran[k][f] for k in ("letters", "words", "rasm", "muqattaat") for f in ("title", "face")],
+            *[s[f] for s in quran["letters"]["signs"] for f in ("sign", "name")],
+            *[sh for s in quran["letters"]["signs"] for sh in s["shapes"]],
+            *[t for s in quran["letters"]["signs"] for w in s["words"] for t in w],
+            *[t for w in quran["words"]["items"] for t in w],
+            *[s[f] for s in quran["rasm"]["signs"] for f in ("sign", "name", "from")],
+            *[i["surah"] for i in quran["muqattaat"]["items"]],
+            *[c for i in quran["muqattaat"]["items"] for p in i["parts"] for c in p],
+            *[s[f] for s in quran["surahs"] for f in ("name", "emoji")],
+        }
+
+    # ٣ب. حارس المحلّل: كل نصّ عربي مكتوب في هذه الأقسام لا بدّ أن يكون قد قُرئ،
     #     كي لا يمرّ محتوى دون فحص بسبب تغيّر في شكل البيانات.
     if parts:
         seen_literals = set()
@@ -426,6 +672,17 @@ def check(letters, groups, skills=(), stories=(), parts=None, quiet=False):
             for lit in re.findall(r"'([^']*)'", parts.get(name, "")):
                 if re.search(r"[ء-ي]", lit) and lit not in seen_literals:
                     errors.append(f"[{name}] نصّ لم يقرأه الفاحص: «{lit}» — راجع محلّل الملف")
+        if quran:
+            for lit in re.findall(r"'([^']*)'", parts.get("QURAN", "")):
+                if re.search(r"[ء-ي]", lit) and lit not in quran_literals:
+                    errors.append(f"[QURAN] نصّ لم يقرأه الفاحص: «{lit}» — راجع محلّل الملف")
+
+    # ٤أ. حرمة النطق الآلي لنصّ المصحف (METHOD §٥.٦: التلاوة بصوت قارئ متقن لا بمولّد).
+    #     الفاحص يمنعه من بابه: لا يدخل نصّ عثماني بيانَ الأصوات ولا قائمة الانتظار.
+    for text in sorted(silent_texts & audio_texts):
+        errors.append(f"[قرآن] نصّ من المصحف مطلوبٌ له صوت مولَّد: «{text}»")
+    for text in sorted(silent_texts & pending_audio):
+        errors.append(f"[قرآن] نصّ من المصحف في قائمة الانتظار الصوتية: «{text}»")
 
     # ٤. تغطية الصوت (تنبيه فقط — يعالجها tools/generate_audio.py وقائمة الانتظار)
     for ch, name in letters.items():
@@ -449,6 +706,9 @@ def check(letters, groups, skills=(), stories=(), parts=None, quiet=False):
         manifest_path = AUDIO_DIR / "manifest.json"
         if manifest_path.exists():
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            recited = sorted(silent_texts & set(manifest.values()))
+            for text in recited:
+                errors.append(f"[قرآن] نصّ من المصحف له ملف صوت مولَّد: «{text}»")
             stale = sorted(set(manifest.values()) - audio_texts)
             if stale:
                 warnings.append(f"{len(stale)} ملف صوت لم يعد المنهج يستعمله: "
@@ -464,6 +724,12 @@ def check(letters, groups, skills=(), stories=(), parts=None, quiet=False):
     print(f"المجموعات: {len(groups)} | الحروف: {len(letters)} | الكلمات: {total_words} "
           f"| المهارات: {len(skills)} | القصص: {len(stories)} (في {total_sentences} جملة) "
           f"| نصوص الصوت المطلوبة: {len(audio_texts)}")
+    if quran:
+        print(f"المرحلة القرآنية: {len(quran['surahs'])} سور "
+              f"(في {sum(len(s['ayat']) for s in quran['surahs'])} آية) "
+              f"| كلمات: {len(quran['words']['items'])} | علامات رسم: {len(quran['rasm']['signs'])} "
+              f"| مقطَّعة: {len(quran['muqattaat']['items'])} "
+              f"| نصوص مصحف لا تُنطق آلياً: {len(silent_texts)}")
 
     if warnings and not quiet:
         print(f"\nتنبيهات ({len(warnings)}):")
@@ -480,7 +746,7 @@ def check(letters, groups, skills=(), stories=(), parts=None, quiet=False):
     return 0
 
 
-def self_test(letters, skills, stories, parts) -> int:
+def self_test(letters, skills, stories, parts, quran=None) -> int:
     """يتحقّق أن الفاحص نفسه يُمسك المخالفات (فاحص لا يفشل أبداً لا يحرس شيئاً)."""
     fails = 0
 
@@ -528,6 +794,37 @@ def self_test(letters, skills, stories, parts) -> int:
     ok("لم يقرأه الفاحص" in report.getvalue(),
        "وحارس المحلّل يمسك نصّاً عربياً لم يقرأه أحد (لا يمرّ محتوى دون فحص)")
 
+    # ————— المرحلة القرآنية —————
+    if quran:
+        all_letters = set(letters)
+        source = quran_source()
+        ok(len(quran["surahs"]) == 4 and [len(s["ayat"]) for s in quran["surahs"]] == [7, 4, 5, 6],
+           f"محلّل السور يقرأ الأربع بآياتها ({[len(s['ayat']) for s in quran['surahs']]})")
+        ok(len(quran["rasm"]["signs"]) >= 5 and all(s["read"] and s["rule"] for s in quran["rasm"]["signs"]),
+           f"ومحلّل علامات الرسم يقرأ {len(quran['rasm']['signs'])} علامة بأمثلتها")
+        ok(bool(source) and len(source) >= 22, f"والمصدر المرجعي مقروء ({len(source)} آية)")
+
+        errs, _, spoken, silent = check_quran(quran, all_letters, letters, source)
+        ok(not errs, f"والمرحلة القرآنية تمرّ نظيفةً{'' if not errs else ': ' + errs[0]}")
+        ok(len(silent) > 25 and all(t not in spoken for t in silent),
+           f"ولا نصّ مصحف واحد في المنطوق ({len(silent)} نصاً صامتاً، {len(spoken)} منطوقاً)")
+
+        # عبث مقصود: آية محرَّفة، وعلامة بلا درس، وحرف جديد بلا كلمة
+        broken = json.loads(json.dumps(quran))
+        broken["surahs"][1]["ayat"][1] = broken["surahs"][1]["ayat"][1].replace("ُ", "َ")
+        ok(any("لا تطابق المصدر" in e for e in check_quran(broken, all_letters, letters, source)[0]),
+           "وتحريف حركة واحدة في آية يُمسَك بمطابقة المصدر")
+
+        broken = json.loads(json.dumps(quran))
+        broken["rasm"]["signs"] = [s for s in broken["rasm"]["signs"] if s["sign"] != "ٱ"]
+        ok(any("لم يُعرَض في درس الرسم" in e for e in check_quran(broken, all_letters, letters, source)[0]),
+           "وحذف درس علامةٍ تظهر في السور يُمسَك (المفكوكية تُشتقّ من الدروس نفسها)")
+
+        broken = json.loads(json.dumps(quran))
+        broken["words"]["items"] = [["كِتَاب", "📖"]] + broken["words"]["items"][1:]
+        ok(any("بلا حركة" in e for e in check_quran(broken, all_letters, letters, source)[0]),
+           "وكلمة إملائية ناقصة الشكل تُمسَك كغيرها من مادة القراءة")
+
     print(f"\n{fails} فشل" if fails else "\n✓ الفاحص يمسك المخالفات كلها")
     return 1 if fails else 0
 
@@ -542,9 +839,10 @@ def main():
     letters, groups, parts = parse_curriculum(CURRICULUM.read_text(encoding="utf-8"))
     skills = parse_skills(parts.get("SKILLS", ""))
     stories = parse_stories(parts.get("STORIES", ""))
+    quran = parse_quran(parts.get("QURAN", ""))
     if args.self_test:
-        sys.exit(self_test(letters, skills, stories, parts))
-    sys.exit(check(letters, groups, skills, stories, parts, quiet=args.quiet))
+        sys.exit(self_test(letters, skills, stories, parts, quran))
+    sys.exit(check(letters, groups, skills, stories, parts, quiet=args.quiet, quran=quran))
 
 
 if __name__ == "__main__":

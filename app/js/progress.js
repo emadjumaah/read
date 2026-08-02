@@ -5,7 +5,7 @@
 // **الحرف × الحركة × نوع التمرين**، ومنه يُبنى التكرار المتباعد وجلسة المراجعة
 // ولوحة وليّ الأمر. لا نصّ منطوق جديد هنا — القياس لا يضيف محتوى.
 
-import { GROUPS, SKILLS, STORIES, bareLetters } from './curriculum.js';
+import { GROUPS, SKILLS, STORIES, QURAN, quranParts, bareLetters } from './curriculum.js';
 
 const STORE_KEY = 'muallim.progress.v1';
 export const VERSION = 2;            // ١ = نجوم فقط (تُرقّى تلقائياً بلا فقد)
@@ -115,7 +115,17 @@ export function interludeNodes(groupId) {
   ];
 }
 
-/** الرحلة كاملةً بأقسامها بالترتيب: مجموعة ← ما بعدها من مهارات وقصص ← مجموعة… */
+/**
+ * عقد المرحلة القرآنية (الجلسة ٦): خاتمة الرحلة بعد المجموعة السابعة وما تلاها.
+ * ترتيبها من `quranParts()` — بيانات المنهج وحدها تحدّد ما فيها.
+ */
+export function quranNodes() {
+  return quranParts().map(({ part, title, face }) => ({
+    id: `quran:${part}`, type: 'quran', groupId: QURAN.after, part, title, face,
+  }));
+}
+
+/** الرحلة كاملةً بأقسامها بالترتيب: مجموعة ← ما بعدها من مهارات وقصص ← … ← المرحلة القرآنية. */
 export function journey() {
   const out = [];
   for (const group of GROUPS) {
@@ -123,6 +133,7 @@ export function journey() {
     const nodes = interludeNodes(group.id);
     if (nodes.length) out.push({ kind: 'interlude', id: `after:${group.id}`, after: group.id, nodes });
   }
+  out.push({ kind: 'quran', id: 'quran', nodes: quranNodes() });
   return out;
 }
 

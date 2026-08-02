@@ -15,7 +15,7 @@ globalThis.localStorage = {
 };
 
 const {
-  GROUPS, SKILLS, STORIES, skillById, storyById, skillExamples, skillTexts, storyTexts,
+  GROUPS, SKILLS, STORIES, quranParts, skillById, storyById, skillExamples, skillTexts, storyTexts,
   sentenceText, bareLetters,
 } = await import(new URL('curriculum.js', APP));
 const { buildSkillRounds } = await import(new URL('skill.js', APP));
@@ -97,8 +97,9 @@ ok(buildSkillRounds({ compare: { pairs: [['بَ', 'بَا']] } }).length === 0,
 
 const nodes = p.allNodes();
 const ids = nodes.map((n) => n.id);
-ok(nodes.length === GROUPS.reduce((s, g) => s + g.letters.length + 1, 0) + SKILLS.length + STORIES.length,
-  `عقد الرحلة = عقد المجموعات + ٥ مهارات + ٣ قصص (${nodes.length} عقدة)`);
+ok(nodes.length === GROUPS.reduce((s, g) => s + g.letters.length + 1, 0)
+  + SKILLS.length + STORIES.length + quranParts().length,
+  `عقد الرحلة = عقد المجموعات + ٥ مهارات + ٣ قصص + خاتمة قرآنية (${nodes.length} عقدة)`);
 ok(ids.indexOf('skill:madd') === ids.indexOf('g3:words') + 1
   && ids.indexOf('skill:sukun') === ids.indexOf('skill:madd') + 1
   && ids.indexOf('g4:ع') === ids.indexOf('skill:sukun') + 1,

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>لقطات المرحلة القرآنية</title>
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+    body { padding: 1rem; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; align-items: start; }
+    .cell { background: rgba(255,255,255,.35); border-radius: 24px; padding: .5rem; }
+    .cell > h4 { margin: .2rem 0 .4rem; text-align: center; color: #1b7a43; }
+    .app { max-width: none; padding: 0; }
+    .dev { display: none; }
+  </style>
+</head>
+<body>
+<div id="toast" class="toast" hidden></div>
+<div class="grid" id="grid"></div>
+
+<script>
+  localStorage.setItem('muallim.progress.v1', JSON.stringify({
+    v: 2, stars: {}, skills: {}, days: {}, reviews: {}, seconds: 0,
+    startedAt: Date.now(), updatedAt: Date.now(),
+  }));
+</script>
+
+<script type="module">
+import { renderQuran } from './js/quran.js';
+import * as progress from './js/progress.js';
+
+// صوت لا ينتهي: تُجمَّد الحالة المعروضة فلا تنتقل الخطوة تلقائياً قبل اللقطة
+window.Audio = class { play() { return new Promise(() => {}); } pause() {} };
+
+for (const node of progress.allNodes()) progress.setStars(node.id, 3);
+
+const grid = document.getElementById('grid');
+const $$ = (root, sel) => [...root.querySelectorAll(sel)];
+
+function cell(title, node) {
+  const box = document.createElement('div');
+  box.className = 'cell';
+  box.innerHTML = `<h4>${title}</h4>`;
+  const app = document.createElement('div');
+  app.className = 'app';
+  app.append(node);
+  box.append(app);
+  grid.append(box);
+  return app;
+}
+
+const step = (app, label) => $$(app, '.btn').find((b) => b.textContent.includes(label))?.click();
+
+// ١) درس الحرفين الجديدين: الهمزة والتاء المربوطة
+cell('١ — الهمزة والتاء المربوطة', renderQuran('letters'));
+
+// ٢) «اقرأ واختر» على كلمات القرآن
+const words = cell('٢ — كلمات من القرآن: اقرأ واختر', renderQuran('words'));
+step(words, 'تابع');
+
+// ٣) علامات رسم المصحف بأمثلتها
+cell('٣ — رسم المصحف', renderQuran('rasm'));
+
+// ٤) الحروف المقطَّعة بأسماء حروفها
+cell('٤ — الحروف المقطَّعة', renderQuran('muqattaat'));
+
+// ٥) سورة الفاتحة (البسملة آيتها الأولى)
+cell('٥ — سورة الفاتحة', renderQuran('s1'));
+
+// ٦) سورة الإخلاص (البسملة سطر مستقلّ)
+cell('٦ — سورة الإخلاص', renderQuran('s112'));
+
+// ٧) الخريطة: محطة الخاتمة القرآنية (طفل أتمّ الرحلة حتى قبلها)
+progress.reset();
+for (const node of progress.allNodes()) {
+  if (node.id === 'quran:letters') break;
+  progress.setStars(node.id, 3);
+}
+const map = cell('٧ — الخريطة: المرحلة القرآنية', document.createElement('div'));
+map.id = 'app';
+// «تابع من هنا» يُزيح الصفحة عن أعلاها (revealNext) فتخرج اللقطة من وسطها
+Element.prototype.scrollIntoView = () => {};
+await import('./js/main.js');
+setInterval(() => window.scrollTo(0, 0), 50);   // تثبيت أعلى الصفحة حتى تُلتقط
+</script>
+</body>
+</html>

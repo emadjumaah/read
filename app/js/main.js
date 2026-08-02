@@ -1,7 +1,7 @@
 // نقطة الدخول: خريطة الرحلة (المجموعات السبع) والتوجيه بين الشاشات.
 // درس الحرف في app/js/lesson.js، ولعبة تركيب الكلمات في app/js/words.js.
 
-import { GROUPS, LETTERS, HARAKAT } from './curriculum.js';
+import { GROUPS, LETTERS, HARAKAT, QURAN } from './curriculum.js';
 import * as progress from './progress.js';
 import * as audio from './audio.js';
 import { renderLesson } from './lesson.js';
@@ -9,10 +9,11 @@ import { renderWordsGame } from './words.js';
 import { renderReview } from './review.js';
 import { renderSkillLesson } from './skill.js';
 import { renderStory } from './story.js';
+import { renderQuran } from './quran.js';
 import { renderParent, skillsText } from './parent.js';
 import {
   h, toast, go, arNum, starsRow, topbar, letterTitle, nodeTitle, nodeFace, nodeWhere,
-  ACCENTS, PAUSE_ACCENT, accentFor, DEV,
+  ACCENTS, PAUSE_ACCENT, QURAN_ACCENT, accentFor, DEV,
 } from './ui.js';
 
 const app = document.getElementById('app');
@@ -46,7 +47,7 @@ function renderMap() {
     const group = progress.findGroup(next.groupId);
     main.append(h('button', {
       class: 'continue',
-      css: { '--accent': next.type === 'skill' || next.type === 'story' ? PAUSE_ACCENT : accentFor(group) },
+      css: { '--accent': accentOf(next, group) },
       onclick: () => openNode(next),
     },
       h('span', { class: 'continue-face' }, nodeFace(next)),
@@ -55,14 +56,14 @@ function renderMap() {
         h('small', {}, `تابع من هنا · ${nodeWhere(next)}`)),
     ));
   } else {
-    main.append(h('p', { class: 'note' }, '🎉 أتممتَ كل المجموعات! المرحلة القرآنية تأتي لاحقاً بإذن الله.'));
+    main.append(h('p', { class: 'note' }, '🎉 أتممتَ الرحلة كلها — من الحرف الأول إلى المصحف!'));
   }
 
   let groupIndex = 0;
   for (const section of progress.journey()) {
-    main.append(section.kind === 'group'
-      ? stationEl(section, groupIndex++, next)
-      : interludeEl(section, next));
+    main.append(section.kind === 'group' ? stationEl(section, groupIndex++, next)
+      : section.kind === 'quran' ? quranEl(section, next)
+        : interludeEl(section, next));
   }
 
   if (DEV) {
@@ -157,6 +158,37 @@ function interludeEl(section, next) {
   });
 }
 
+/**
+ * محطة الخاتمة: المرحلة القرآنية (§١.٢ و§٥.٦). خضرتها تميّزها عن كل ما قبلها،
+ * ولا تُفتح إلا بإتمام الرحلة كلها — فهي تتويج التأسيس لا بديل عنه.
+ */
+function quranEl(section, next) {
+  const unlocked = progress.isNodeUnlockedById(section.nodes[0].id);
+  const complete = section.nodes.every((n) => progress.isDone(n.id));
+  const earned = section.nodes.reduce((sum, n) => sum + progress.getStars(n.id), 0);
+
+  return trackEl({
+    className: `station station--quran${unlocked ? '' : ' station--locked'}${complete ? ' station--done' : ''}`,
+    accent: QURAN_ACCENT,
+    label: `${QURAN.title}${unlocked ? '' : ' — مقفلة'}`,
+    badge: QURAN.face,
+    title: QURAN.title,
+    sub: 'كلمات ورسم المصحف وسور قصار',
+    meta: unlocked
+      ? [h('b', {}, `★ ${arNum(earned)}`), ` / ${arNum(section.nodes.length * progress.MAX_STARS)}`]
+      : '🔒 مقفلة',
+    nodes: section.nodes,
+    next,
+  });
+}
+
+/** لون العقدة في بطاقة «تابع من هنا»: لون مجموعتها، أو لون محطتها الخاصة. */
+function accentOf(node, group) {
+  if (node.type === 'quran') return QURAN_ACCENT;
+  if (node.type === 'skill' || node.type === 'story') return PAUSE_ACCENT;
+  return accentFor(group);
+}
+
 function trackEl({ className, accent, label, badge, title, sub, meta, nodes, next }) {
   const station = h('section', { class: className, css: { '--accent': accent }, 'aria-label': label },
     h('div', { class: 'station-head' },
@@ -209,7 +241,7 @@ function nodeButton(node, next) {
 function openNode(node) {
   if (node.type === 'letter') go(`#/lesson/${node.groupId}/${encodeURIComponent(node.letter)}`);
   else if (node.type === 'words') go(`#/words/${node.groupId}`);
-  else go(`#/${node.type}/${node.part}`);
+  else go(`#/${node.type}/${encodeURIComponent(node.part)}`);
 }
 
 function fillAll(stars) {
@@ -283,6 +315,9 @@ async function render() {
   } else if (name === 'story' && arg1) {
     if (!guard(`story:${decodeURIComponent(arg1)}`)) return;
     screen = renderStory(decodeURIComponent(arg1)) || renderMap();
+  } else if (name === 'quran' && arg1) {
+    if (!guard(`quran:${decodeURIComponent(arg1)}`)) return;
+    screen = renderQuran(decodeURIComponent(arg1)) || renderMap();
   } else if (name === 'review') {
     screen = renderReview();
     if (!screen) {                       // لا حصيلة للمراجعة بعدُ
@@ -335,7 +370,19 @@ function startClock() {
   }, TICK_MS);
 }
 
+// ————— العمل دون إنترنت (PWA) —————
+// عامل الخدمة يخزن الهيكل والأصوات كلها (app/sw.js)، فبعد أول فتح يعمل التطبيق
+// بلا شبكة. لا يُسجَّل من file:// (لا يقبله المتصفّح) ولا يُسقِط التطبيق إن رُفض.
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) return;
+  navigator.serviceWorker
+    .register(new URL('../sw.js', import.meta.url), { scope: './' })
+    .catch((e) => console.warn('[sw] لم يُسجَّل عامل الخدمة:', e));
+}
+
 window.addEventListener('hashchange', render);
 audio.ready();
 startClock();
 render();
+registerServiceWorker();

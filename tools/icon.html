@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>أيقونة المُعلِّم</title>
+<style>
+  /* أيقونة التطبيق: تُرسَم هنا وتُلتقط بـ tools/make_icons.py — لا أصل ثنائيّ يُحرَّر يدوياً.
+     المقاس والهامش يأتيان من الرابط: ?size=512&pad=0.20 (الهامش لأيقونة maskable). */
+  html, body { margin: 0; padding: 0; background: transparent; }
+  body { display: grid; place-items: center; }
+  .icon {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(160deg, #f7b733 0%, #f5a524 45%, #e8590c 100%);
+    color: #fff;
+    font-family: 'Noto Naskh Arabic', 'Geeza Pro', 'Al Bayan', serif;
+    font-weight: 700;
+    line-height: 1;
+    overflow: hidden;
+  }
+  .icon span { transform: translateY(-.04em); }
+</style>
+</head>
+<body>
+<script>
+  const q = new URLSearchParams(location.search);
+  const size = +(q.get('size') || 512);
+  const pad = +(q.get('pad') || 0);          // نسبة الهامش الآمن (maskable = .2)
+  const round = q.get('round') !== '0';      // الأيقونة المقنَّعة تملأ المربّع كاملاً
+
+  document.body.style.width = `${size}px`;
+  document.body.style.height = `${size}px`;
+  if (q.get('bg')) document.body.style.background = q.get('bg');
+
+  const box = document.createElement('div');
+  box.className = 'icon';
+  box.style.width = `${size}px`;
+  box.style.height = `${size}px`;
+  box.style.borderRadius = round ? `${size * 0.22}px` : '0';
+  box.style.fontSize = `${size * (1 - 2 * pad) * 0.38}px`;
+  // شعار لا مادةَ قراءة: يُكتب بلا شكل كي يبقى واضحاً في الأيقونة الصغيرة
+  box.append(Object.assign(document.createElement('span'), { textContent: 'اقرأ' }));
+  document.body.append(box);
+</script>
+</body>
+</html>
