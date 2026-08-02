@@ -1,13 +1,13 @@
 // نقطة الدخول: خريطة الرحلة (المجموعات السبع) والتوجيه بين الشاشات.
-// درس الحرف في app/js/lesson.js؛ ولعبة الكلمات (الجلسة ٣) لها هنا شاشة مؤقتة
-// تعرض الكلمات للاستماع فقط وتُستبدل بالكامل في جلستها.
+// درس الحرف في app/js/lesson.js، ولعبة تركيب الكلمات في app/js/words.js.
 
 import { GROUPS, LETTERS, HARAKAT } from './curriculum.js';
 import * as progress from './progress.js';
 import * as audio from './audio.js';
 import { renderLesson } from './lesson.js';
+import { renderWordsGame } from './words.js';
 import {
-  h, toast, go, arNum, starsRow, topbar, letterTitle, wordText,
+  h, toast, go, arNum, starsRow, topbar, letterTitle,
   ACCENTS, accentFor, DEV,
 } from './ui.js';
 
@@ -144,50 +144,6 @@ function fillAll(stars) {
   render();
 }
 
-// ————— شاشة مؤقتة: كلمات المجموعة (اللعبة في الجلسة ٣) —————
-
-function renderWords(groupId) {
-  const group = progress.findGroup(groupId);
-  if (!group) return renderMap();
-
-  audio.preload(group.words.map((w) => w.say));
-
-  return h('div', { class: 'screen', css: { '--accent': accentFor(group) } },
-    topbar(
-      h('button', { class: 'btn', onclick: () => go('#/') }, '→ الخريطة'),
-      h('span', { class: 'spacer' }),
-      h('span', { class: 'pill' }, group.title),
-    ),
-    h('main', { class: 'screen-card' },
-      h('h2', {}, 'كلمات المجموعة'),
-      h('p', { class: 'hint' }, 'اضغط الكلمة لتسمعها'),
-      h('ul', { class: 'words' }, group.words.map((word) => h('li', {},
-        h('button', {
-          class: 'word',
-          'aria-label': `اسمع كلمة ${word.say}`,
-          onclick: () => audio.play(word.say),
-        },
-          h('span', { class: 'word-emoji' }, word.emoji),
-          h('span', { class: 'word-text' }, wordText(word)),
-          h('span', { class: 'word-tiles' }, word.tiles.join(' · ')),
-        )))),
-      h('p', { class: 'note' },
-        'هذه شاشة مؤقتة للاستماع. لعبة تركيب المقاطع تُبنى في الجلسة ٣.'),
-      DEV && devStars(progress.nodeId(groupId, progress.WORDS_PART)),
-    ),
-  );
-}
-
-function devStars(nodeId) {
-  return h('div', { class: 'dev' },
-    h('div', { class: 'dev-title' }, 'أدوات التجربة — تُحذف مع بناء الشاشة الحقيقية'),
-    h('div', { class: 'dev-row' }, [1, 2, 3].map((n) => h('button', {
-      class: 'btn',
-      onclick: () => { progress.setStars(nodeId, n); toast(`${arNum(n)} ★`); go('#/'); },
-    }, `أنهِ بـ ${arNum(n)} ★`))),
-  );
-}
-
 // ————— شاشة فحص الأصوات (للمراجعة بالأذن — dev فقط) —————
 
 async function renderAudit() {
@@ -245,7 +201,7 @@ async function render() {
     screen = renderLesson(arg1, letter) || renderMap();
   } else if (name === 'words' && arg1) {
     if (!guard(arg1, progress.WORDS_PART)) return;
-    screen = renderWords(arg1);
+    screen = renderWordsGame(arg1) || renderMap();
   } else if (name === 'audio' && DEV) {
     screen = await renderAudit();
   } else {

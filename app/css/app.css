@@ -318,34 +318,9 @@ button {
   font-size: .95rem;
 }
 
-/* شبكة كلمات المجموعة (استماع) */
-.words {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
-  gap: .75rem;
-  margin: 1rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.word {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: .25rem;
-  width: 100%;
-  min-height: 7.5rem;
-  padding: .9rem .5rem;
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--accent) 8%, white);
-  border: 2px solid color-mix(in srgb, var(--accent) 25%, white);
-  transition: transform .12s ease;
-}
-
-.word:active { transform: scale(.96); }
+/* الكلمة المصوّرة (كلمة المثال في الدرس) */
 .word-emoji { font-size: 2.2rem; line-height: 1.2; }
 .word-text { font-family: var(--font-letter); font-size: 1.6rem; }
-.word-tiles { font-family: var(--font-letter); font-size: 1rem; color: var(--ink-soft); }
 
 /* ————— درس الحرف: شريط الخطوات ————— */
 
@@ -507,6 +482,158 @@ button {
   cursor: crosshair;
 }
 
+/* ————— لعبة تركيب الكلمات ————— */
+
+.wgame h2 { margin: .25rem 0 .75rem; font-size: 1.35rem; }
+.wgame .foot { margin-top: 1.5rem; }
+.wgame .next { max-width: 22rem; margin-inline: auto; }
+
+/* شريط كلمات المجموعة: صورة كل كلمة، الحالية محاطة والمنجَزة خضراء */
+.dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .4rem;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.dot {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background: #f4f0e9;
+  border: 2px solid var(--line);
+  font-size: 1.1rem;
+  line-height: 1;
+  filter: grayscale(1);
+  opacity: .55;
+}
+
+.dot--now {
+  filter: none;
+  opacity: 1;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, white);
+  transform: scale(1.15);
+}
+
+.dot--done { filter: none; opacity: 1; border-color: #2f9e44; background: #e9f8ec; }
+
+/* الصورة: زر كبير يُسمع الكلمة */
+.wgame-pic {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 8.5rem;
+  height: 8.5rem;
+  margin: 0 auto;
+  border-radius: 28px;
+  background: color-mix(in srgb, var(--accent) 8%, white);
+  border: 3px solid color-mix(in srgb, var(--accent) 25%, white);
+  transition: transform .12s ease;
+}
+
+.wgame-pic:active { transform: scale(.96); }
+.pic-emoji { font-size: 4.2rem; line-height: 1; }
+
+.pic-ear {
+  position: absolute;
+  inset-block-end: -.6rem;
+  inset-inline-start: -.6rem;
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-size: 1.1rem;
+}
+
+/* خانات المقاطع */
+.slots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .5rem;
+  margin-top: 1.5rem;
+}
+
+.slot {
+  display: grid;
+  place-items: center;
+  min-width: 4.6rem;
+  min-height: 4.6rem;
+  padding: .2rem .7rem;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--accent) 5%, white);
+  border: 3px dashed color-mix(in srgb, var(--accent) 32%, white);
+  color: var(--accent);
+  font-family: var(--font-letter);
+  font-size: 2.3rem;
+  line-height: 1.4;
+}
+
+.slot--filled {
+  border-style: solid;
+  background: color-mix(in srgb, var(--accent) 12%, white);
+  animation: pop .3s ease;
+}
+
+.slots--done .slot { border-color: #2f9e44; background: #e9f8ec; color: #2b8a3e; }
+
+/* الكلمة مجموعةً بعد اكتمالها (بحروف متصلة كما تُكتب) */
+.built:not(:empty) { margin-top: 1.25rem; }
+
+.word-built {
+  font-family: var(--font-letter);
+  font-size: 2.8rem;
+  line-height: 1.5;
+  color: #2b8a3e;
+  animation: pop .4s ease;
+}
+
+.built .hint { margin: 0; }
+
+/* بلاطات المقاطع المخلوطة */
+.tiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .6rem;
+  margin-top: 1.75rem;
+}
+
+.tile {
+  display: grid;
+  place-items: center;
+  min-width: 4.8rem;
+  min-height: 4.8rem;
+  padding: .3rem .8rem;
+  border-radius: 20px;
+  background: var(--card);
+  border: 3px solid color-mix(in srgb, var(--accent) 25%, white);
+  box-shadow: var(--shadow);
+  transition: transform .12s ease, opacity .25s ease;
+}
+
+.tile:active { transform: scale(.94); }
+
+.tile-face {
+  font-family: var(--font-letter);
+  font-size: 2.3rem;
+  line-height: 1.4;
+  color: var(--accent);
+}
+
+.tile:disabled { cursor: default; }
+.tile--used { opacity: .18; box-shadow: none; }
+.tile.bad { background: #fdecec; border-color: var(--danger); }
+
 /* الاحتفال الختامي */
 .celebrate { padding: 1rem 0 .5rem; }
 
@@ -627,12 +754,13 @@ button {
   .station-num { background: color-mix(in srgb, var(--accent) 25%, var(--card)); }
   .node-face { background: color-mix(in srgb, var(--accent) 20%, var(--card)); }
   .node--locked .node-face { background: #38312a; }
-  .giant, .word { background: color-mix(in srgb, var(--accent) 18%, var(--card)); }
-  .form-cell, .example-word, .trace { background: color-mix(in srgb, var(--accent) 16%, var(--card)); }
-  .step-dot { background: #38312a; }
-  .vchip.good { background: #24361f; }
-  .vchip.good .vchip-face { color: #8ce99a; }
-  .vchip.bad { background: #3a2222; }
+  .giant, .wgame-pic { background: color-mix(in srgb, var(--accent) 18%, var(--card)); }
+  .form-cell, .example-word, .trace, .slot { background: color-mix(in srgb, var(--accent) 16%, var(--card)); }
+  .step-dot, .dot { background: #38312a; }
+  .dot--now { background: color-mix(in srgb, var(--accent) 25%, var(--card)); }
+  .dot--done, .slots--done .slot, .vchip.good { background: #24361f; }
+  .slots--done .slot, .word-built, .vchip.good .vchip-face { color: #8ce99a; }
+  .vchip.bad, .tile.bad { background: #3a2222; }
   .note { background: #38312a; }
   .toast { background: #f5ecdf; color: #221d17; }
 }

@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><title>اختبار لعبة تركيب الكلمات</title></head>
+<body>
+<pre id="out" style="font:14px/1.6 monospace"></pre>
+<iframe id="frame" src="index.html" style="width:420px;height:900px;border:1px solid #ccc"></iframe>
+<script type="module">
+const out = document.getElementById('out');
+const results = [];
+const post = () => navigator.sendBeacon('/result',
+  new Blob([JSON.stringify(results, null, 1)], { type: 'text/plain' }));
+const ok = (cond, msg) => {
+  results.push({ ok: !!cond, msg });
+  out.textContent += `${cond ? '✓' : '✗'} ${msg}\n`;
+  post();                        // نتيجة جزئية بعد كل تحقّق كي لا يضيع التقرير عند التعليق
+};
+setTimeout(() => { ok(false, 'انتهت المهلة الكلية'); post(); }, 85000);
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function waitFor(fn, label = '', ms = 4000) {
+  const t0 = Date.now();
+  for (;;) {
+    let v; try { v = fn(); } catch { v = null; }
+    if (v) return v;
+    if (Date.now() - t0 > ms) throw new Error('انتظار طويل: ' + label);
+    await sleep(25);
+  }
+}
+
+const { GROUPS } = await import('./js/curriculum.js');   // بيانات المنهج مصدرها الوحيد
+const manifest = await (await fetch('audio/manifest.json')).json();
+const frame = document.getElementById('frame');
+
+const played = [];      // نصوص شُغِّلت من الملفات المولَّدة
+const spoken = [];      // ما لجأ إلى النطق الآلي (يجب أن يبقى فارغاً)
+const jsErrors = [];
+let win, doc;
+
+/** يربط الأدوات بنافذة الإطار الحالية ويعزل الصوت عن فكّ الترميز. */
+function attach() {
+  win = frame.contentWindow;
+  doc = frame.contentDocument;
+  win.addEventListener('error', (e) => jsErrors.push(String(e.message)));
+  win.addEventListener('unhandledrejection', (e) => jsErrors.push('رفض غير معالَج: ' + e.reason));
+  win.Audio = class extends win.EventTarget {
+    constructor(src = '') { super(); this.src = src; this.preload = ''; this.currentTime = 0; }
+    play() {
+      const key = (this.src.split('/').pop() || '').replace('.mp3', '');
+      played.push(manifest[key] ?? `?${key}`);
+      setTimeout(() => this.dispatchEvent(new Event('ended')), 5);
+      return Promise.resolve();
+    }
+    pause() {}
+  };
+  win.SpeechSynthesisUtterance = class { constructor(text) { spoken.push(text); this.text = text; } };
+}
+
+/** يزرع تقدّماً معيّناً ثم يعيد تحميل التطبيق عليه. */
+async function seed(nodeIds) {
+  win.localStorage.setItem('muallim.progress.v1', JSON.stringify({
+    v: 1,
+    stars: Object.fromEntries(nodeIds.map((k) => [k, 3])),
+    seconds: 0, errors: {}, startedAt: Date.now(), updatedAt: Date.now(),
+  }));
+  const done = new Promise((r) => frame.addEventListener('load', r, { once: true }));
+  frame.src = 'index.html';
+  await done;
+  attach();
+  await sleep(120);
+}
+
+await new Promise((r) => frame.addEventListener('load', r, { once: true }));
+attach();
+
+const $ = (sel) => doc.querySelector(sel);
+const $$ = (sel) => [...doc.querySelectorAll(sel)];
+const texts = (sel) => $$(sel).map((el) => el.textContent.trim());
+const bare = (s) => s.replace(/[ً-ْٰـ\s]/g, '');
+const lastPlayed = () => played[played.length - 1];
+const btn = (label) => $$('.btn').find((b) => b.textContent.includes(label));
+
+async function goto(hash) {
+  win.location.hash = hash;
+  await sleep(120);
+}
+
+/** كل حرف عربي معروض للقراءة ⊆ المدروس — مفكوكية ١٠٠٪. */
+function assertDecodable(studied, where) {
+  const shown = new Set([...bare(texts('.slot, .tile-face, .word-built').join(''))]
+    .filter((c) => /[ء-ي]/.test(c)));
+  const bad = [...shown].filter((c) => !studied.includes(c));
+  ok(bad.length === 0, `${where}: لا حرف غير مدروس على اللوح${bad.length ? ' — ' + bad.join('،') : ''}`);
+}
+
+/** كل ما يُنقَر عليه في اللعبة ≥ ٤٨ بكسل (إصبع طفل على آيباد). */
+function checkTargets(where) {
+  const small = $$('.wgame button')
+    .map((el) => [el, el.getBoundingClientRect()])
+    .filter(([, r]) => r.width && (r.height < 48 || r.width < 48))
+    .map(([el]) => el.className);
+  ok(small.length === 0, `${where}: أهداف اللمس ≥٤٨ بكسل${small.length ? ' — ' + small.join('،') : ''}`);
+}
+
+const tileFace = (b) => b.querySelector('.tile-face').textContent;
+
+/** ينقر البلاطة الصحيحة التالية (أول بلاطة حيّة بهذا النص — الكلمة قد تكرّر مقطعاً). */
+async function place(text) {
+  const b = await waitFor(() => $$('.tile:not([disabled])').find((t) => tileFace(t) === text),
+    `بلاطة «${text}»`);
+  b.click();
+  await sleep(35);
+  return b;
+}
+
+try {
+  // ————— القفل محروس في التوجيه: لعبة مجموعة لم تُفتح بعد —————
+  await seed(['g1:ا', 'g1:ب', 'g1:م', 'g1:ل']);
+  await goto('#/words/g2');
+  ok(!!$('.station'), 'لعبة مجموعة مقفلة تعيد الطفل إلى الخريطة');
+
+  // ————— لعبة المجموعة الأولى: لوح كامل بخطأ واحد مقصود —————
+  const g1 = GROUPS[0];
+  await goto('#/words/g1');
+  await waitFor(() => $('.tiles'), 'لوح اللعبة');
+  ok($$('.dot').length === g1.words.length, `شريط كلمات المجموعة: ${g1.words.length} صور`);
+  ok($$('.dot--now').length === 1 && $$('.dot')[0].classList.contains('dot--now'), 'الكلمة الأولى هي الحالية');
+
+  const w1 = g1.words[0];                                   // بابا: مقطعان متكرّران
+  ok(texts('.pic-emoji')[0] === w1.emoji, `الصورة معروضة (${texts('.pic-emoji')[0]})`);
+  ok($$('.slot').length === w1.tiles.length, `خانات بعدد المقاطع (${$$('.slot').length})`);
+  ok($$('.tile').length === w1.tiles.length + 1,
+    `بلاطات = مقاطع الكلمة + مشتّت (${$$('.tile').length})`);
+  const extra = $$('.tile').map(tileFace).filter((t) => !w1.tiles.includes(t));
+  ok(extra.length === 1, `المشتّت واحد ولا يطابق مقاطع الكلمة (${extra.join('،')})`);
+  assertDecodable('ابمل', 'لوح «بابا»');
+  checkTargets('لوح اللعبة');
+
+  const slotBoxes = $$('.slot').map((s) => s.getBoundingClientRect());
+  ok(slotBoxes[0].left > slotBoxes[1].left, 'الخانة الأولى يمين الثانية (ترتيب القراءة العربية)');
+
+  $('.wgame-pic').click();
+  await sleep(50);
+  ok(lastPlayed() === w1.say, `الصورة تُسمع الكلمة كاملة (${lastPlayed()})`);
+
+  // خطأ مقصود: بلاطة المشتّت
+  const wrong = $$('.tile').find((t) => tileFace(t) === extra[0]);
+  wrong.click();
+  await sleep(60);
+  ok(wrong.classList.contains('bad'), 'البلاطة الخاطئة تُعلَّم وتُهزّ');
+  ok(!wrong.disabled && $('.slot').textContent === '', 'الخطأ لا يملأ خانة ولا يستهلك البلاطة');
+  ok(lastPlayed() === extra[0], `الخطأ يُسمع المقطع المختار ليقارنه (${lastPlayed()})`);
+
+  const first = await place(w1.tiles[0]);
+  ok(first.disabled && first.classList.contains('tile--used'), 'البلاطة الصحيحة تُستهلك');
+  ok($$('.slot')[0].textContent === w1.tiles[0], `الخانة الأولى امتلأت بـ«${w1.tiles[0]}»`);
+  ok(lastPlayed() === w1.tiles[0], `المقطع يُسمع عند وضعه (${lastPlayed()})`);
+  await place(w1.tiles[1]);
+  await waitFor(() => $('.word-built'), 'الكلمة مجموعةً');
+  ok($('.word-built').textContent === w1.tiles.join(''), `الكلمة تظهر متصلة (${$('.word-built').textContent})`);
+  ok($('.slots').classList.contains('slots--done'), 'الخانات تتلوّن بالإتمام');
+  await waitFor(() => lastPlayed() === w1.say, 'صوت الكلمة كاملة');
+  ok(true, `الإتمام يُسمع الكلمة كاملة (${lastPlayed()})`);
+
+  // الانتقال التلقائي بعد سماع الكلمة (طريق الطفل الافتراضي)
+  await waitFor(() => $$('.dot')[1].classList.contains('dot--now'), 'الانتقال التلقائي', 3500);
+  ok(true, 'الانتقال إلى الكلمة التالية تلقائياً بعد سماعها');
+
+  // بقية كلمات المجموعة بزرّ «التالي»
+  for (let i = 1; i < g1.words.length; i++) {
+    for (const t of g1.words[i].tiles) await place(t);
+    await waitFor(() => $('.next'), 'زر التالي');
+    await waitFor(() => lastPlayed() === g1.words[i].say, `صوت ${g1.words[i].say}`);
+    $('.next').click();
+    await sleep(80);
+  }
+
+  await waitFor(() => $('.celebrate'), 'شاشة الاحتفال');
+  ok($$('.big-stars .on').length === 2, `خطأ واحد ⇒ نجمتان (${$$('.big-stars .on').length})`);
+  ok(JSON.parse(win.localStorage.getItem('muallim.progress.v1')).stars['g1:words'] === 2,
+    'النجمتان محفوظتان في localStorage');
+  ok(!!$$('.note').find((n) => n.textContent.includes('المجموعة الثانية')),
+    'الاحتفال يبشّر بفتح المجموعة التالية');
+  ok($$('.dot--done').length === g1.words.length, 'كل صور المجموعة صارت منجَزة');
+
+  $('.celebrate .btn--primary').click();
+  await waitFor(() => $('.station'), 'العودة للخريطة');
+  ok(!$$('.station')[1].classList.contains('station--locked'), 'المجموعة الثانية فُتحت على الخريطة');
+  ok($('[data-next]')?.getAttribute('aria-label')?.includes('نون'), 'الخريطة تشير إلى حرف النون تالياً');
+
+  // ————— كل كلمات المجموعات السبع قابلة للعب —————
+  const all = GROUPS.flatMap((g) => [...g.letters.map((l) => `${g.id}:${l}`), `${g.id}:words`]);
+  await seed(all);
+
+  for (const g of GROUPS) {
+    const from = played.length;
+    const trouble = [];
+    await goto(`#/words/${g.id}`);
+    await waitFor(() => $('.tiles'), `لوح ${g.title}`);
+    const studied = GROUPS.slice(0, GROUPS.indexOf(g) + 1).flatMap((x) => x.letters).join('');
+
+    for (const word of g.words) {
+      if ($$('.slot').length !== word.tiles.length) trouble.push(`خانات «${word.say}»`);
+      const board = $$('.tile').map(tileFace);
+      if (board.length !== word.tiles.length + (word.tiles.length <= 2 ? 1 : 2)) {
+        trouble.push(`بلاطات «${word.say}» (${board.length})`);
+      }
+      if ([...bare(board.join(''))].some((c) => /[ء-ي]/.test(c) && !studied.includes(c))) {
+        trouble.push(`مفكوكية «${word.say}»`);
+      }
+      for (const t of word.tiles) await place(t);
+      await waitFor(() => $('.word-built'), `إتمام «${word.say}»`);
+      if ($('.word-built').textContent !== word.tiles.join('')) trouble.push(`رسم «${word.say}»`);
+      await waitFor(() => lastPlayed() === word.say, `صوت «${word.say}»`);
+      (await waitFor(() => $('.next'), 'زر التالي')).click();
+      await sleep(70);
+    }
+
+    await waitFor(() => $('.celebrate'), `احتفال ${g.title}`);
+    const heard = new Set(played.slice(from));
+    const silent = g.words.flatMap((w) => [...w.tiles, w.say]).filter((t) => !heard.has(t));
+    ok(trouble.length === 0 && silent.length === 0,
+      `${g.title}: ${g.words.length} كلمات بُنيت كلها وسُمع كل مقطع وكل كلمة`
+      + (trouble.length ? ' — ' + trouble.join('،') : '')
+      + (silent.length ? ' — بلا صوت: ' + silent.join('،') : ''));
+  }
+
+  // ————— الصوت والأخطاء —————
+  const missing = played.filter((t) => t.startsWith('?'));
+  ok(missing.length === 0, `كل ما شُغِّل له ملف مولَّد (${played.length} تشغيلاً، ${missing.length} ناقصاً)`);
+  ok(spoken.length === 0, `لم يُستعمل النطق الآلي الاحتياطي (${spoken.length})`);
+  ok(jsErrors.length === 0, `لا أخطاء جافاسكربت (${jsErrors.join(' | ') || 'لا شيء'})`);
+} catch (e) {
+  ok(false, 'استثناء: ' + ((e && e.stack) || e));
+}
+
+await fetch('/result', { method: 'POST', body: JSON.stringify(results, null, 1) });
+</script>
+</body>
+</html>

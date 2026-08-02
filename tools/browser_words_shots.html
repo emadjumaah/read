@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>لقطات لعبة تركيب الكلمات</title>
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+    body { padding: 1rem; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; align-items: start; }
+    .cell { background: rgba(255,255,255,.35); border-radius: 24px; padding: .5rem; }
+    .cell > h4 { margin: .2rem 0 .4rem; text-align: center; color: #b8720a; }
+    .app { max-width: none; padding: 0; }
+    .dev { display: none; }   /* أدوات التجربة تُستعمل للقيادة فقط ولا تدخل اللقطة */
+  </style>
+</head>
+<body>
+<div id="toast" class="toast" hidden></div>
+<div class="grid" id="grid"></div>
+
+<!-- تقدّم مزروع قبل تحميل الوحدات: حروف المجموعة الأولى منجَزة، فتُفتح الثانية بإتمام اللعبة -->
+<script>
+  localStorage.setItem('muallim.progress.v1', JSON.stringify({
+    v: 1,
+    stars: { 'g1:ا': 3, 'g1:ب': 3, 'g1:م': 3, 'g1:ل': 3 },
+    seconds: 0, errors: {}, startedAt: Date.now(), updatedAt: Date.now(),
+  }));
+</script>
+
+<script type="module">
+import { renderWordsGame } from './js/words.js';
+
+// صوت لا ينتهي أبداً: تُجمَّد الحالة المعروضة فلا ينتقل اللوح تلقائياً قبل اللقطة
+window.Audio = class { play() { return new Promise(() => {}); } pause() {} };
+
+const grid = document.getElementById('grid');
+const $$ = (root, sel) => [...root.querySelectorAll(sel)];
+const face = (el) => el.querySelector('.tile-face').textContent;
+
+function instance(title, drive) {
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  cell.innerHTML = `<h4>${title}</h4>`;
+  const app = document.createElement('div');
+  app.className = 'app';
+  app.append(renderWordsGame('g1'));
+  cell.append(app);
+  grid.append(cell);
+  drive(app);
+}
+
+/** ينقر البلاطات بترتيب مقاطع الكلمة المعروضة (عدد الخانات = عدد المقاطع). */
+function build(app, count) {
+  for (let i = 0; i < count; i++) {
+    const want = ['بَا', 'بَا'][i];
+    $$(app, '.tile:not([disabled])').find((t) => face(t) === want)?.click();
+  }
+}
+
+instance('١ — لوح الكلمة', () => {});
+instance('٢ — مقطع في مكانه ومشتّت مرفوض', (app) => {
+  build(app, 1);
+  const wrong = $$(app, '.tile:not([disabled])').find((t) => !['بَا'].includes(face(t)));
+  wrong.classList.add('bad');     // الحالة تُثبَّت للّقطة (تزول في اللعب بعد ٧٠٠ملّي)
+});
+instance('٣ — الكلمة اكتملت', (app) => build(app, 2));
+instance('٤ — الاحتفال وفتح المجموعة التالية', (app) => {
+  $$(app, '.btn').find((b) => b.textContent.includes('إنهاء اللعبة')).click();
+});
+</script>
+</body>
+</html>
