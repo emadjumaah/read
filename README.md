@@ -37,6 +37,9 @@ python3 -m http.server 8000 -d app
 .venv/bin/python tools/generate_audio.py --verify-only   # تحقّق: لا ناقص ولا يتيم ولا مبتور
 .venv/bin/python tools/generate_audio.py --engine edge   # المحرّك الاحتياطي (مايكروسوفت)
 
+.venv/bin/python tools/generate_audio.py --queue-status   # قائمة الانتظار (docs/AUDIO_QUEUE.md)
+.venv/bin/python tools/generate_audio.py --from-queue --rpm 8   # تصريف القائمة على حصة اليوم
+
 .venv/bin/python tools/recording_list.py                 # قائمة تسجيل للمعلّم البشري
 .venv/bin/python tools/import_recordings.py ~/rec        # استيراد التسجيلات (قصّ + تطبيع)
 ```
@@ -47,9 +50,12 @@ python3 -m http.server 8000 -d app
 
 ```bash
 python3 tools/check_decodable.py     # المفكوكية والتغطية
-node tools/test_progress.mjs         # قواعد القفل والنجوم
+python3 tools/test_queue.py          # تصريف قائمة الانتظار الصوتية (بلا شبكة)
+node tools/test_progress.mjs         # قواعد القفل والنجوم وسجلّ المهارات والتكرار المتباعد
 node tools/test_lesson.mjs           # مفكوكية جولات درس الحرف
 node tools/test_words.mjs            # مفكوكية ألواح لعبة الكلمات وتغطية أصواتها
+node tools/test_review.mjs           # جلسة المراجعة (مفكوكيتها وتغطية أصواتها) واللوحة
 python3 tools/browser_test.py        # درس الحرف في Chrome حقيقي
-python3 tools/browser_test.py --words   # لعبة الكلمات في Chrome حقيقي (المجموعات السبع)
+python3 tools/browser_test.py --words    # لعبة الكلمات في Chrome حقيقي (المجموعات السبع)
+python3 tools/browser_test.py --review   # المراجعة اليومية ولوحة وليّ الأمر في Chrome حقيقي
 ```

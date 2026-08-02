@@ -20,6 +20,7 @@
 import argparse
 import asyncio
 import base64
+import datetime
 import hashlib
 import json
 import os
@@ -36,6 +37,8 @@ ROOT = Path(__file__).resolve().parent.parent
 CURRICULUM = ROOT / "app" / "js" / "curriculum.js"
 OUT_DIR = ROOT / "app" / "audio"
 ENV_FILE = ROOT / ".env"
+QUEUE_FILE = ROOT / "tools" / "audio_queue.json"
+TODAY = datetime.date.today().isoformat()
 
 HARAKAT = {"fatha": "َ", "kasra": "ِ", "damma": "ُ"}
 
@@ -49,12 +52,17 @@ STYLE = {
     "letter_haraka": "انطق بتأنٍّ شديد ووضوح تام، بمخرج صحيح، كمعلم قرآن يعلّم طفلاً في السادسة: ",
     "syllable": "انطق هذا المقطع بتأنٍّ ووضوح لطفل يتعلم التهجئة: ",
     "word": "انطق الكلمة بوضوح وودّ لطفل: ",
+    # فئتان تخصّان قائمة الانتظار (docs/AUDIO_QUEUE.md)
+    "sentence": "اقرأ هذه الجملة بتأنٍّ ووضوح وودّ، كمعلم يقرأ لطفل في السادسة: ",
+    "story_word": "انطق الكلمة بوضوح وودّ لطفل يتابع قصة: ",
 }
 CATEGORY_AR = {
     "letter_name": "اسم حرف",
     "letter_haraka": "حرف بحركة",
     "syllable": "مقطع",
     "word": "كلمة",
+    "sentence": "جملة",
+    "story_word": "كلمة قصة",
 }
 # الأدقّ أولاً: نصّ ورد في موضعين يأخذ فئته الأضيق.
 CATEGORY_ORDER = ["letter_name", "letter_haraka", "syllable", "word"]
@@ -165,11 +173,14 @@ def parse_429(body: str) -> tuple[bool, int]:
     return per_day, seconds
 
 
-def gemini_pcm(text: str, category: str, model: str, voice: str, api_key: str,
+def gemini_pcm(text: str, style: str, model: str, voice: str, api_key: str,
                retries: int = 5) -> tuple[bytes, int]:
-    """يعيد (PCM خام 16-bit little-endian، معدّل العيّنات). يعيد المحاولة عند 429/5xx."""
+    """يعيد (PCM خام 16-bit little-endian، معدّل العيّنات). يعيد المحاولة عند 429/5xx.
+
+    `style` تعليمة الأداء التي تسبق النص (لا تُنطق) — انظر STYLE.
+    """
     body = json.dumps({
-        "contents": [{"parts": [{"text": STYLE[category] + text}]}],
+        "contents": [{"parts": [{"text": style + text}]}],
         "generationConfig": {
             "responseModalities": ["AUDIO"],
             "speechConfig": {
@@ -282,8 +293,9 @@ def is_same_as(path: Path, ref_dir: Path) -> bool:
 def synthesize_gemini(texts: dict, model: str, voice: str, force: bool, api_key: str,
                       replace_same_as: Path | None = None, dry_run: bool = False) -> int:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    # الفهرس يُبنى كاملاً قبل التوليد كي يبقى صحيحاً حتى لو توقّف التوليد في منتصفه.
-    manifest = {key_for(t): t for t in texts}
+    # الفهرس يُبنى كاملاً قبل التوليد كي يبقى صحيحاً حتى لو توقّف التوليد في منتصفه،
+    # ويضمّ منجَز قائمة الانتظار كي لا يسقط منه ما صُرِّف سابقاً.
+    manifest = manifest_map()
     made = skipped = failed = 0
     total = len(texts)
 
@@ -298,7 +310,7 @@ def synthesize_gemini(texts: dict, model: str, voice: str, force: bool, api_key:
             print(f"  [{i}/{total}] ⟶ {text} ({CATEGORY_AR[cat]}) → {path.name}")
             continue
         try:
-            pcm, rate = gemini_pcm(text, cat, model, voice, api_key)
+            pcm, rate = gemini_pcm(text, STYLE[cat], model, voice, api_key)
             pcm_to_mp3(pcm, rate, path)
             made += 1
             print(f"  [{i}/{total}] ✓ {text} ({CATEGORY_AR[cat]}) → {path.name} "
@@ -323,12 +335,11 @@ async def synthesize_edge(texts: dict, voice: str, force: bool) -> int:
     import edge_tts
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    manifest, made, skipped, failed = {}, 0, 0, 0
+    manifest = manifest_map()
+    made = skipped = failed = 0
 
     for text in texts:
-        key = key_for(text)
-        manifest[key] = text
-        path = OUT_DIR / f"{key}.mp3"
+        path = OUT_DIR / f"{key_for(text)}.mp3"
         if path.exists() and not force:
             skipped += 1
             continue
@@ -354,8 +365,12 @@ def write_manifest(manifest: dict) -> None:
     print(f"الفهرس: {OUT_DIR / 'manifest.json'} ({len(manifest)} نصاً)")
 
 
-def verify(texts: dict, min_bytes: int = 1500) -> int:
-    """تحقّق ختامي: لكل نص ملف، ولا ملف يتيم، ولا ملف أصغر من الحد المعقول."""
+def verify(texts: dict, pending: dict | None = None, min_bytes: int = 1500) -> int:
+    """تحقّق ختامي: لكل نص متوقَّع ملف، ولا ملف يتيم، ولا ملف أصغر من الحد المعقول.
+
+    `pending` = نصوص قائمة الانتظار التي لم تُصرَّف بعد: غيابها متوقَّع لا خطأ.
+    """
+    pending = pending or {}
     problems = []
     keys = {key_for(t) for t in texts}
     on_disk = {p.stem for p in OUT_DIR.glob("*.mp3")}
@@ -365,14 +380,16 @@ def verify(texts: dict, min_bytes: int = 1500) -> int:
             problems.append(f"ناقص: {t}")
         elif p.stat().st_size < min_bytes:
             problems.append(f"صغير جداً ({p.stat().st_size}B): {t}")
-    for orphan in sorted(on_disk - keys):
-        problems.append(f"يتيم (لا نصّ له في المنهج): {orphan}.mp3")
+    for orphan in sorted(on_disk - keys - {key_for(t) for t in pending}):
+        problems.append(f"يتيم (لا نصّ له في المنهج ولا في القائمة): {orphan}.mp3")
 
-    print(f"\nالتحقّق الختامي: {len(texts)} نصاً، {len(on_disk)} ملفاً على القرص.")
+    print(f"\nالتحقّق الختامي: {len(texts)} نصاً متوقَّعاً، {len(on_disk)} ملفاً على القرص.")
+    if pending:
+        print(f"  ⏳ {len(pending)} نصاً في قائمة الانتظار لم يُصرَّف بعد (غيابها متوقَّع).")
     for p in problems:
         print(f"  ✗ {p}", file=sys.stderr)
     if not problems:
-        print("  ✓ كل نصّ له ملفه، ولا يتيم، ولا ملف مبتور.")
+        print("  ✓ كل نصّ متوقَّع له ملفه، ولا يتيم، ولا ملف مبتور.")
     return len(problems)
 
 
@@ -385,6 +402,112 @@ def archive_current(dest: Path) -> None:
             shutil.copy2(f, dest / f.name)
             n += 1
     print(f"حُفظت نسخة من {n} ملفاً في {dest.relative_to(ROOT)}/")
+
+
+# ————————————————————————— قائمة الانتظار (docs/AUDIO_QUEUE.md) —————————————————————————
+
+def load_queue() -> list:
+    """قائمة النصوص المطلوبة من جلسات التطوير — تُنشأ فارغة إن لم تكن موجودة."""
+    if not QUEUE_FILE.exists():
+        return []
+    try:
+        data = json.loads(QUEUE_FILE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        sys.exit(f"{QUEUE_FILE.name} ليس JSON صالحاً: {e}")
+    if not isinstance(data, list):
+        sys.exit(f"{QUEUE_FILE.name} يجب أن يكون مصفوفة JSON")
+    for i, entry in enumerate(data):
+        if not isinstance(entry, dict) or not entry.get("text"):
+            sys.exit(f"مدخل {i} في {QUEUE_FILE.name} بلا نصّ")
+        cat = entry.get("category", "word")
+        if cat not in STYLE:
+            sys.exit(f"مدخل {i}: فئة غير معروفة «{cat}» — المتاح: {'، '.join(STYLE)}")
+    return data
+
+
+def save_queue(queue: list) -> None:
+    QUEUE_FILE.write_text(json.dumps(queue, ensure_ascii=False, indent=2) + "\n",
+                          encoding="utf-8")
+
+
+def queue_pending(queue: list) -> list:
+    """المصفوفون بالأولوية (الأصغر أسبق) ثم بالأقدمية (ترتيب الإضافة)."""
+    pending = [(i, e) for i, e in enumerate(queue) if e.get("status", "pending") != "done"]
+    pending.sort(key=lambda p: (p[1].get("priority", 100), p[0]))
+    return pending
+
+
+def queue_texts(queue: list, status: str) -> dict:
+    """نصوص القائمة بحالة معيّنة ← فئتها."""
+    return {e["text"]: e.get("category", "word")
+            for e in queue if e.get("status", "pending") == status}
+
+
+def manifest_map() -> dict:
+    """مفتاح ← نصّ لكل ما يُتوقَّع أن له ملفاً (المنهج + منجَز القائمة)."""
+    texts, _ = expected_texts()
+    return {key_for(t): t for t in texts}
+
+
+def expected_texts() -> tuple[dict, dict]:
+    """(المتوقع أن له ملف = المنهج + منجَز القائمة، المصفوف انتظاراً)."""
+    texts = parse_curriculum(CURRICULUM.read_text(encoding="utf-8"))
+    queue = load_queue()
+    texts.update(queue_texts(queue, "done"))
+    return texts, queue_texts(queue, "pending")
+
+
+def style_for(entry: dict) -> str:
+    hint = (entry.get("style_hint") or "").strip()
+    if hint:
+        return hint.rstrip(":：").rstrip() + ": "
+    return STYLE[entry.get("category", "word")]
+
+
+def drain_queue(model: str, voice: str, api_key: str, dry_run: bool = False) -> int:
+    """تصريف القائمة بالترتيب على حصة اليوم — يتوقف نظيفاً عند نفاد الحصة."""
+    queue = load_queue()
+    pending = queue_pending(queue)
+    if not pending:
+        print("قائمة الانتظار فارغة — لا شيء يُصرَّف.")
+        return 0
+
+    print(f"قائمة الانتظار: {len(pending)} نصاً منتظِراً من {len(queue)}.")
+    made = failed = 0
+    for n, (idx, entry) in enumerate(pending, 1):
+        text = entry["text"]
+        cat = entry.get("category", "word")
+        path = OUT_DIR / f"{key_for(text)}.mp3"
+        label = f"[{n}/{len(pending)}] {text} ({CATEGORY_AR[cat]}، أولوية {entry.get('priority', 100)})"
+        if dry_run:
+            print(f"  ⟶ {label} → {path.name}")
+            made += 1
+            continue
+        try:
+            pcm, rate = gemini_pcm(text, style_for(entry), model, voice, api_key)
+            pcm_to_mp3(pcm, rate, path)
+            queue[idx]["status"] = "done"
+            queue[idx]["doneAt"] = TODAY
+            save_queue(queue)                 # بعد كل نصّ: انقطاعٌ لا يفقد تقدّماً
+            made += 1
+            print(f"  ✓ {label} → {path.name} {path.stat().st_size // 1024}KB")
+        except QuotaExhausted as e:
+            print(f"\n  ⏸ {e}  (صُرِّف {made} وبقي {len(pending) - made})", file=sys.stderr)
+            print(f"RETRY_AFTER_SECONDS={e.seconds}")
+            break
+        except Exception as e:  # noqa: BLE001
+            failed += 1
+            print(f"  ✗ {label}: {e}", file=sys.stderr)
+
+    if dry_run:
+        print(f"\nسيُصرَّف: {made} (تجربة جافّة — لم يُطلب شيء)")
+        return 0
+
+    texts, _ = expected_texts()
+    write_manifest({key_for(t): t for t in texts})
+    left = len(queue_pending(load_queue()))
+    print(f"\nتم التصريف: {made} مولّد، {failed} فشل، {left} ما زال منتظِراً.")
+    return failed
 
 
 # ————————————————————————— المفاضلة —————————————————————————
@@ -421,7 +544,7 @@ def run_audition(out_dir: Path, api_key: str, models, voices, force: bool,
                 if page_only:                       # إعادة بناء الصفحة مما على القرص فقط
                     continue
                 try:
-                    pcm, rate = gemini_pcm(text, cat, model, voice, api_key)
+                    pcm, rate = gemini_pcm(text, STYLE[cat], model, voice, api_key)
                     pcm_to_mp3(pcm, rate, path)
                     rows.append((model, voice, text, cat, name, path.stat().st_size))
                     print(f"  [{i}/{total}] ✓ {model} · {voice} · {text}")
@@ -521,6 +644,10 @@ def main():
     ap.add_argument("--dry-run", action="store_true", help="عرض ما سيُولَّد بلا أي طلب")
     ap.add_argument("--rpm", type=float, default=8.0,
                     help="سقف الطلبات في الدقيقة (افتراضي ٨ — دون حدّ النموذج ١٠)")
+    ap.add_argument("--from-queue", action="store_true",
+                    help="تصريف tools/audio_queue.json بالأولوية فالأقدمية (docs/AUDIO_QUEUE.md)")
+    ap.add_argument("--queue-status", action="store_true",
+                    help="عرض حالة القائمة ونصوصها المنتظِرة (JSON) بلا أي طلب")
     ap.add_argument("--verify-only", action="store_true", help="تحقّق ختامي بلا توليد")
     ap.add_argument("--archive-current", metavar="DIR", nargs="?", const="archive/audio-edge",
                     help="نسخ أصوات app/audio الحالية إلى مجلد أرشيف ثم الخروج")
@@ -536,12 +663,31 @@ def main():
         archive_current(ROOT / args.archive_current)
         return
 
-    texts = parse_curriculum(CURRICULUM.read_text(encoding="utf-8"))
+    texts, pending = expected_texts()
+    if args.queue_status:
+        queue = load_queue()
+        waiting = queue_pending(queue)
+        print(f"قائمة الانتظار ({QUEUE_FILE.relative_to(ROOT)}): "
+              f"{len(waiting)} منتظِراً، {len(queue) - len(waiting)} مُصرَّفاً.")
+        print(json.dumps([e["text"] for _i, e in waiting], ensure_ascii=False))
+        return
     if args.verify_only:
-        sys.exit(1 if verify(texts) else 0)
+        sys.exit(1 if verify(texts, pending) else 0)
 
     api_key = read_env_key()
     engine = args.engine or ("gemini" if api_key else "edge")
+
+    if args.from_queue:
+        if not api_key:
+            sys.exit("التصريف يحتاج GEMINI_API_KEY في البيئة أو .env")
+        set_rpm(args.rpm)
+        print(f"تصريف القائمة · النموذج {args.model} · الصوت {args.tts_voice} "
+              f"· ≤{args.rpm:g} طلب/دقيقة")
+        failed = drain_queue(args.model, args.tts_voice, api_key, args.dry_run)
+        if args.dry_run:
+            return
+        texts, pending = expected_texts()
+        sys.exit(1 if (failed or verify(texts, pending)) else 0)
 
     if args.audition:
         if not api_key and not args.page_only:
@@ -554,10 +700,12 @@ def main():
         )
         sys.exit(1 if failed else 0)
 
+    # التوليد العام على نصوص المنهج وحدها؛ نصوص القائمة يصرّفها --from-queue.
+    curriculum = parse_curriculum(CURRICULUM.read_text(encoding="utf-8"))
     counts = {}
-    for cat in texts.values():
+    for cat in curriculum.values():
         counts[cat] = counts.get(cat, 0) + 1
-    print(f"عدد النصوص المستخرجة من المنهج: {len(texts)}  "
+    print(f"عدد النصوص المستخرجة من المنهج: {len(curriculum)}  "
           + "، ".join(f"{CATEGORY_AR[c]}: {n}" for c, n in counts.items()))
 
     if engine == "gemini":
@@ -571,7 +719,7 @@ def main():
             ref = ROOT / args.replace_same_as
             if not ref.is_dir():
                 sys.exit(f"مجلد المرجع غير موجود: {ref}")
-        failed = synthesize_gemini(texts, args.model, args.tts_voice, args.force, api_key,
+        failed = synthesize_gemini(curriculum, args.model, args.tts_voice, args.force, api_key,
                                    ref, args.dry_run)
         if args.dry_run:
             return
@@ -581,9 +729,9 @@ def main():
         except ImportError:
             sys.exit("ثبّت الحزمة أولاً:  pip install edge-tts")
         print(f"المحرّك: edge-tts · الصوت {args.voice}")
-        failed = asyncio.run(synthesize_edge(texts, args.voice, args.force))
+        failed = asyncio.run(synthesize_edge(curriculum, args.voice, args.force))
 
-    problems = verify(texts)
+    problems = verify(texts, pending)
     sys.exit(1 if (failed or problems) else 0)
 
 
