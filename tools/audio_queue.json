@@ -1,1 +1,530 @@
-[]
+[
+  {
+    "text": "الفتحة قبل الألف تُمَدّ، والضمة قبل الواو، والكسرة قبل الياء.",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الحرف الساكن لا حركة له، تصله بما قبله ثم تقف عليه.",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشدّة حرفان: ساكن ثم متحرّك، يُنطقان حرفاً واحداً قويّاً.",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "سُكْ كَرْ",
+    "category": "syllable",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "سُكَّرْ",
+    "category": "word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "سُلْ لَمْ",
+    "category": "syllable",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "سُلَّمْ",
+    "category": "word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "دُكْ كَانْ",
+    "category": "syllable",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "دُكَّانْ",
+    "category": "word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "التنوين نون ساكنة في آخر الكلمة، تُنطق ولا تُكتب.",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "بً",
+    "category": "letter_haraka",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "بٌ",
+    "category": "letter_haraka",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "بٍ",
+    "category": "letter_haraka",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "بَابٌ",
+    "category": "word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "قَلَمٌ",
+    "category": "word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "وَلَدٌ",
+    "category": "word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "اللام القمرية تُنطق ساكنة، واللام الشمسية لا تُنطق ويُشدَّد ما بعدها.",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقَمَرْ",
+    "category": "word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشَّمْسْ",
+    "category": "word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْبَابْ",
+    "category": "word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الدَّارْ",
+    "category": "word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْفِيلْ",
+    "category": "word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "السَّمَكْ",
+    "category": "word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "بَيْتُ سَامِي",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "سَامِي وَلَدْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "سَامِي",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "وَلَدْ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "بَيْتُ سَامِي كَبِيرْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "بَيْتُ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "كَبِيرْ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "فِي الْبَيْتِ سُلَّمْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْبَيْتِ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "مَعَ سَامِي كَلْبْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "مَعَ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "كَلْبْ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْكَلْبُ نَامْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْكَلْبُ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "نَامْ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "جَمَلُ حَسَنْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "حَسَنٌ وَلَدٌ كَبِيرْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "حَسَنٌ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "لِحَسَنٍ جَمَلْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "لِحَسَنٍ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "جَمَلْ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْجَمَلُ يَحْمِلُ الْحَلِيبْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْجَمَلُ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "يَحْمِلُ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحَلِيبْ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "حَسَنٌ يُحِبُّ جَمَلَهْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "يُحِبُّ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "جَمَلَهْ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشَّمْسُ وَالْمَطَرْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "طَلَعَتِ الشَّمْسْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "طَلَعَتِ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "زَيْدٌ يَلْعَبُ فِي الشَّارِعْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "زَيْدٌ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "يَلْعَبُ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشَّارِعْ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "نَزَلَ الْمَطَرْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "نَزَلَ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَطَرْ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "رَجَعَ زَيْدٌ لِلدَّارْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "رَجَعَ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "لِلدَّارْ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "زَيْدٌ سَعِيدْ",
+    "category": "sentence",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "سَعِيدْ",
+    "category": "story_word",
+    "requestedBy": "session-4",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  }
+]

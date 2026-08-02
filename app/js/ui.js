@@ -9,6 +9,9 @@ export const DEV = typeof location !== 'undefined'
 // لون لكل مجموعة على الخريطة (يتغيّر المشهد كلما تقدّم الطفل)
 export const ACCENTS = ['#e8590c', '#2f9e44', '#1971c2', '#9c36b5', '#0c8599', '#c92a2a', '#f08c00'];
 
+/** لون محطات ما بين المجموعات (المهارات والقصص) — يميّزها عن محطات الحروف. */
+export const PAUSE_ACCENT = '#5f3dc4';
+
 export function accentFor(group) {
   return ACCENTS[Math.max(0, GROUPS.indexOf(group)) % ACCENTS.length];
 }
@@ -32,6 +35,32 @@ export const letterTitle = (ch) => `حرف ${LETTERS[ch]?.name ?? ch}`;
 
 /** الكلمة كما تُعرض للطفل: تركيب مقاطعها المشكولة. */
 export const wordText = (word) => word.tiles.join('');
+
+/** اسم عقدة الخريطة كما يُعرض للطفل ولوليّ أمره (حرف · لعبة · مهارة · قصة). */
+export function nodeTitle(node) {
+  if (node.type === 'letter') return letterTitle(node.letter);
+  if (node.type === 'words') return 'لعبة الكلمات';
+  if (node.type === 'skill') return node.skill.title;
+  if (node.type === 'story') return `قصة «${node.story.title}»`;
+  return '';
+}
+
+/** موضع العقدة في الرحلة: اسم مجموعتها، أو محطة ما بين المجموعتين. */
+export function nodeWhere(node) {
+  if (node.type === 'letter' || node.type === 'words') {
+    return GROUPS.find((g) => g.id === node.groupId)?.title ?? '';
+  }
+  return 'محطة المهارات والقصص';
+}
+
+/** وجه العقدة على الخريطة: الحرف نفسه، أو رمز يدلّ على نوعها. */
+export function nodeFace(node) {
+  if (node.type === 'letter') return node.letter;
+  if (node.type === 'words') return '🧩';
+  if (node.type === 'skill') return node.skill.face;
+  if (node.type === 'story') return node.story.emoji;
+  return '';
+}
 
 // ————— بناء DOM —————
 

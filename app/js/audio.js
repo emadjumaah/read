@@ -98,18 +98,26 @@ function playFile(text) {
   });
 }
 
-/** احتياط: نطق آلي من المتصفح — أبطأ قليلاً كي تتضح الحروف لأذن الطفل. */
+/**
+ * احتياط: نطق آلي من المتصفح — أبطأ قليلاً كي تتضح الحروف لأذن الطفل.
+ * لا يرمي أبداً: متصفّح بلا نطق (أو يرفض النصّ) يعود بـfalse، فلا يسقط الدرس
+ * على طفل بسبب صوت — وهذا الاحتياط هو ما يشتغل للنصوص المنتظِرة في قائمة الصوت.
+ */
 function speak(text) {
   return new Promise((resolve) => {
-    const synth = window.speechSynthesis;
-    if (!synth || !window.SpeechSynthesisUtterance) return resolve(false);
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ar-SA';
-    u.rate = 0.75;
-    u.onend = () => resolve(true);
-    u.onerror = () => resolve(false);
-    synth.cancel();
-    synth.speak(u);
+    try {
+      const synth = window.speechSynthesis;
+      if (!synth || !window.SpeechSynthesisUtterance) return resolve(false);
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ar-SA';
+      u.rate = 0.75;
+      u.onend = () => resolve(true);
+      u.onerror = () => resolve(false);
+      synth.cancel();
+      synth.speak(u);
+    } catch {
+      resolve(false);
+    }
   });
 }
 

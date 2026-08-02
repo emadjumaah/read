@@ -7,10 +7,12 @@ import * as audio from './audio.js';
 import { renderLesson } from './lesson.js';
 import { renderWordsGame } from './words.js';
 import { renderReview } from './review.js';
+import { renderSkillLesson } from './skill.js';
+import { renderStory } from './story.js';
 import { renderParent, skillsText } from './parent.js';
 import {
-  h, toast, go, arNum, starsRow, topbar, letterTitle,
-  ACCENTS, accentFor, DEV,
+  h, toast, go, arNum, starsRow, topbar, letterTitle, nodeTitle, nodeFace, nodeWhere,
+  ACCENTS, PAUSE_ACCENT, accentFor, DEV,
 } from './ui.js';
 
 const app = document.getElementById('app');
@@ -44,19 +46,24 @@ function renderMap() {
     const group = progress.findGroup(next.groupId);
     main.append(h('button', {
       class: 'continue',
-      css: { '--accent': accentFor(group) },
+      css: { '--accent': next.type === 'skill' || next.type === 'story' ? PAUSE_ACCENT : accentFor(group) },
       onclick: () => openNode(next),
     },
-      h('span', { class: 'continue-face' }, next.type === 'letter' ? next.letter : '🧩'),
+      h('span', { class: 'continue-face' }, nodeFace(next)),
       h('span', { class: 'continue-text' },
-        h('b', {}, next.type === 'letter' ? letterTitle(next.letter) : 'لعبة الكلمات'),
-        h('small', {}, `تابع من هنا · ${group.title}`)),
+        h('b', {}, nodeTitle(next)),
+        h('small', {}, `تابع من هنا · ${nodeWhere(next)}`)),
     ));
   } else {
     main.append(h('p', { class: 'note' }, '🎉 أتممتَ كل المجموعات! المرحلة القرآنية تأتي لاحقاً بإذن الله.'));
   }
 
-  GROUPS.forEach((group, index) => main.append(stationEl(group, index, next)));
+  let groupIndex = 0;
+  for (const section of progress.journey()) {
+    main.append(section.kind === 'group'
+      ? stationEl(section, groupIndex++, next)
+      : interludeEl(section, next));
+  }
 
   if (DEV) {
     main.append(h('div', { class: 'dev' },
@@ -107,45 +114,76 @@ function reviewCard() {
   );
 }
 
-function stationEl(group, index, next) {
+function stationEl(section, index, next) {
+  const group = section.group;
   const unlocked = progress.isGroupUnlocked(group.id);
   const stats = progress.groupStars(group);
   const complete = progress.isGroupComplete(group);
 
-  const station = h('section', {
-    class: `station${unlocked ? '' : ' station--locked'}${complete ? ' station--done' : ''}`,
-    css: { '--accent': ACCENTS[index % ACCENTS.length] },
-    'aria-label': `${group.title}${unlocked ? '' : ' — مقفلة'}`,
-  },
+  return trackEl({
+    className: `station${unlocked ? '' : ' station--locked'}${complete ? ' station--done' : ''}`,
+    accent: ACCENTS[index % ACCENTS.length],
+    label: `${group.title}${unlocked ? '' : ' — مقفلة'}`,
+    badge: arNum(index + 1),
+    title: group.title,
+    sub: group.letters.join(' '),
+    meta: unlocked ? [h('b', {}, `★ ${arNum(stats.earned)}`), ` / ${arNum(stats.max)}`] : '🔒 مقفلة',
+    nodes: section.nodes,
+    next,
+  });
+}
+
+/**
+ * محطة ما بين المجموعتين: دروس العلامات والقصص (§٥ من المنهج).
+ * تُميَّز بلونها وشكلها كي يعرف الطفل — ووليّ أمره — أنها استراحة من الحروف.
+ */
+function interludeEl(section, next) {
+  const unlocked = progress.isNodeUnlockedById(section.nodes[0].id);
+  const complete = section.nodes.every((n) => progress.isDone(n.id));
+  const earned = section.nodes.reduce((sum, n) => sum + progress.getStars(n.id), 0);
+
+  return trackEl({
+    className: `station station--pause${unlocked ? '' : ' station--locked'}${complete ? ' station--done' : ''}`,
+    accent: PAUSE_ACCENT,
+    label: `محطة المهارات والقصص${unlocked ? '' : ' — مقفلة'}`,
+    badge: '✦',
+    title: 'مهارات وقصص',
+    sub: section.nodes.map(nodeTitle).join(' · '),
+    meta: unlocked
+      ? [h('b', {}, `★ ${arNum(earned)}`), ` / ${arNum(section.nodes.length * progress.MAX_STARS)}`]
+      : '🔒 مقفلة',
+    nodes: section.nodes,
+    next,
+  });
+}
+
+function trackEl({ className, accent, label, badge, title, sub, meta, nodes, next }) {
+  const station = h('section', { class: className, css: { '--accent': accent }, 'aria-label': label },
     h('div', { class: 'station-head' },
-      h('span', { class: 'station-num' }, arNum(index + 1)),
+      h('span', { class: 'station-num' }, badge),
       h('div', {},
-        h('h2', {}, group.title),
-        h('p', { class: 'station-letters' }, group.letters.join(' ')),
+        h('h2', {}, title),
+        h('p', { class: 'station-letters' }, sub),
       ),
-      h('div', { class: 'station-meta' }, unlocked
-        ? [h('b', {}, `★ ${arNum(stats.earned)}`), ` / ${arNum(stats.max)}`]
-        : '🔒 مقفلة'),
+      h('div', { class: 'station-meta' }, meta),
     ),
   );
 
   const track = h('ol', { class: 'track' });
-  for (const node of progress.groupNodes(group)) {
-    track.append(h('li', {}, nodeButton(group, node, next)));
-  }
+  for (const node of nodes) track.append(h('li', {}, nodeButton(node, next)));
   station.append(track);
   return station;
 }
 
-function nodeButton(group, node, next) {
+function nodeButton(node, next) {
   const stars = progress.getStars(node.id);
-  const open = progress.isNodeUnlocked(node.groupId, node.part);
+  const open = progress.isNodeUnlockedById(node.id);
   const isNext = next && next.id === node.id;
-  const label = node.type === 'letter' ? letterTitle(node.letter) : `لعبة كلمات ${group.title}`;
+  const label = nodeTitle(node);
   const state = !open ? 'locked' : stars ? 'done' : 'open';
 
   const btn = h('button', {
-    class: `node node--${node.type === 'words' ? 'words' : 'letter'} node--${state}${isNext ? ' node--next' : ''}`,
+    class: `node node--${node.type} node--${state}${isNext ? ' node--next' : ''}`,
     'aria-label': `${label} — ${open ? (stars ? `${arNum(stars)} نجوم` : 'مفتوح') : 'مقفل'}`,
     onclick: () => {
       if (!open) {
@@ -159,7 +197,7 @@ function nodeButton(group, node, next) {
     },
   },
     h('span', { class: 'node-face' }, open
-      ? (node.type === 'letter' ? node.letter : '🧩')
+      ? nodeFace(node)
       : h('span', { class: 'node-lock' }, '🔒')),
     starsRow(stars),
   );
@@ -170,13 +208,12 @@ function nodeButton(group, node, next) {
 
 function openNode(node) {
   if (node.type === 'letter') go(`#/lesson/${node.groupId}/${encodeURIComponent(node.letter)}`);
-  else go(`#/words/${node.groupId}`);
+  else if (node.type === 'words') go(`#/words/${node.groupId}`);
+  else go(`#/${node.type}/${node.part}`);
 }
 
 function fillAll(stars) {
-  for (const group of GROUPS) {
-    for (const node of progress.groupNodes(group)) progress.setStars(node.id, stars);
-  }
+  for (const node of progress.allNodes()) progress.setStars(node.id, stars);
   toast('حُدِّث التقدّم');
   render();
 }
@@ -224,8 +261,9 @@ async function render() {
   const [name, arg1, arg2] = location.hash.replace(/^#\/?/, '').split('/');
 
   // القفل يُحرس في التوجيه أيضاً، لا في أزرار الخريطة وحدها
-  const guard = (groupId, part) => {
-    if (progress.isNodeUnlocked(groupId, part)) return true;
+  const guard = (id) => {
+    if (!progress.findNode(id)) return true;          // عقدة لا وجود لها: الشاشة تردّه للخريطة
+    if (progress.isNodeUnlockedById(id)) return true;
     toast('أكمِل ما قبله أولاً 😊');
     location.replace('#/');
     return false;
@@ -234,11 +272,17 @@ async function render() {
   let screen;
   if (name === 'lesson' && arg1 && arg2) {
     const letter = decodeURIComponent(arg2);
-    if (!guard(arg1, letter)) return;
+    if (!guard(progress.nodeId(arg1, letter))) return;
     screen = renderLesson(arg1, letter) || renderMap();
   } else if (name === 'words' && arg1) {
-    if (!guard(arg1, progress.WORDS_PART)) return;
+    if (!guard(progress.nodeId(arg1, progress.WORDS_PART))) return;
     screen = renderWordsGame(arg1) || renderMap();
+  } else if (name === 'skill' && arg1) {
+    if (!guard(`skill:${decodeURIComponent(arg1)}`)) return;
+    screen = renderSkillLesson(decodeURIComponent(arg1)) || renderMap();
+  } else if (name === 'story' && arg1) {
+    if (!guard(`story:${decodeURIComponent(arg1)}`)) return;
+    screen = renderStory(decodeURIComponent(arg1)) || renderMap();
   } else if (name === 'review') {
     screen = renderReview();
     if (!screen) {                       // لا حصيلة للمراجعة بعدُ

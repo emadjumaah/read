@@ -4,13 +4,15 @@
     python3 tools/browser_test.py              # درس الحرف: يسوق التطبيق ويطبع التقرير
     python3 tools/browser_test.py --words      # لعبة تركيب الكلمات (المجموعات السبع)
     python3 tools/browser_test.py --review     # المراجعة اليومية ولوحة وليّ الأمر
-    python3 tools/browser_test.py --shots out.png [--words|--review]   # لقطة للمراجعة البصرية
+    python3 tools/browser_test.py --story      # دروس المهارات وشاشة قراءة القصص
+    python3 tools/browser_test.py --shots out.png [--words|--review|--story]   # لقطة للمراجعة
     python3 tools/browser_test.py --show       # بمتصفّح مرئي لتتبّع ما يجري
 
 كيف يعمل: خادم صغير يخدم مجلد app/ ويضيف صفحات الاختبار وحدها من هذا المجلد
 (/__test.html و/__shots.html و/__words.html و/__words_shots.html و/__review.html
-و/__review_shots.html) ويستقبل النتيجة بـPOST /result، فلا تبقى في app/ صفحة اختبار
-تُخدَم للطفل.
+و/__review_shots.html و/__story.html و/__story_shots.html) ويستقبل النتيجة بـPOST /result،
+فلا تبقى في app/ صفحة اختبار تُخدَم للطفل. ويخدم /__queue.json (نصوص قائمة الانتظار
+الصوتية) كي تستثنيها الصفحات من فحص «لا لجوء للنطق الآلي».
 
 ملاحظة: --dump-dom و--virtual-time-budget غير موثوقين مع fetch والصوت،
 لذلك تُرسَل النتائج من الصفحة نفسها ثم يُقتل المتصفّح.
@@ -38,8 +40,28 @@ PAGES = {
     "/__words_shots.html": TOOLS / "browser_words_shots.html",
     "/__review.html": TOOLS / "browser_review.html",
     "/__review_shots.html": TOOLS / "browser_review_shots.html",
+    "/__story.html": TOOLS / "browser_story.html",
+    "/__story_shots.html": TOOLS / "browser_story_shots.html",
 }
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+QUEUE_FILE = ROOT / "tools" / "audio_queue.json"
+
+
+def pending_texts() -> list:
+    """النصوص المنتظِرة في قائمة الانتظار الصوتية (docs/AUDIO_QUEUE.md).
+
+    صفحات الاختبار تستثنيها من فحص «لا لجوء للنطق الآلي»: لا ملف لها بعدُ لأن
+    جلسة الصوتيات لم تصرّفها، فاحتياط النطق هو السلوك الصحيح مؤقتاً — وبعد التصريف
+    تفرغ القائمة فيعود الفحص صارماً على كل نصّ بلا تعديل في الصفحات.
+    """
+    if not QUEUE_FILE.exists():
+        return []
+    try:
+        data = json.loads(QUEUE_FILE.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return []
+    return [e["text"] for e in data
+            if isinstance(e, dict) and e.get("text") and e.get("status", "pending") != "done"]
 
 
 def make_server(port: int, results: list):
@@ -48,6 +70,14 @@ def make_server(port: int, results: list):
             super().__init__(*a, directory=str(APP), **kw)
 
         def do_GET(self):
+            if self.path.split("?")[0] == "/__queue.json":
+                body = json.dumps(pending_texts(), ensure_ascii=False).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
             page = PAGES.get(self.path.split("?")[0])
             if page:
                 body = page.read_bytes()
@@ -92,6 +122,7 @@ def main():
     ap.add_argument("--shots", metavar="PNG", help="لقطة للمراجعة البصرية بدل تشغيل الاختبارات")
     ap.add_argument("--words", action="store_true", help="لعبة تركيب الكلمات بدل درس الحرف")
     ap.add_argument("--review", action="store_true", help="المراجعة اليومية ولوحة وليّ الأمر")
+    ap.add_argument("--story", action="store_true", help="دروس المهارات وشاشة قراءة القصص")
     ap.add_argument("--show", action="store_true", help="متصفّح مرئي")
     args = ap.parse_args()
 
@@ -105,6 +136,7 @@ def main():
         if args.shots:
             out = Path(args.shots).resolve()
             page, size = (("__review_shots.html", "1100,3050") if args.review
+                          else ("__story_shots.html", "1100,5400") if args.story
                           else ("__words_shots.html", "980,2100") if args.words
                           else ("__shots.html", "980,2650"))
             proc = run_chrome(f"{base}/{page}?dev=1", profile,
@@ -117,7 +149,8 @@ def main():
             print(f"اللقطة: {out}" if out.exists() else "تعذّرت اللقطة")
             return 0 if out.exists() else 1
 
-        page = "__review.html" if args.review else "__words.html" if args.words else "__test.html"
+        page = ("__review.html" if args.review else "__story.html" if args.story
+                else "__words.html" if args.words else "__test.html")
         proc = run_chrome(f"{base}/{page}", profile, ["--hide-scrollbars"], args.show)
         deadline = time.time() + args.timeout
         while time.time() < deadline:

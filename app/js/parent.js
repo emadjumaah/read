@@ -5,7 +5,7 @@
 // (pill · vchip · note · chip) وتُلوَّن بمتغيّر --accent، فلا تحتاج تنسيقاً جديداً.
 
 import * as progress from './progress.js';
-import { h, go, arNum, arCount, topbar, letterTitle, shake } from './ui.js';
+import { h, go, arNum, arCount, topbar, letterTitle, nodeTitle, nodeWhere, shake } from './ui.js';
 
 const ACCENT = '#5f3dc4';
 const GOOD = '#2f9e44';
@@ -42,8 +42,7 @@ export function recommend({ letters = 0, dueCount = 0, secondsToday = 0, reviewD
     return { title: 'ابدأ بمراجعة اليوم', body: `حان وقت تثبيت ${skillsText(dueCount)} (تمارين قصيرة مما درسه). المراجعة قبل الدرس الجديد.`, action: { label: 'ابدأ المراجعة', hash: '#/review' } };
   }
   if (next) {
-    const what = next.type === 'letter' ? letterTitle(next.letter) : 'لعبة تركيب الكلمات';
-    return { title: 'واصِلا الدرس التالي', body: `التالي في رحلته: ${what}.`, action: { label: 'افتح الخريطة', hash: '#/' } };
+    return { title: 'واصِلا الدرس التالي', body: `التالي في رحلته: ${nodeTitle(next)}.`, action: { label: 'افتح الخريطة', hash: '#/' } };
   }
   return { title: 'أتمّ رحلة الحروف كلها', body: 'أعِد معه المراجعة اليومية حتى تُفتح المرحلة القرآنية.', action: { label: 'ابدأ المراجعة', hash: '#/review' } };
 }
@@ -190,7 +189,7 @@ function dashboard() {
 
     ...section('أين هو الآن',
       h('p', { class: 'hint' }, next
-        ? `التالي: ${next.type === 'letter' ? letterTitle(next.letter) : 'لعبة تركيب الكلمات'} — ${progress.findGroup(next.groupId).title}.`
+        ? `التالي: ${nodeTitle(next)} — ${nodeWhere(next)}.`
         : 'أتمّ كل عقد الخريطة.'),
       h('p', { class: 'hint' },
         `بانتظار التثبيت الآن: ${arNum(due.length)} من ${arNum(progress.skills().length)} مهارة سُجّلت.`)),

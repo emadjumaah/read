@@ -28,6 +28,9 @@ async function waitFor(fn, label = '', ms = 4000) {
 }
 
 const manifest = await (await fetch('audio/manifest.json')).json();
+// النصوص المنتظِرة في قائمة الانتظار الصوتية: لا ملف لها بعدُ، فاحتياط النطق الآلي
+// هو الصواب مؤقتاً — وتفرغ القائمة بعد التصريف فيعود الفحص صارماً بلا تعديل هنا.
+const pendingAudio = new Set(await (await fetch('/__queue.json')).json());
 const frame = document.getElementById('frame');
 
 const played = [];      // نصوص شُغِّلت من الملفات المولَّدة
@@ -117,7 +120,9 @@ async function playQuiz(studied, expectedOptions) {
 try {
   // ————— الخريطة —————
   await waitFor(() => $('.station'), 'الخريطة');
-  ok($$('.station').length === 7, 'الخريطة تعرض المحطات السبع');
+  ok($$('.station:not(.station--pause)').length === 7, 'الخريطة تعرض المحطات السبع');
+  ok($$('.station--pause').length === 4,
+    `ومحطات المهارات والقصص بينها (${$$('.station--pause').length})`);
 
   // ————— درس الألف: أول درس في الرحلة —————
   await goto('#/lesson/g1/%D8%A7');
@@ -273,7 +278,9 @@ try {
   // ————— الصوت والأخطاء —————
   const missing = played.filter((t) => t.startsWith('?'));
   ok(missing.length === 0, `كل ما شُغِّل له ملف مولَّد (${played.length} تشغيلاً، ${missing.length} ناقصاً)`);
-  ok(spoken.length === 0, `لم يُستعمل النطق الآلي الاحتياطي (${spoken.length})`);
+  const stray = spoken.filter((t) => !pendingAudio.has(t));
+  ok(stray.length === 0, `لم يُستعمل النطق الآلي إلا لنصّ ينتظر التصريف `
+    + `(${spoken.length - stray.length} منتظِراً${stray.length ? '، خارج القائمة: ' + stray.join('، ') : ''})`);
   ok(jsErrors.length === 0, `لا أخطاء جافاسكربت (${jsErrors.join(' | ') || 'لا شيء'})`);
 } catch (e) {
   ok(false, 'استثناء: ' + ((e && e.stack) || e));

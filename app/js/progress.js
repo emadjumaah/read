@@ -5,7 +5,7 @@
 // **الحرف × الحركة × نوع التمرين**، ومنه يُبنى التكرار المتباعد وجلسة المراجعة
 // ولوحة وليّ الأمر. لا نصّ منطوق جديد هنا — القياس لا يضيف محتوى.
 
-import { GROUPS, bareLetters } from './curriculum.js';
+import { GROUPS, SKILLS, STORIES, bareLetters } from './curriculum.js';
 
 const STORE_KEY = 'muallim.progress.v1';
 export const VERSION = 2;            // ١ = نجوم فقط (تُرقّى تلقائياً بلا فقد)
@@ -100,6 +100,44 @@ export function findGroup(groupId) {
   return GROUPS.find((g) => g.id === groupId) || null;
 }
 
+/**
+ * عقد ما بين المجموعات (الجلسة ٤): دروس المهارات ثم القصص التي تلي مجموعةً ما.
+ * المهارة قبل القصة لأن القصة تُوظّف علامتها (شدّة ← قصة فيها شدّة).
+ */
+export function interludeNodes(groupId) {
+  return [
+    ...SKILLS.filter((s) => s.after === groupId).map((skill) => ({
+      id: `skill:${skill.id}`, type: 'skill', groupId, part: skill.id, skill,
+    })),
+    ...STORIES.filter((s) => s.after === groupId).map((story) => ({
+      id: `story:${story.id}`, type: 'story', groupId, part: story.id, story,
+    })),
+  ];
+}
+
+/** الرحلة كاملةً بأقسامها بالترتيب: مجموعة ← ما بعدها من مهارات وقصص ← مجموعة… */
+export function journey() {
+  const out = [];
+  for (const group of GROUPS) {
+    out.push({ kind: 'group', id: group.id, group, nodes: groupNodes(group) });
+    const nodes = interludeNodes(group.id);
+    if (nodes.length) out.push({ kind: 'interlude', id: `after:${group.id}`, after: group.id, nodes });
+  }
+  return out;
+}
+
+let nodesCache = null;   // بيانات المنهج ثابتة وقت التشغيل، فتُبنى القائمة مرة واحدة
+
+/** كل عقد الرحلة بالترتيب — عليها يقوم القفل التسلسلي وحساب النجوم. */
+export function allNodes() {
+  if (!nodesCache) nodesCache = journey().flatMap((section) => section.nodes);
+  return nodesCache;
+}
+
+export function findNode(id) {
+  return allNodes().find((n) => n.id === id) || null;
+}
+
 // ————— النجوم —————
 
 export function getStars(id) {
@@ -134,49 +172,44 @@ export function groupStars(group) {
 }
 
 export function totalStars() {
-  return GROUPS.reduce((sum, g) => sum + groupStars(g).earned, 0);
+  return allNodes().reduce((sum, n) => sum + getStars(n.id), 0);
 }
 
 export function maxTotalStars() {
-  return GROUPS.reduce((sum, g) => sum + groupNodes(g).length * MAX_STARS, 0);
+  return allNodes().length * MAX_STARS;
 }
 
 // ————— القفل التسلسلي —————
+// قاعدة واحدة تحكم الرحلة كلها: العقدة تُفتح بإتمام كل ما قبلها في `allNodes()`.
+// فينتظم في حبل واحد: حروف المجموعة، ثم لعبة كلماتها، ثم مهارات ما بعدها وقصصه.
+
+/** العقدة مفتوحة = كل ما سبقها في الرحلة مُنجَز. */
+export function isNodeUnlockedById(id) {
+  const nodes = allNodes();
+  const index = nodes.findIndex((n) => n.id === id);
+  if (index < 0) return false;
+  return nodes.slice(0, index).every((n) => isDone(n.id));
+}
 
 /** المجموعة مكتملة = كل حروفها ولعبة كلماتها أُنجزت. */
 export function isGroupComplete(group) {
   return groupNodes(group).every((n) => isDone(n.id));
 }
 
-/** تُفتح المجموعة الأولى دائماً، وما بعدها بإتمام سابقتها (لعبة الكلمات آخرها). */
+/** تُفتح المجموعة الأولى دائماً، وما بعدها بإتمام سابقتها وما تلاها من مهارات وقصص. */
 export function isGroupUnlocked(groupId) {
-  const index = GROUPS.findIndex((g) => g.id === groupId);
-  if (index <= 0) return index === 0;
-  return isGroupComplete(GROUPS[index - 1]);
-}
-
-/**
- * داخل المجموعة: الحرف يُفتح بإتمام الحرف الذي قبله،
- * ولعبة الكلمات تُفتح بإتمام حروف المجموعة كلها.
- */
-export function isNodeUnlocked(groupId, part) {
   const group = findGroup(groupId);
-  if (!group || !isGroupUnlocked(groupId)) return false;
-  const nodes = groupNodes(group);
-  const index = nodes.findIndex((n) => n.part === part);
-  if (index < 0) return false;
-  return nodes.slice(0, index).every((n) => isDone(n.id));
+  return group ? isNodeUnlockedById(groupNodes(group)[0].id) : false;
 }
 
-/** أول عقدة مفتوحة لم تُنجَز — «تابع من هنا». */
+/** عقدة داخل مجموعة (حرف أو لعبة كلمات) بمعرّفها المركّب. */
+export function isNodeUnlocked(groupId, part) {
+  return isNodeUnlockedById(nodeId(groupId, part));
+}
+
+/** أول عقدة لم تُنجَز في الرحلة — «تابع من هنا». */
 export function nextNode() {
-  for (const group of GROUPS) {
-    if (!isGroupUnlocked(group.id)) return null;
-    for (const node of groupNodes(group)) {
-      if (!isDone(node.id)) return node;
-    }
-  }
-  return null;   // اكتملت الرحلة
+  return allNodes().find((n) => !isDone(n.id)) || null;   // null = اكتملت الرحلة
 }
 
 // ————— حصيلة الطفل (ما يجوز أن يظهر له في المراجعة) —————

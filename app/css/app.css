@@ -671,6 +671,124 @@ button {
   to { transform: scale(1); opacity: 1; }
 }
 
+/* ————— محطة ما بين المجموعتين: المهارات والقصص ————— */
+
+.station--pause {
+  border-inline-start-style: dashed;
+  background: linear-gradient(180deg, var(--card) 55%, color-mix(in srgb, var(--accent) 7%, white));
+}
+
+.station--pause .station-letters { font-family: var(--font-ui); font-size: .9rem; letter-spacing: 0; }
+.node--skill .node-face { font-size: 2.1rem; }
+.node--story .node-face { font-family: var(--font-ui); font-size: 2rem; }
+
+/* ————— درس المهارة ————— */
+
+.rule {
+  max-width: 32rem;
+  margin: .75rem auto 1.25rem;
+  font-size: 1.1rem;
+  line-height: 1.9;
+}
+
+.wordrow { gap: .75rem; margin-top: .5rem; }
+.wordrow .example-word { padding: .6rem 1rem; }
+.wordrow .word-text { font-size: 1.9rem; }
+
+/* صفّا المقارنة: طرفا كل زوج متقابلان مع عنوانَي العمودين */
+.pairs {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  max-width: 30rem;
+  margin: 1rem auto 0;
+}
+
+.pair { display: flex; gap: .6rem; }
+.pair > * { flex: 1 1 0; }
+
+.pair--head {
+  gap: .6rem;
+  color: var(--ink-soft);
+  font-size: .85rem;
+}
+
+.pair--head small { flex: 1 1 0; text-align: center; }
+
+.vchip--pair { min-width: 0; }
+.vchip--pair .vchip-face { font-size: 2.6rem; white-space: nowrap; }
+
+/* ————— شاشة القراءة (القصص) ————— */
+
+.story .screen-card { text-align: start; }
+.story .hint, .story .foot .hint { text-align: center; }
+
+.sheet {
+  margin-top: .5rem;
+  padding: 1rem .9rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 5%, white);
+  border: 2px solid color-mix(in srgb, var(--accent) 18%, white);
+}
+
+.story-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  width: 100%;
+  min-height: 3.5rem;
+  margin-bottom: .5rem;
+  padding: .4rem;
+  border-radius: 18px;
+}
+
+.story-title-text {
+  font-family: var(--font-letter);
+  font-size: 1.9rem;
+  line-height: 1.7;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .2rem;
+  border-top: 2px dotted color-mix(in srgb, var(--accent) 20%, white);
+}
+
+.line-emoji { font-size: 1.9rem; line-height: 1; flex: none; }
+.line-ear { flex: none; min-width: 3rem; padding: .6rem .8rem; }
+
+.line-words {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .2rem .35rem;
+  flex: 1;
+  margin: 0;
+}
+
+.story-word {
+  min-width: 3rem;                 /* «فِي» و«مَعَ» أهدافُ لمسٍ لإصبع طفل أيضاً */
+  min-height: 3rem;
+  padding: .2rem .5rem;
+  border-radius: 12px;
+  font-family: var(--font-letter);
+  font-size: 1.9rem;
+  line-height: 1.7;
+  transition: background .2s ease, color .2s ease;
+}
+
+.story-word:active { background: color-mix(in srgb, var(--accent) 20%, white); }
+.story-word--said { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, white); }
+
+.story .foot { flex-direction: column; gap: .25rem; margin-top: 1.25rem; }
+.story .foot .hint { margin: 0; }
+.story .foot .next { max-width: 22rem; }
+
 /* ————— أدوات المطوّر (?dev=1) ————— */
 
 .dev {
@@ -756,6 +874,10 @@ button {
   .node--locked .node-face { background: #38312a; }
   .giant, .wgame-pic { background: color-mix(in srgb, var(--accent) 18%, var(--card)); }
   .form-cell, .example-word, .trace, .slot { background: color-mix(in srgb, var(--accent) 16%, var(--card)); }
+  .station--pause { background: linear-gradient(180deg, var(--card) 55%, color-mix(in srgb, var(--accent) 22%, var(--card))); }
+  .sheet { background: color-mix(in srgb, var(--accent) 14%, var(--card)); border-color: color-mix(in srgb, var(--accent) 34%, var(--card)); }
+  .line { border-top-color: color-mix(in srgb, var(--accent) 34%, var(--card)); }
+  .story-word--said, .story-word:active { background: color-mix(in srgb, var(--accent) 30%, var(--card)); }
   .step-dot, .dot { background: #38312a; }
   .dot--now { background: color-mix(in srgb, var(--accent) 25%, var(--card)); }
   .dot--done, .slots--done .slot, .vchip.good { background: #24361f; }

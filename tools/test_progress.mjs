@@ -13,7 +13,7 @@ globalThis.localStorage = {
 };
 
 const p = await import(new URL('progress.js', APP));
-const { GROUPS } = await import(new URL('curriculum.js', APP));
+const { GROUPS, SKILLS, STORIES } = await import(new URL('curriculum.js', APP));
 
 let fails = 0;
 const ok = (cond, msg) => { if (!cond) { fails++; console.log('  ✗', msg); } else console.log('  ✓', msg); };
@@ -42,7 +42,9 @@ ok(p.isGroupComplete(g1), 'المجموعة ١ اكتملت');
 ok(p.isGroupUnlocked('g2'), 'المجموعة ٢ فُتحت');
 ok(p.nextNode().id === `g2:${g2.letters[0]}`, 'التالي = أول حرف في المجموعة ٢');
 
-ok(p.maxTotalStars() === GROUPS.reduce((s,g)=>s+(g.letters.length+1)*3,0), 'سقف النجوم الكلي');
+// سقف النجوم = عقد المجموعات + عقد ما بينها (المهارات والقصص — الجلسة ٤)
+ok(p.maxTotalStars() === GROUPS.reduce((s, g) => s + (g.letters.length + 1) * 3, 0)
+  + (SKILLS.length + STORIES.length) * 3, 'سقف النجوم الكلي');
 ok(store.size === 1, 'الحفظ في localStorage تمّ');
 
 const reloaded = JSON.parse(store.get('muallim.progress.v1'));

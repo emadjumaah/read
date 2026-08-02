@@ -27,8 +27,11 @@ async function waitFor(fn, label = '', ms = 4000) {
   }
 }
 
-const { GROUPS } = await import('./js/curriculum.js');   // بيانات المنهج مصدرها الوحيد
+const { GROUPS, SKILLS, STORIES } = await import('./js/curriculum.js');   // بيانات المنهج مصدرها الوحيد
 const manifest = await (await fetch('audio/manifest.json')).json();
+// النصوص المنتظِرة في قائمة الانتظار الصوتية: لا ملف لها بعدُ، فاحتياط النطق الآلي
+// هو الصواب مؤقتاً — وتفرغ القائمة بعد التصريف فيعود الفحص صارماً بلا تعديل هنا.
+const pendingAudio = new Set(await (await fetch('/__queue.json')).json());
 const frame = document.getElementById('frame');
 
 const played = [];      // نصوص شُغِّلت من الملفات المولَّدة
@@ -188,7 +191,13 @@ try {
   ok($('[data-next]')?.getAttribute('aria-label')?.includes('نون'), 'الخريطة تشير إلى حرف النون تالياً');
 
   // ————— كل كلمات المجموعات السبع قابلة للعب —————
-  const all = GROUPS.flatMap((g) => [...g.letters.map((l) => `${g.id}:${l}`), `${g.id}:words`]);
+  // القفل تسلسلي على الرحلة كلها، فالوصول إلى لعبة مجموعة متأخرة يقتضي إنجاز
+  // ما بينها من مهارات وقصص أيضاً (الجلسة ٤).
+  const all = [
+    ...GROUPS.flatMap((g) => [...g.letters.map((l) => `${g.id}:${l}`), `${g.id}:words`]),
+    ...SKILLS.map((s) => `skill:${s.id}`),
+    ...STORIES.map((s) => `story:${s.id}`),
+  ];
   await seed(all);
 
   for (const g of GROUPS) {
@@ -227,7 +236,9 @@ try {
   // ————— الصوت والأخطاء —————
   const missing = played.filter((t) => t.startsWith('?'));
   ok(missing.length === 0, `كل ما شُغِّل له ملف مولَّد (${played.length} تشغيلاً، ${missing.length} ناقصاً)`);
-  ok(spoken.length === 0, `لم يُستعمل النطق الآلي الاحتياطي (${spoken.length})`);
+  const stray = spoken.filter((t) => !pendingAudio.has(t));
+  ok(stray.length === 0, `لم يُستعمل النطق الآلي إلا لنصّ ينتظر التصريف `
+    + `(${spoken.length - stray.length} منتظِراً${stray.length ? '، خارج القائمة: ' + stray.join('، ') : ''})`);
   ok(jsErrors.length === 0, `لا أخطاء جافاسكربت (${jsErrors.join(' | ') || 'لا شيء'})`);
 } catch (e) {
   ok(false, 'استثناء: ' + ((e && e.stack) || e));
