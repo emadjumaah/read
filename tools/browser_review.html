@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><title>اختبار المراجعة ولوحة وليّ الأمر</title></head>
+<body>
+<pre id="out" style="font:14px/1.6 monospace"></pre>
+<iframe id="frame" src="index.html" style="width:420px;height:900px;border:1px solid #ccc"></iframe>
+<script type="module">
+const out = document.getElementById('out');
+const results = [];
+const post = () => navigator.sendBeacon('/result',
+  new Blob([JSON.stringify(results, null, 1)], { type: 'text/plain' }));
+const ok = (cond, msg) => {
+  results.push({ ok: !!cond, msg });
+  out.textContent += `${cond ? '✓' : '✗'} ${msg}\n`;
+  post();                        // نتيجة جزئية بعد كل تحقّق كي لا يضيع التقرير عند التعليق
+};
+setTimeout(() => { ok(false, 'انتهت المهلة الكلية'); post(); }, 110000);
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function waitFor(fn, label = '', ms = 4000) {
+  const t0 = Date.now();
+  for (;;) {
+    let v; try { v = fn(); } catch { v = null; }
+    if (v) return v;
+    if (Date.now() - t0 > ms) throw new Error('انتظار طويل: ' + label);
+    await sleep(25);
+  }
+}
+
+const { GROUPS } = await import('./js/curriculum.js');   // بيانات المنهج مصدرها الوحيد
+const manifest = await (await fetch('audio/manifest.json')).json();
+const frame = document.getElementById('frame');
+const WORDS = GROUPS.flatMap((g) => g.words);
+
+const played = [];      // نصوص شُغِّلت من الملفات المولَّدة
+const spoken = [];      // ما لجأ إلى النطق الآلي (يجب أن يبقى فارغاً)
+const jsErrors = [];
+let win, doc;
+
+function attach() {
+  win = frame.contentWindow;
+  doc = frame.contentDocument;
+  win.addEventListener('error', (e) => jsErrors.push(String(e.message)));
+  win.addEventListener('unhandledrejection', (e) => jsErrors.push('رفض غير معالَج: ' + e.reason));
+  win.Audio = class extends win.EventTarget {
+    constructor(src = '') { super(); this.src = src; this.preload = ''; this.currentTime = 0; }
+    play() {
+      const key = (this.src.split('/').pop() || '').replace('.mp3', '');
+      played.push(manifest[key] ?? `?${key}`);
+      setTimeout(() => this.dispatchEvent(new Event('ended')), 5);
+      return Promise.resolve();
+    }
+    pause() {}
+  };
+  win.SpeechSynthesisUtterance = class { constructor(text) { spoken.push(text); this.text = text; } };
+}
+
+const today = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+const dayNumber = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);
+
+/** يزرع حالة تقدّم (نجوماً ومهاراتٍ ودقائق) ثم يعيد تحميل التطبيق عليها. */
+async function seed(nodeIds, extra = {}) {
+  win.localStorage.setItem('muallim.progress.v1', JSON.stringify({
+    v: 2,
+    stars: Object.fromEntries(nodeIds.map((k) => [k, 3])),
+    skills: {}, days: {}, reviews: {}, seconds: 0,
+    startedAt: Date.now(), updatedAt: Date.now(),
+    ...extra,
+  }));
+  const done = new Promise((r) => frame.addEventListener('load', r, { once: true }));
+  frame.src = 'index.html';
+  await done;
+  attach();
+  await sleep(120);
+}
+
+const stored = () => JSON.parse(win.localStorage.getItem('muallim.progress.v1'));
+
+await new Promise((r) => frame.addEventListener('load', r, { once: true }));
+attach();
+
+const $ = (sel) => doc.querySelector(sel);
+const $$ = (sel) => [...doc.querySelectorAll(sel)];
+const texts = (sel) => $$(sel).map((el) => el.textContent.trim());
+const bare = (s) => s.replace(/[ً-ْٰـ\s]/g, '');
+const lastPlayed = () => played[played.length - 1];
+const btn = (label) => $$('.btn').find((b) => b.textContent.includes(label));
+const reviewCard = () => $$('.continue').find((c) => c.textContent.includes('مراجعة اليوم'));
+
+async function goto(hash) {
+  win.location.hash = hash;
+  await sleep(150);
+}
+
+/**
+ * الهدف المسموع في تمرين اختيار: ننتظر صوتاً **جديداً** (بعد `mark`) يكون أحد الخيارات
+ * المعروضة — لا نقرأ آخر ما شُغِّل بعد مهلة ثابتة، فيلتقط أحياناً صوت التمرين السابق.
+ */
+const heardTarget = (faces, mark) => waitFor(
+  () => (played.length > mark && faces.includes(lastPlayed()) ? lastPlayed() : null),
+  'صوت الهدف', 6000);
+
+/** كل حرف عربي معروض في المراجعة ⊆ حصيلة الطفل — مفكوكية ١٠٠٪. */
+function assertDecodable(studied, where) {
+  const shown = new Set([...bare(texts('.vchip-face, .tile-face, .slot, .word-built').join(''))]
+    .filter((c) => /[ء-ي]/.test(c)));
+  const outside = [...shown].filter((c) => !studied.includes(c));
+  ok(outside.length === 0, `${where}: لا حرف خارج حصيلته${outside.length ? ' — ' + outside.join('،') : ''}`);
+}
+
+function checkTargets(where) {
+  const small = $$('.screen-card button')
+    .map((el) => [el, el.getBoundingClientRect()])
+    .filter(([, r]) => r.width && (r.height < 48 || r.width < 48))
+    .map(([el]) => el.className);
+  ok(small.length === 0, `${where}: أهداف اللمس ≥٤٨ بكسل${small.length ? ' — ' + small.join('،') : ''}`);
+}
+
+try {
+  // ————— ١) قبل أي درس: لا مراجعة ولا مدخل إليها —————
+  await waitFor(() => $('.station'), 'الخريطة');
+  ok(!reviewCard(), 'طفل لم يدرس شيئاً: لا بطاقة مراجعة على الخريطة');
+  await goto('#/review');
+  ok(!!$('.station') && !$('.lesson'), 'الدخول المباشر على #/review يعيده إلى الخريطة');
+  ok($('#toast')?.hidden === false || doc.getElementById('toast')?.textContent.includes('درساً'),
+    'ورسالة تشرح له أن المراجعة تأتي بعد أول درس');
+
+  // ————— ٢) القياس يُسجَّل من الدرس الحقيقي (حرف × حركة × تمرين) —————
+  await seed(['g1:ا']);
+  await goto('#/lesson/g1/%D8%A8');
+  await waitFor(() => $('.lesson'), 'درس الباء');
+  btn('تابع').click();                                   // ١ اسمع وشاهد ← ٢ الحركات
+  await waitFor(() => btn('أيها سمعت'), 'خطوة الحركات');
+  btn('أيها سمعت').click();
+  await sleep(120);
+  const hTarget = lastPlayed();
+  const hChips = $$('.vchip');
+  hChips.find((c) => c.querySelector('.vchip-face').textContent !== hTarget).click();   // خطأ مقصود
+  await sleep(120);
+  hChips.find((c) => c.querySelector('.vchip-face').textContent === hTarget).click();
+  await waitFor(() => $('.next'), 'زر تابع بعد الإجابة');
+
+  const afterHaraka = stored().skills;
+  const hKeys = Object.keys(afterHaraka).filter((k) => k.endsWith('|haraka'));
+  ok(hKeys.length === 1 && hKeys[0].startsWith('ب|'),
+    `خطوة الحركات تسجّل مهارة واحدة بمفتاح (حرف|حركة|تمرين): ${hKeys.join('،')}`);
+  ok(afterHaraka[hKeys[0]].wrong === 1 && afterHaraka[hKeys[0]].right === 1,
+    'الخطأ والإصابة كلاهما مسجَّل على المهارة نفسها');
+  ok(afterHaraka[hKeys[0]].box === 1 && afterHaraka[hKeys[0]].due === dayNumber() + 1,
+    'الإصابة بعد الخطأ ترفع الصندوق وتجدول المراجعة للغد');
+
+  btn('تابع').click();                                   // ٣ تتبّع
+  await waitFor(() => $('canvas.trace'), 'لوح التتبّع');
+  btn('تمّ').click();                                    // ٤ ميّز بأذنك
+  await waitFor(() => $$('.vchip--big').length, 'جولات التمييز');
+  for (let round = 1; round <= 3; round++) {
+    await waitFor(() => $$('.vchip--big').length, `جولة ${round}`);
+    const mark = played.length;
+    const heard = await heardTarget(texts('.vchip--big'), mark);
+    if (round === 1) {                                   // خطأ مقصود في الجولة الأولى
+      $$('.vchip--big').find((c) => c.textContent !== heard).click();
+      await sleep(600);
+    }
+    $$('.vchip--big').find((c) => c.textContent === heard).click();
+    await sleep(900);
+  }
+  await waitFor(() => $('.celebrate'), 'ختام الدرس');
+  const quizKeys = Object.keys(stored().skills).filter((k) => k.endsWith('|quiz'));
+  ok(quizKeys.length >= 1 && quizKeys.every((k) => /^.\|(fatha|kasra|damma)\|quiz$/.test(k)),
+    `تمرين التمييز يسجّل مهاراته بالحركة المسموعة (${quizKeys.join('، ')})`);
+  ok(Object.values(stored().skills).reduce((s, x) => s + x.wrong, 0) === 2,
+    'مجموع الأخطاء المسجّلة في الدرس = خطآن (واحد في كل تمرين)');
+
+  $('.celebrate .btn--primary').click();
+  await waitFor(() => $('.station'), 'العودة للخريطة');
+  ok(!!reviewCard(), 'بعد درسين تظهر بطاقة «مراجعة اليوم» على الخريطة');
+  const cards = $$('.continue');
+  ok(cards[0] === reviewCard(), 'وتتقدّم على «تابع من هنا» (التثبيت قبل الجديد)');
+
+  // ————— ٣) جلسة المراجعة: تُبنى من المستحقّ وتنطق المخزون وحده —————
+  const STUDIED = 'ابملنرد';
+  const nodes = ['g1:ا', 'g1:ب', 'g1:م', 'g1:ل', 'g1:words', 'g2:ن', 'g2:ر', 'g2:د'];
+  const now = dayNumber();
+  const skill = (letter, haraka, kind, wrong) =>
+    [`${letter}|${haraka}|${kind}`, { right: 0, wrong, box: 0, due: now, seen: now }];
+  await seed(nodes, {
+    skills: Object.fromEntries([
+      skill('ب', 'sukun', 'build', 5),
+      skill('م', 'fatha', 'haraka', 4),
+      skill('ل', 'damma', 'quiz', 3),
+      skill('ن', 'kasra', 'quiz', 2),
+      skill('ر', 'fatha', 'quiz', 1),
+      skill('د', 'fatha', 'quiz', 1),
+    ]),
+    days: { '2020-01-01': 600 },
+  });
+
+  ok(reviewCard().textContent.includes('تثبيت ٦ مهارات'),
+    `البطاقة تعلن المستحقّ بعربية سليمة (${reviewCard().textContent.trim()})`);
+  reviewCard().click();
+  await waitFor(() => $('.dots'), 'شاشة المراجعة');
+  ok($$('.dot').length === 6, `الجلسة ٦ تمارين (${$$('.dot').length})`);
+  ok($$('.dot--now').length === 1, 'التمرين الحالي مميَّز في الشريط');
+
+  const kinds = [];
+  let firstWrongLetter = null;
+  for (let i = 0; i < 6; i++) {
+    await waitFor(() => $('.vchip') || $('.tiles'), `التمرين ${i + 1}`);
+    const mark = played.length;                          // كل صوت بعد هذا هو صوت هذا التمرين
+    assertDecodable(STUDIED, `التمرين ${i + 1}`);
+
+    if ($('.tiles')) {                                   // تركيب كلمة
+      kinds.push('build');
+      const say = $('.wgame-pic').getAttribute('aria-label').replace('اسمع كلمة ', '');
+      const word = WORDS.find((w) => w.say === say);
+      ok(!!word && [...bare(word.tiles.join(''))].every((c) => STUDIED.includes(c)),
+        `التمرين ${i + 1}: كلمة «${say}» كل حروفها من حصيلته`);
+      ok($$('.slot').length === word.tiles.length, `التمرين ${i + 1}: خانات بعدد مقاطع «${say}»`);
+      if (i === 0) checkTargets('لوح التركيب');
+      for (const t of word.tiles) {
+        const tile = await waitFor(
+          () => $$('.tile:not([disabled])').find((b) => b.querySelector('.tile-face').textContent === t),
+          `بلاطة «${t}»`);
+        tile.click();
+        await sleep(60);
+      }
+      await waitFor(() => played.includes(say), `صوت «${say}»`);
+      ok(true, `التمرين ${i + 1}: «${say}» بُنيت وسُمعت كاملة`);
+    } else {                                             // تمييز حرف أو حركة
+      const big = $$('.vchip--big').length > 0;
+      kinds.push(big ? 'quiz' : 'haraka');
+      const chips = $$('.vchip');
+      const faces = chips.map((c) => c.querySelector('.vchip-face').textContent);
+      const heard = await heardTarget(faces, mark);
+      ok(faces.includes(heard), `التمرين ${i + 1}: المسموع «${heard}» بين الخيارات (${faces.join('|')})`);
+      if (big) ok(new Set(faces.map((f) => f.slice(1))).size === 1,
+        `التمرين ${i + 1}: حركة واحدة لكل خيارات التمييز`);
+      else ok(new Set(faces.map((f) => f[0])).size === 1,
+        `التمرين ${i + 1}: حرف واحد بحركاته الثلاث`);
+      if (i === 0) checkTargets('تمرين التمييز');
+
+      if (!firstWrongLetter) {                           // خطأ مقصود مرة واحدة
+        firstWrongLetter = bare(heard)[0];
+        const wrongChip = chips[faces.findIndex((f) => f !== heard)];
+        wrongChip.click();
+        await sleep(120);
+        ok(wrongChip.classList.contains('bad'), 'الخطأ يُعلَّم ولا ينقل إلى التمرين التالي');
+        ok($$('.dot--now').length === 1 && $$('.dot')[i].classList.contains('dot--now'),
+          'التمرين نفسه باقٍ بعد الخطأ');
+        await sleep(400);
+        ok(lastPlayed() === heard, 'ويُعاد الصوت ليقارن (بلا تلقين الجواب)');
+      }
+      chips[faces.indexOf(heard)].click();
+      await sleep(950);
+    }
+  }
+
+  await waitFor(() => $('.celebrate'), 'ختام المراجعة');
+  ok(new Set(kinds).size === 3, `الجلسة نوّعت التمارين الثلاثة (${kinds.join('، ')})`);
+  ok($$('.big-stars .on').length === 2, `خطأ واحد ⇒ نجمتان (${$$('.big-stars .on').length})`);
+  ok($$('.dot--done').length === 6, 'كل تمارين الشريط صارت منجَزة');
+
+  const after = stored();
+  const log = after.reviews[today()] || {};
+  ok(log.tries === log.right + 1 && log.right >= 6,
+    `مراجعة اليوم محفوظة بوحدة المحاولة: خطأ واحد من ${log.tries} (${JSON.stringify(log)})`);
+  const wrongSkill = Object.entries(after.skills)
+    .find(([k, s]) => k.startsWith(`${firstWrongLetter}|`) && s.wrong > 0);
+  ok(!!wrongSkill && wrongSkill[1].due === now + 1,
+    'ما أخطأ فيه ثم صحّحه يعود غداً (لا يقفز إلى التباعد الطويل)');
+  const advanced = Object.values(after.skills).filter((s) => s.box > 0 && s.due > now).length;
+  ok(advanced >= 4, `وما أصابه تباعد موعده (${advanced} مهارات)`);
+
+  $('.celebrate .btn--primary').click();
+  await waitFor(() => $('.station'), 'العودة للخريطة');
+  ok(reviewCard().textContent.includes('تمّت مراجعة اليوم'), 'الخريطة تعلن أن مراجعة اليوم تمّت');
+
+  // ————— ٤) لوحة وليّ الأمر خلف بوابة حسابية —————
+  const playedBefore = played.length;
+  btn('👪').click();
+  await waitFor(() => $('.giant'), 'بوابة وليّ الأمر');
+  ok(!$('.audit'), 'اللوحة لا تظهر قبل حلّ العملية');
+  const readQ = () => {
+    const [a, b] = $('.giant').textContent.split('×')
+      .map((s) => Number(s.trim().replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))));
+    return { a, b };
+  };
+  const q1 = readQ();
+  ok(q1.a >= 6 && q1.b >= 7 && q1.a * q1.b > 40, `عملية ضرب لا يحلّها طفل السادسة (${q1.a}×${q1.b})`);
+  const input = $('input.chip');
+  input.value = String(q1.a * q1.b + 1);
+  btn('ادخل').click();
+  await sleep(120);
+  ok(!$('.audit') && $('.giant'), 'الجواب الخاطئ لا يفتح اللوحة');
+  const q2 = readQ();
+  ok(q2.a !== q1.a || q2.b !== q1.b, 'ويأتي بعملية جديدة (لا تخمين بالتكرار)');
+  $('input.chip').value = String(q2.a * q2.b).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d]);   // بالأرقام العربية
+  btn('ادخل').click();
+  await waitFor(() => $('.audit'), 'اللوحة بعد الجواب الصحيح');
+  ok(true, 'الجواب الصحيح (بأرقام عربية) يفتح اللوحة');
+
+  const board = $('.audit').textContent;
+  ok(board.includes('توصية اليوم'), 'اللوحة تعرض توصية اليوم');
+  ok(board.includes('الحروف المتقنة') && board.includes('الحروف المتعثّرة'),
+    'وتعرض المتقن والمتعثّر');
+  ok(/دقيقة|أقل من دقيقة|لا شيء/.test(board), 'وتعرض دقائق الاستخدام');
+  ok($$('.audit .pill').length >= 13, `مؤشرات اليوم والأسبوع حاضرة (${$$('.audit .pill').length} مؤشراً)`);
+  const weak = $$('.audit .vchip').map((c) => c.querySelector('.vchip-face').textContent);
+  ok(weak.includes(firstWrongLetter), `الحرف الذي تعثّر فيه (${firstWrongLetter}) معروض على اللوحة`);
+  ok(played.length === playedBefore, 'شاشة وليّ الأمر لا تنطق شيئاً (لا صوت في غير موضعه)');
+
+  await goto('#/');
+  await waitFor(() => $('.station'), 'العودة للخريطة');
+  await goto('#/parent');
+  ok(!!(await waitFor(() => $('.audit'), 'اللوحة بلا بوابة')),
+    'البوابة تبقى مفتوحة ما دامت الصفحة مفتوحة (لا تُرهق وليّ الأمر)');
+
+  // ————— ٥) ساعة الاستخدام: تحسب زمن الانتباه وتخزنه لليوم —————
+  const seconds = await waitFor(() => stored().days[today()], 'نبضة ساعة الاستخدام', 14000);
+  ok(seconds >= 10, `دقائق اليوم تُسجَّل بنبضة الاستخدام (${seconds} ثانية)`);
+  ok(stored().days['2020-01-01'] === 600, 'وأيام سابقة تبقى كما هي');
+
+  // ————— ٦) الصوت والأخطاء —————
+  const missing = played.filter((t) => t.startsWith('?'));
+  ok(missing.length === 0,
+    `كل ما نطقته المراجعة له ملف مولَّد (${played.length} تشغيلاً، ${missing.length} ناقصاً)`);
+  ok(spoken.length === 0, `لم يُستعمل النطق الآلي الاحتياطي (${spoken.length})`);
+  ok(jsErrors.length === 0, `لا أخطاء جافاسكربت (${jsErrors.join(' | ') || 'لا شيء'})`);
+} catch (e) {
+  ok(false, 'استثناء: ' + ((e && e.stack) || e));
+}
+
+await fetch('/result', { method: 'POST', body: JSON.stringify(results, null, 1) });
+</script>
+</body>
+</html>

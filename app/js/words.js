@@ -5,7 +5,7 @@
 // والمقاطع المدروسة هي مقاطع كلمات المجموعات حتى هذه المجموعة — وحروفها كلها
 // مدروسة بالضرورة، فلا يظهر للطفل حرف ولا حركة لم يأتِ دورها.
 
-import { GROUPS, bareLetters } from './curriculum.js';
+import { GROUPS, bareLetters, syllableSkill } from './curriculum.js';
 import * as progress from './progress.js';
 import * as audio from './audio.js';
 import {
@@ -138,6 +138,13 @@ export function renderWordsGame(groupId) {
 
     function onTile(item, btn) {
       if (state.filled >= word.tiles.length) return;      // اكتملت الكلمة
+
+      // القياس على المقطع المطلوب لا على ما اختاره: الحرف × حركته × تمرين التركيب
+      const skill = syllableSkill(word.tiles[state.filled]);
+      if (skill) {
+        progress.recordAttempt(skill.letter, skill.haraka, progress.KINDS.BUILD,
+          item.text === word.tiles[state.filled]);
+      }
 
       if (item.text !== word.tiles[state.filled]) {
         state.errors++;

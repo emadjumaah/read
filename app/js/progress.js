@@ -1,25 +1,53 @@
-// تقدّم الطفل: نجوم كل عقدة + قواعد فتح المجموعات، محفوظة في localStorage.
-// حساب واحد في هذه المرحلة. سجلّ الأخطاء (errors) و(seconds) محجوزان للجلسة ٥.
+// تقدّم الطفل: نجوم كل عقدة + قواعد فتح المجموعات + سجلّ المهارات ودقائق الاستخدام،
+// محفوظ كله في localStorage. حساب واحد في هذه المرحلة.
+//
+// سجلّ المهارات (الجلسة ٥ · METHOD §٦): كل تمرين يسجَّل على مستوى
+// **الحرف × الحركة × نوع التمرين**، ومنه يُبنى التكرار المتباعد وجلسة المراجعة
+// ولوحة وليّ الأمر. لا نصّ منطوق جديد هنا — القياس لا يضيف محتوى.
 
-import { GROUPS } from './curriculum.js';
+import { GROUPS, bareLetters } from './curriculum.js';
 
 const STORE_KEY = 'muallim.progress.v1';
+export const VERSION = 2;            // ١ = نجوم فقط (تُرقّى تلقائياً بلا فقد)
 export const MAX_STARS = 3;
 export const WORDS_PART = 'words';   // عقدة لعبة الكلمات في آخر كل مجموعة
+
+/** أنواع التمارين المقيسة — أسماؤها ثابتة لأنها تُخزَّن في مفاتيح المهارات. */
+export const KINDS = { QUIZ: 'quiz', HARAKA: 'haraka', BUILD: 'build' };
+
+/** تباعد ليتنر بالأيام: كل إجابة صحيحة ترفع الصندوق، والخطأ يعيده إلى الصفر. */
+export const BOX_DAYS = [0, 1, 2, 4, 8, 16];
+export const MAX_BOX = BOX_DAYS.length - 1;
+export const MASTERED_BOX = 3;       // من بلغه في كل تمارينه يُعدّ متقناً
 
 const listeners = new Set();
 
 function blank() {
-  return { v: 1, stars: {}, seconds: 0, errors: {}, startedAt: Date.now(), updatedAt: Date.now() };
+  return {
+    v: VERSION,
+    stars: {},        // معرّف عقدة ← نجوم
+    skills: {},       // «حرف|حركة|تمرين» ← {right, wrong, box, due, seen}
+    days: {},         // «YYYY-MM-DD» ← ثوانٍ من الاستعمال الفعلي
+    reviews: {},      // «YYYY-MM-DD» ← {items, right, at}
+    seconds: 0,
+    startedAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+}
+
+/** ترقية حالة قديمة إلى النسخة الحالية دون فقد نجوم الطفل. */
+function migrate(data) {
+  if (!data || typeof data !== 'object' || typeof data.stars !== 'object') return null;
+  if (data.v !== 1 && data.v !== VERSION) return null;
+  const { errors, ...rest } = data;   // errors: حقل النسخة ١ المحجوز، حلّت محلّه skills
+  return { ...blank(), ...rest, v: VERSION };
 }
 
 function load() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
     if (!raw) return blank();
-    const data = JSON.parse(raw);
-    if (!data || data.v !== 1 || typeof data.stars !== 'object') return blank();
-    return { ...blank(), ...data };
+    return migrate(JSON.parse(raw)) || blank();
   } catch {
     return blank();   // تخزين معطّل أو ممتلئ: نكمل في الذاكرة بلا انهيار
   }
@@ -149,6 +177,184 @@ export function nextNode() {
     }
   }
   return null;   // اكتملت الرحلة
+}
+
+// ————— حصيلة الطفل (ما يجوز أن يظهر له في المراجعة) —————
+
+/** الحروف التي أتمّ دروسها فعلاً، بترتيب المنهج — مرجع المفكوكية في المراجعة. */
+export function studiedLetters() {
+  const out = [];
+  for (const group of GROUPS) {
+    for (const letter of group.letters) {
+      if (isDone(nodeId(group.id, letter))) out.push(letter);
+    }
+  }
+  return out;
+}
+
+/** كلمات المنهج المفكوكة بحصيلته: كل حروفها مدروسة (لا يشترط إتمام لعبة مجموعتها). */
+export function studiedWords(letters = studiedLetters()) {
+  const known = new Set(letters);
+  const out = [];
+  for (const group of GROUPS) {
+    for (const word of group.words) {
+      if ([...bareLetters(word.tiles.join(''))].every((c) => known.has(c))) out.push(word);
+    }
+  }
+  return out;
+}
+
+// ————— سجلّ المهارات والتكرار المتباعد —————
+
+/** رقم اليوم المحلي (لا UTC): وحدة الجدولة في التكرار المتباعد. */
+export function dayNumber(date = new Date()) {
+  return Math.floor((date.getTime() - date.getTimezoneOffset() * 60000) / 86400000);
+}
+
+/** مفتاح اليوم «YYYY-MM-DD» بالتقويم المحلي (لسجلّ الدقائق والمراجعات). */
+export function dayKey(date = new Date()) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/** مفتاح المهارة: حرف × حركة × نوع تمرين. */
+export function skillKey(letter, haraka, kind) {
+  return `${letter}|${haraka || 'none'}|${kind}`;
+}
+
+export function parseSkillKey(key) {
+  const [letter, haraka, kind] = String(key).split('|');
+  return { letter, haraka, kind };
+}
+
+export function getSkill(key) {
+  return state.skills[key] || null;
+}
+
+/** كل المهارات المسجّلة: [{key, letter, haraka, kind, right, wrong, box, due, seen}] */
+export function skills() {
+  return Object.entries(state.skills).map(([key, s]) => ({ key, ...parseSkillKey(key), ...s }));
+}
+
+/**
+ * تسجيل محاولة واحدة. الصحيحة ترفع صندوق ليتنر فيتباعد موعدها،
+ * والخاطئة تعيده إلى الصفر فتعود المهارة في مراجعة اليوم نفسه (METHOD §٦).
+ * @returns {object|null} حالة المهارة بعد التسجيل
+ */
+export function recordAttempt(letter, haraka, kind, correct, today = dayNumber()) {
+  if (!letter || !kind) return null;
+  const key = skillKey(letter, haraka, kind);
+  const s = state.skills[key] || { right: 0, wrong: 0, box: 0, due: today, seen: today };
+  if (correct) {
+    s.right++;
+    s.box = Math.min(MAX_BOX, s.box + 1);
+  } else {
+    s.wrong++;
+    s.box = 0;
+  }
+  s.due = today + BOX_DAYS[s.box];
+  s.seen = today;
+  state.skills[key] = s;
+  save();
+  return s;
+}
+
+/**
+ * المستحقّ للمراجعة اليوم، الأضعف أولاً: أدنى صندوق، ثم أكثر أخطاءً، ثم أقدم استحقاقاً.
+ * (المهارة التي لم تُلمس بعدُ ليست هنا — المراجعة تراجع ما مرّ به الطفل فعلاً.)
+ */
+export function dueSkills(today = dayNumber()) {
+  return skills()
+    .filter((s) => s.due <= today)
+    .sort((a, b) => a.box - b.box || b.wrong - a.wrong || a.due - b.due || a.key.localeCompare(b.key));
+}
+
+/**
+ * حصيلة كل حرف من سجلّه: متقن (كل تمارينه بلغت صندوق الإتقان)،
+ * أو متعثّر (خطآن فأكثر وما زال في الصناديق الدنيا)، أو قيد التعلّم.
+ */
+export function letterStats() {
+  const byLetter = new Map();
+  for (const s of skills()) {
+    const acc = byLetter.get(s.letter)
+      || { letter: s.letter, right: 0, wrong: 0, minBox: MAX_BOX, kinds: 0, seen: 0 };
+    acc.right += s.right;
+    acc.wrong += s.wrong;
+    acc.minBox = Math.min(acc.minBox, s.box);
+    acc.kinds++;
+    acc.seen = Math.max(acc.seen, s.seen);
+    byLetter.set(s.letter, acc);
+  }
+  const order = GROUPS.flatMap((g) => g.letters);
+  return [...byLetter.values()]
+    .map((a) => ({
+      ...a,
+      attempts: a.right + a.wrong,
+      mastered: a.minBox >= MASTERED_BOX,
+      struggling: a.wrong >= 2 && a.minBox <= 1,
+    }))
+    .sort((a, b) => order.indexOf(a.letter) - order.indexOf(b.letter));
+}
+
+// ————— دقائق الاستخدام —————
+
+/** إضافة زمن استعمال فعلي (يُستدعى بنبضة من main.js وقت انتباه الطفل فقط). */
+export function addSeconds(sec, key = dayKey()) {
+  const n = Math.max(0, Math.round(sec));
+  if (!n) return;
+  state.seconds += n;
+  state.days[key] = (state.days[key] || 0) + n;
+  save();
+}
+
+export function secondsOn(key = dayKey()) {
+  return state.days[key] || 0;
+}
+
+export function totalSeconds() {
+  return state.seconds;
+}
+
+/** آخر N يوماً منتهيةً باليوم: [{key, seconds}] — للوحة وليّ الأمر. */
+export function usageDays(count = 7, today = new Date()) {
+  const out = [];
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+    out.push({ key: dayKey(d), seconds: secondsOn(dayKey(d)) });
+  }
+  return out;
+}
+
+// ————— جلسة المراجعة اليومية —————
+
+export function reviewOf(key = dayKey()) {
+  return state.reviews[key] || null;
+}
+
+/**
+ * تسجيل مراجعة أُتمّت اليوم. الوحدة **محاولة** لا تمرين — تمرين التركيب فيه
+ * محاولة لكل مقطع، فخلطهما يكذب على وليّ الأمر في نسبة الإصابة.
+ */
+export function markReview(tries, right, key = dayKey()) {
+  const before = state.reviews[key];
+  state.reviews[key] = {
+    tries: (before?.tries || 0) + tries,
+    right: (before?.right || 0) + right,
+    at: Date.now(),
+  };
+  save();
+  return state.reviews[key];
+}
+
+/** أيام المراجعة المتتالية المنتهية باليوم أو بالأمس (لا تنكسر السلسلة قبل نوم الطفل). */
+export function reviewStreak(today = new Date()) {
+  let streak = 0;
+  for (let i = 0; i < 400; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+    if (state.reviews[dayKey(d)]) streak++;
+    else if (i > 0 || streak) break;
+  }
+  return streak;
 }
 
 // ————— إدارة —————

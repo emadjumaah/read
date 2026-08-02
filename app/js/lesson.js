@@ -4,7 +4,9 @@
 // المفكوكية ١٠٠٪: كل حرف يظهر في هذه الشاشة (خياراتٍ كان أو كلمةَ مثال) مأخوذ من
 // lettersThrough(group, letter) — أي المدروس فعلاً حتى هذا الدرس، لا حتى نهاية المجموعة.
 
-import { LETTERS, HARAKAT, letterForms, lettersThrough, exampleWordFor } from './curriculum.js';
+import {
+  LETTERS, HARAKAT, HARAKA_BY_MARK, letterForms, lettersThrough, exampleWordFor,
+} from './curriculum.js';
 import * as progress from './progress.js';
 import * as audio from './audio.js';
 import {
@@ -183,10 +185,12 @@ export function renderLesson(groupId, letter) {
     });
 
     function onPick(item, btn) {
-      if (!target || solved) {          // وضع الاستماع الحر
+      if (!target || solved) {          // وضع الاستماع الحر (لا يُقاس)
         audio.play(item.text);
         return;
       }
+      // القياس على مستوى (حرف × حركة × تمرين) — METHOD §٦
+      progress.recordAttempt(letter, target.key, progress.KINDS.HARAKA, item.text === target.text);
       if (item.text === target.text) {
         solved = true;
         btn.classList.add('good');
@@ -339,6 +343,7 @@ export function renderLesson(groupId, letter) {
 
     function onPick(ch, btn, r) {
       if (locked) return;
+      progress.recordAttempt(r.target, HARAKA_BY_MARK[r.mark], progress.KINDS.QUIZ, ch === r.target);
       if (ch === r.target) {
         locked = true;
         btn.classList.add('good');

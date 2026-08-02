@@ -180,6 +180,36 @@ export function lettersThrough(groupId, letter) {
   return [];
 }
 
+// ————— تحليل المقطع (يخدم القياس والمراجعة: مهارة = حرف × حركة) —————
+
+export const SUKUN = 'ْ';
+
+/** العلامة ← مفتاحها. السكون ليس حركةً في HARAKAT لكنه وجه من وجوه الحرف يُقاس. */
+export const HARAKA_BY_MARK = {
+  'َ': 'fatha',
+  'ِ': 'kasra',
+  'ُ': 'damma',
+  [SUKUN]: 'sukun',
+};
+
+/** مفتاح الحركة ← علامتها (سلسلة فارغة للمجهول). */
+export function markOf(haraka) {
+  if (haraka === 'sukun') return SUKUN;
+  return HARAKAT.find((k) => k.key === haraka)?.mark ?? '';
+}
+
+/**
+ * مهارة المقطع: أول حرف فيه وحركته — «بَيْ» ← {ب, fatha}، «بْ» ← {ب, sukun}.
+ * هي وحدة القياس في سجلّ الأخطاء (METHOD §٦: الحرف × الحركة × نوع التمرين).
+ * تعود null لنصّ بلا حرف معروف.
+ */
+export function syllableSkill(text) {
+  const chars = [...String(text ?? '')];
+  const index = chars.findIndex((c) => LETTERS[c]);
+  if (index < 0) return null;
+  return { letter: chars[index], haraka: HARAKA_BY_MARK[chars[index + 1]] || 'none' };
+}
+
 // الحركات والسكون والشدة والتنوين (U+064B–U+0652) + الألف الخنجرية + التطويل + الفراغ
 const MARK_OR_TATWEEL = /[ً-ْٰـ\s]/g;
 

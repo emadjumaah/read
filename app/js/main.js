@@ -6,6 +6,8 @@ import * as progress from './progress.js';
 import * as audio from './audio.js';
 import { renderLesson } from './lesson.js';
 import { renderWordsGame } from './words.js';
+import { renderReview } from './review.js';
+import { renderParent, skillsText } from './parent.js';
 import {
   h, toast, go, arNum, starsRow, topbar, letterTitle,
   ACCENTS, accentFor, DEV,
@@ -24,11 +26,19 @@ function renderMap() {
       h('h1', {}, 'المُعلِّم'),
       h('span', { class: 'spacer' }),
       DEV && h('button', { class: 'btn btn--ghost', onclick: () => go('#/audio') }, '🔊 فحص الأصوات'),
+      h('button', {
+        class: 'btn btn--ghost',
+        'aria-label': 'لوحة وليّ الأمر',
+        onclick: () => go('#/parent'),
+      }, '👪'),
       h('span', { class: 'pill pill--stars' }, `★ ${arNum(earned)} / ${arNum(progress.maxTotalStars())}`),
     ),
   );
 
   const main = h('main', { class: 'map' });
+
+  const review = reviewCard();
+  if (review) main.append(review);
 
   if (next) {
     const group = progress.findGroup(next.groupId);
@@ -68,6 +78,33 @@ function renderMap() {
 
   screen.append(main);
   return screen;
+}
+
+/**
+ * بطاقة «مراجعة اليوم» فوق الخريطة: تظهر متى صار للطفل حصيلة يُراجَع فيها،
+ * وتتقدّم على «تابع من هنا» لأن تثبيت المتزعزع أولى من درس جديد يُبنى عليه.
+ * مراجعة اليوم إن تمّت تبقى مفتوحة للإعادة لكنها تفقد نبرة الإلحاح.
+ */
+function reviewCard() {
+  const letters = progress.studiedLetters();
+  if (letters.length < 2) return null;   // لا حصيلة بعدُ: لا مراجعة
+
+  const due = progress.dueSkills().length;
+  const done = Boolean(progress.reviewOf());
+  const line = done ? 'تمّت مراجعة اليوم — يمكنك إعادتها'
+    : due ? `حان وقت تثبيت ${skillsText(due)}`
+      : 'تمارين سريعة مما درسته';
+
+  return h('button', {
+    class: 'continue',
+    css: { background: done ? '#e9f8ec' : '#0c8599', color: done ? '#2b8a3e' : '#fff' },
+    onclick: () => go('#/review'),
+  },
+    h('span', { class: 'continue-face' }, done ? '✓' : '🔁'),
+    h('span', { class: 'continue-text' },
+      h('b', {}, 'مراجعة اليوم'),
+      h('small', {}, line)),
+  );
 }
 
 function stationEl(group, index, next) {
@@ -202,6 +239,15 @@ async function render() {
   } else if (name === 'words' && arg1) {
     if (!guard(arg1, progress.WORDS_PART)) return;
     screen = renderWordsGame(arg1) || renderMap();
+  } else if (name === 'review') {
+    screen = renderReview();
+    if (!screen) {                       // لا حصيلة للمراجعة بعدُ
+      toast('أتمِم درساً أولاً، ثم تأتي المراجعة 😊');
+      location.replace('#/');
+      return;
+    }
+  } else if (name === 'parent') {
+    screen = renderParent(render);
   } else if (name === 'audio' && DEV) {
     screen = await renderAudit();
   } else {
@@ -224,6 +270,28 @@ function revealNext() {
   }
 }
 
+// ————— ساعة الاستخدام —————
+// تُحسب دقائق التعلّم الفعلي وحدها: الصفحة ظاهرة، وللطفل تفاعل قريب.
+// (شاشة مفتوحة منسيّة لا تُحسب — وإلا كذبت لوحة وليّ الأمر على وليّ الأمر.)
+
+const TICK_MS = 10000;
+const IDLE_MS = 60000;
+let lastTouch = Date.now();
+
+function startClock() {
+  const touched = () => { lastTouch = Date.now(); };
+  for (const type of ['pointerdown', 'keydown', 'hashchange']) {
+    window.addEventListener(type, touched, { passive: true });
+  }
+  document.addEventListener('visibilitychange', touched);
+  setInterval(() => {
+    if (document.visibilityState !== 'visible') return;
+    if (Date.now() - lastTouch > IDLE_MS) return;
+    progress.addSeconds(TICK_MS / 1000);
+  }, TICK_MS);
+}
+
 window.addEventListener('hashchange', render);
 audio.ready();
+startClock();
 render();

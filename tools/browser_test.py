@@ -3,12 +3,14 @@
 
     python3 tools/browser_test.py              # درس الحرف: يسوق التطبيق ويطبع التقرير
     python3 tools/browser_test.py --words      # لعبة تركيب الكلمات (المجموعات السبع)
-    python3 tools/browser_test.py --shots out.png [--words]   # لقطة للمراجعة البصرية
+    python3 tools/browser_test.py --review     # المراجعة اليومية ولوحة وليّ الأمر
+    python3 tools/browser_test.py --shots out.png [--words|--review]   # لقطة للمراجعة البصرية
     python3 tools/browser_test.py --show       # بمتصفّح مرئي لتتبّع ما يجري
 
 كيف يعمل: خادم صغير يخدم مجلد app/ ويضيف صفحات الاختبار وحدها من هذا المجلد
-(/__test.html و/__shots.html و/__words.html و/__words_shots.html) ويستقبل النتيجة
-بـPOST /result، فلا تبقى في app/ صفحة اختبار تُخدَم للطفل.
+(/__test.html و/__shots.html و/__words.html و/__words_shots.html و/__review.html
+و/__review_shots.html) ويستقبل النتيجة بـPOST /result، فلا تبقى في app/ صفحة اختبار
+تُخدَم للطفل.
 
 ملاحظة: --dump-dom و--virtual-time-budget غير موثوقين مع fetch والصوت،
 لذلك تُرسَل النتائج من الصفحة نفسها ثم يُقتل المتصفّح.
@@ -34,6 +36,8 @@ PAGES = {
     "/__shots.html": TOOLS / "browser_shots.html",
     "/__words.html": TOOLS / "browser_words.html",
     "/__words_shots.html": TOOLS / "browser_words_shots.html",
+    "/__review.html": TOOLS / "browser_review.html",
+    "/__review_shots.html": TOOLS / "browser_review_shots.html",
 }
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
@@ -87,6 +91,7 @@ def main():
     ap.add_argument("--timeout", type=int, default=90, help="ثوانٍ قبل الاستسلام")
     ap.add_argument("--shots", metavar="PNG", help="لقطة للمراجعة البصرية بدل تشغيل الاختبارات")
     ap.add_argument("--words", action="store_true", help="لعبة تركيب الكلمات بدل درس الحرف")
+    ap.add_argument("--review", action="store_true", help="المراجعة اليومية ولوحة وليّ الأمر")
     ap.add_argument("--show", action="store_true", help="متصفّح مرئي")
     args = ap.parse_args()
 
@@ -99,7 +104,8 @@ def main():
     try:
         if args.shots:
             out = Path(args.shots).resolve()
-            page, size = (("__words_shots.html", "980,2100") if args.words
+            page, size = (("__review_shots.html", "1100,3050") if args.review
+                          else ("__words_shots.html", "980,2100") if args.words
                           else ("__shots.html", "980,2650"))
             proc = run_chrome(f"{base}/{page}?dev=1", profile,
                               [f"--screenshot={out}", f"--window-size={size}", "--hide-scrollbars"],
@@ -111,7 +117,7 @@ def main():
             print(f"اللقطة: {out}" if out.exists() else "تعذّرت اللقطة")
             return 0 if out.exists() else 1
 
-        page = "__words.html" if args.words else "__test.html"
+        page = "__review.html" if args.review else "__words.html" if args.words else "__test.html"
         proc = run_chrome(f"{base}/{page}", profile, ["--hide-scrollbars"], args.show)
         deadline = time.time() + args.timeout
         while time.time() < deadline:

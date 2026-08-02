@@ -16,6 +16,17 @@ export function accentFor(group) {
 const AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 export const arNum = (n) => String(n).replace(/\d/g, (d) => AR_DIGITS[+d]);
 
+/**
+ * صياغة المعدود بالعربية الصحيحة: [مفرد، مثنى، جمع قلة (٣–١٠)، مفرد منصوب (١١+)].
+ * الشاشة يقرؤها وليّ أمر عربي — «٨ دقيقة» غلط لا يليق بتطبيق يعلّم العربية.
+ */
+export function arCount(n, [one, two, few, many]) {
+  if (n === 1) return one;
+  if (n === 2) return two;
+  if (n >= 3 && n <= 10) return `${arNum(n)} ${few}`;
+  return `${arNum(n)} ${many}`;
+}
+
 /** اسم الحرف كما يُقرأ في العناوين: «حرف باء». */
 export const letterTitle = (ch) => `حرف ${LETTERS[ch]?.name ?? ch}`;
 
