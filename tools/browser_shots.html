@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>لقطات خطوات الدرس</title>
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+    body { padding: 1rem; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; align-items: start; }
+    .cell { background: rgba(255,255,255,.35); border-radius: 24px; padding: .5rem; }
+    .cell > h4 { margin: .2rem 0 .4rem; text-align: center; color: #b8720a; }
+    .app { max-width: none; padding: 0; }
+    .dev { display: none; }   /* أدوات التجربة تُستعمل للقيادة فقط ولا تدخل اللقطة */
+  </style>
+</head>
+<body>
+<div id="toast" class="toast" hidden></div>
+<div class="grid" id="grid"></div>
+<script type="module">
+import { renderLesson } from './js/lesson.js';
+
+const grid = document.getElementById('grid');
+const $$ = (root, sel) => [...root.querySelectorAll(sel)];
+
+function instance(title, drive) {
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  cell.innerHTML = `<h4>${title}</h4>`;
+  const app = document.createElement('div');
+  app.className = 'app';
+  app.append(renderLesson('g1', 'ب'));
+  cell.append(app);
+  grid.append(cell);
+  drive(app);
+}
+
+instance('١ — اسمع وشاهد', () => {});
+instance('٢ — الحركات (بعد السؤال)', (app) => {
+  app.querySelector('.next').click();
+  $$(app, '.btn').find((b) => b.textContent.includes('أيها سمعت')).click();
+  const chips = $$(app, '.vchip');
+  chips[0].classList.add('good');
+  chips[2].classList.add('bad');
+});
+instance('٣ — تتبّع', (app) => {
+  app.querySelector('.next').click();
+  $$(app, '.btn').find((b) => b.textContent.includes('أيها سمعت')).click();
+  $$(app, '.vchip')[0].click();
+  $$(app, '.vchip')[1].click();
+  $$(app, '.vchip')[2].click();
+  app.querySelector('.next')?.click();
+});
+instance('٤ — ميّز بأذنك', (app) => {
+  app.querySelector('.next').click();
+  $$(app, '.btn').find((b) => b.textContent.includes('أيها سمعت')).click();
+  $$(app, '.vchip').forEach((c) => c.click());          // إحداها الصحيحة فيظهر «تابع»
+  app.querySelector('.next').click();                   // ← تتبّع
+  $$(app, '.btn').find((b) => b.textContent.includes('تمّ')).click();
+});
+instance('٥ — الاحتفال', (app) => {
+  $$(app, '.btn').find((b) => b.textContent.includes('إنهاء الدرس')).click();
+});
+</script>
+</body>
+</html>

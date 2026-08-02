@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><title>اختبار درس الحرف</title></head>
+<body>
+<pre id="out" style="font:14px/1.6 monospace"></pre>
+<iframe id="frame" src="index.html" style="width:420px;height:900px;border:1px solid #ccc"></iframe>
+<script type="module">
+const out = document.getElementById('out');
+const results = [];
+const post = () => navigator.sendBeacon('/result',
+  new Blob([JSON.stringify(results, null, 1)], { type: 'text/plain' }));
+const ok = (cond, msg) => {
+  results.push({ ok: !!cond, msg });
+  out.textContent += `${cond ? '✓' : '✗'} ${msg}\n`;
+  post();                        // نتيجة جزئية بعد كل تحقّق كي لا يضيع التقرير عند التعليق
+};
+setTimeout(() => { ok(false, 'انتهت المهلة الكلية'); post(); }, 60000);
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function waitFor(fn, label = '', ms = 4000) {
+  const t0 = Date.now();
+  for (;;) {
+    let v; try { v = fn(); } catch { v = null; }
+    if (v) return v;
+    if (Date.now() - t0 > ms) throw new Error('انتظار طويل: ' + label);
+    await sleep(30);
+  }
+}
+
+const manifest = await (await fetch('audio/manifest.json')).json();
+const frame = document.getElementById('frame');
+
+const played = [];      // نصوص شُغِّلت من الملفات المولَّدة
+const spoken = [];      // ما لجأ إلى النطق الآلي (يجب أن يبقى فارغاً)
+const jsErrors = [];
+let win, doc;
+
+/** يربط الأدوات بنافذة الإطار الحالية ويعزل الصوت عن فكّ الترميز. */
+function attach() {
+  win = frame.contentWindow;
+  doc = frame.contentDocument;
+  win.addEventListener('error', (e) => jsErrors.push(String(e.message)));
+  win.addEventListener('unhandledrejection', (e) => jsErrors.push('رفض غير معالَج: ' + e.reason));
+  win.Audio = class extends win.EventTarget {
+    constructor(src = '') { super(); this.src = src; this.preload = ''; this.currentTime = 0; }
+    play() {
+      const key = (this.src.split('/').pop() || '').replace('.mp3', '');
+      played.push(manifest[key] ?? `?${key}`);
+      setTimeout(() => this.dispatchEvent(new Event('ended')), 5);
+      return Promise.resolve();
+    }
+    pause() {}
+  };
+  win.SpeechSynthesisUtterance = class { constructor(text) { spoken.push(text); this.text = text; } };
+}
+
+async function reload() {
+  const done = new Promise((r) => frame.addEventListener('load', r, { once: true }));
+  frame.src = 'index.html';
+  await done;
+  attach();
+  await sleep(120);
+}
+
+await new Promise((r) => frame.addEventListener('load', r, { once: true }));
+attach();
+
+const $ = (sel) => doc.querySelector(sel);
+const $$ = (sel) => [...doc.querySelectorAll(sel)];
+const texts = (sel) => $$(sel).map((el) => el.textContent.trim());
+const bare = (s) => s.replace(/[ً-ْٰـ\s]/g, '');
+const lastPlayed = () => played[played.length - 1];
+const btn = (label) => $$('.btn').find((b) => b.textContent.includes(label));
+
+async function goto(hash) {
+  win.location.hash = hash;
+  await sleep(100);
+}
+const stepName = () => $('.step--now .step-name')?.textContent;
+const clickNext = async () => { (await waitFor(() => $('.next'), 'زر تابع')).click(); await sleep(70); };
+
+/** كل حرف عربي معروض للقراءة (لا نصوص الواجهة) ⊆ المدروس — مفكوكية ١٠٠٪. */
+function assertDecodable(studied, where) {
+  const sel = '.giant, .form-face, .vchip-face, .word-text, .celebrate-face';
+  const shown = new Set([...bare(texts(sel).join(''))].filter((c) => /[ء-ي]/.test(c)));
+  const bad = [...shown].filter((c) => !studied.includes(c));
+  ok(bad.length === 0, `${where}: لا حرف غير مدروس في سطح القراءة${bad.length ? ' — ' + bad.join('،') : ''}`);
+}
+
+/** كل ما يُنقَر عليه في الشاشة ≥ ٤٨ بكسل (إصبع طفل على آيباد). */
+function checkTargets(where) {
+  const small = $$('.lesson button')
+    .map((el) => [el, el.getBoundingClientRect()])
+    .filter(([, r]) => r.width && (r.height < 48 || r.width < 48))
+    .map(([el]) => el.className);
+  ok(small.length === 0, `${where}: أهداف اللمس ≥٤٨ بكسل${small.length ? ' — ' + small.join('،') : ''}`);
+}
+
+/** يخوض جولات «ميّز بأذنك» بلا خطأ ويتحقّق من سلامة كل جولة. */
+async function playQuiz(studied, expectedOptions) {
+  for (let round = 1; round <= 3; round++) {
+    await waitFor(() => $$('.vchip--big').length > 0, 'خيارات الجولة');
+    await sleep(340);                     // الهدف يُشغَّل بعد ربع ثانية من بدء الجولة
+    const heard = lastPlayed();
+    const opts = texts('.vchip--big');
+    ok(opts.length === expectedOptions, `الجولة ${round}: ${expectedOptions} خيارات (${opts.join('|')})`);
+    ok(opts.every((o) => studied.includes(bare(o))), `الجولة ${round}: الخيارات من المدروس فقط`);
+    ok(opts.includes(heard), `الجولة ${round}: المسموع «${heard}» بين الخيارات`);
+    ok(new Set(opts.map((o) => o.slice(1))).size === 1, `الجولة ${round}: حركة واحدة لكل الخيارات`);
+    assertDecodable(studied, `الجولة ${round}`);
+    if (round === 1) checkTargets('ميّز بأذنك');
+    $$('.vchip--big').find((c) => c.textContent === heard).click();
+    await sleep(900);
+  }
+}
+
+try {
+  // ————— الخريطة —————
+  await waitFor(() => $('.station'), 'الخريطة');
+  ok($$('.station').length === 7, 'الخريطة تعرض المحطات السبع');
+
+  // ————— درس الألف: أول درس في الرحلة —————
+  await goto('#/lesson/g1/%D8%A7');
+  await waitFor(() => $('.lesson'), 'شاشة الدرس');
+  ok(texts('.step-name').join('|') === 'اسمع وشاهد|الحركات|تتبّع',
+    `أول درس: ثلاث خطوات بلا «ميّز بأذنك» (${texts('.step-name').join('|')})`);
+  ok($('.giant').textContent === 'ا', 'الحرف كبيراً في الخطوة الأولى');
+  ok($$('.form-cell').length === 4, 'أشكاله الأربعة معروضة');
+  ok(!$('.example'), 'لا كلمة مثال للألف (لا كلمة مفكوكة بعد)');
+  assertDecodable('ا', 'درس الألف');
+
+  btn('اسمه').click();
+  await sleep(40);
+  ok(lastPlayed() === 'أَلِف', `زر «اسمه» يشغّل اسم الحرف (${lastPlayed()})`);
+  $('.giant').click();
+  await sleep(40);
+  ok(lastPlayed() === 'اَ', `الحرف الكبير يشغّل صوته (${lastPlayed()})`);
+
+  // الخطوة ٢: الحركات — نتعمّد خطأً واحداً
+  await clickNext();
+  ok(stepName() === 'الحركات', 'انتقلنا إلى خطوة الحركات');
+  ok(texts('.vchip-face').join('|') === 'اَ|اِ|اُ', `الحركات الثلاث معروضة (${texts('.vchip-face').join('|')})`);
+  $$('.vchip')[1].click();
+  await sleep(40);
+  ok(lastPlayed() === 'اِ', 'نقرة على البلاطة تُسمعها قبل السؤال');
+
+  btn('أيها سمعت').click();
+  await sleep(60);
+  const target = lastPlayed();
+  ok(['اَ', 'اِ', 'اُ'].includes(target), `السؤال يشغّل إحدى الحركات (${target})`);
+  const chips = $$('.vchip');
+  const wrong = chips.find((c) => c.querySelector('.vchip-face').textContent !== target);
+  wrong.click();
+  await sleep(80);
+  ok(wrong.classList.contains('bad'), 'الاختيار الخاطئ يُعلَّم ولا ينتقل');
+  ok(!$('.next'), 'زر «تابع» لا يظهر قبل الإجابة الصحيحة');
+  const right = chips.find((c) => c.querySelector('.vchip-face').textContent === target);
+  right.click();
+  await sleep(80);
+  ok(right.classList.contains('good'), 'الاختيار الصحيح يُعلَّم');
+  ok(!!$('.next'), 'زر «تابع» ظهر بعد الإجابة الصحيحة');
+
+  // الخطوة ٣: التتبّع
+  await clickNext();
+  ok(stepName() === 'تتبّع', 'انتقلنا إلى خطوة التتبّع');
+  const canvas = await waitFor(() => $('canvas.trace'), 'لوح التتبّع');
+  await sleep(150);
+  ok(canvas.width > 0 && canvas.height > 0, `اللوح مقاس فعلياً (${canvas.width}×${canvas.height})`);
+  const ctx = canvas.getContext('2d');
+  const ink = () => [...ctx.getImageData(4, canvas.height - 80, 60, 60).data]
+    .filter((v, i) => i % 4 === 3 && v > 0).length;
+  const box = canvas.getBoundingClientRect();
+  const before = ink();
+  const pe = (type, x, y) => canvas.dispatchEvent(new win.PointerEvent(type,
+    { clientX: x, clientY: y, pointerId: 1, bubbles: true, cancelable: true, isPrimary: true }));
+  const y0 = box.top + box.height - 40;
+  pe('pointerdown', box.left + 10, y0);
+  for (let i = 1; i <= 12; i++) pe('pointermove', box.left + 10 + i * 3, y0 - i * 2);
+  pe('pointerup', box.left + 46, y0 - 24);
+  await sleep(40);
+  const after = ink();
+  ok(after > before, `الرسم بالإصبع يترك أثراً على اللوح (${before}→${after})`);
+  const scrolled = doc.documentElement.scrollTop;
+  btn('امسح').click();
+  await sleep(40);
+  ok(ink() <= before, 'زر «امسح» يمسح الرسم ويُبقي النموذج الباهت');
+  ok(scrolled === doc.documentElement.scrollTop, 'الرسم لا يمرّر الصفحة');
+
+  // الختام: نجمتان (خطأ واحد)
+  btn('تمّ').click();
+  await waitFor(() => $('.celebrate'), 'شاشة الاحتفال');
+  ok($$('.big-stars .on').length === 2, `خطأ واحد ⇒ نجمتان (${$$('.big-stars .on').length})`);
+  ok(JSON.parse(win.localStorage.getItem('muallim.progress.v1')).stars['g1:ا'] === 2,
+    'النجمتان محفوظتان في localStorage');
+
+  // ————— العودة للخريطة وفتح الحرف التالي —————
+  $('.celebrate .btn--primary').click();   // زر الاحتفال لا زر الشريط العلوي
+  await waitFor(() => $('.station'), 'العودة للخريطة');
+  ok($('[data-next]')?.getAttribute('aria-label')?.includes('باء'), 'الخريطة تشير إلى حرف الباء تالياً');
+
+  // ————— درس الباء: أربع خطوات وكلمة مثال ملوَّنة، وثلاث نجوم بلا خطأ —————
+  await goto('#/lesson/g1/%D8%A8');
+  await waitFor(() => $('.lesson'), 'درس الباء');
+  ok(texts('.step-name').join('|') === 'اسمع وشاهد|الحركات|تتبّع|ميّز بأذنك', 'درس الباء بأربع خطوات');
+  ok($('.example-word .word-text').textContent === 'بَابَا', `كلمة المثال: ${$('.example-word .word-text').textContent}`);
+  ok(texts('.lit').join('|') === 'بَ|بَ', `الحرف ملوَّن داخل الكلمة مرتين (${texts('.lit').join('|')})`);
+  ok(texts('.form-face').join('|') === 'ب|بـ|ـبـ|ـب', `أشكال الباء الأربعة (${texts('.form-face').join('|')})`);
+  assertDecodable('اب', 'درس الباء');
+  const litColor = win.getComputedStyle($('.lit')).color;
+  ok(litColor === 'rgb(232, 89, 12)' && litColor !== win.getComputedStyle($('.example-word')).color,
+    `الحرف المستهدف بلون المجموعة داخل الكلمة (${litColor})`);
+  checkTargets('الخطوة الأولى');
+  $('.example-word').click();
+  await sleep(40);
+  ok(lastPlayed() === 'بابا', `كلمة المثال تُسمع كاملة (${lastPlayed()})`);
+
+  await clickNext();
+  btn('أيها سمعت').click();
+  await sleep(60);
+  const t2 = lastPlayed();
+  $$('.vchip').find((c) => c.querySelector('.vchip-face').textContent === t2).click();
+  await sleep(80);
+  await clickNext();
+  btn('تمّ').click();
+  await sleep(80);
+  ok(stepName() === 'ميّز بأذنك', 'وصلنا إلى «ميّز بأذنك»');
+  await playQuiz('اب', 2);
+
+  await waitFor(() => $('.celebrate'), 'احتفال درس الباء');
+  ok($$('.big-stars .on').length === 3, `بلا أخطاء ⇒ ثلاث نجوم (${$$('.big-stars .on').length})`);
+  ok(JSON.parse(win.localStorage.getItem('muallim.progress.v1')).stars['g1:ب'] === 3,
+    'ثلاث نجوم محفوظة للباء');
+
+  $$('.celebrate .btn').find((b) => b.textContent.includes('أعِد')).click();
+  await sleep(90);
+  ok(stepName() === 'اسمع وشاهد' && $$('.step').length === 4, 'زر «أعِد الدرس» يبدأ الدرس من أوله');
+
+  // ————— القفل محروس في التوجيه —————
+  await goto('#/lesson/g1/%D9%84');
+  await sleep(150);
+  ok(!!$('.station'), 'درس مقفل (لام) يعيد الطفل إلى الخريطة');
+
+  // ————— درس متأخّر (راء في المجموعة ٢): ثلاثة خيارات من ستة حروف مدروسة —————
+  win.localStorage.setItem('muallim.progress.v1', JSON.stringify({
+    v: 1,
+    stars: Object.fromEntries(['g1:ا', 'g1:ب', 'g1:م', 'g1:ل', 'g1:words', 'g2:ن'].map((k) => [k, 3])),
+    seconds: 0, errors: {}, startedAt: Date.now(), updatedAt: Date.now(),
+  }));
+  await reload();
+  await goto('#/lesson/g2/%D8%B1');
+  await waitFor(() => $('.lesson'), 'درس الراء');
+  ok($('.example-word .word-text').textContent === 'نَارْ', `كلمة مثال الراء: ${$('.example-word .word-text').textContent}`);
+  assertDecodable('ابملنر', 'درس الراء');
+  await clickNext();
+  btn('أيها سمعت').click();
+  await sleep(60);
+  const t3 = lastPlayed();
+  $$('.vchip').find((c) => c.querySelector('.vchip-face').textContent === t3).click();
+  await sleep(80);
+  await clickNext();
+  btn('تمّ').click();
+  await sleep(80);
+  await playQuiz('ابملنر', 3);
+  await waitFor(() => $('.celebrate'), 'احتفال درس الراء');
+  ok(JSON.parse(win.localStorage.getItem('muallim.progress.v1')).stars['g2:ر'] === 3, 'نجوم الراء محفوظة');
+
+  // بعد الإتمام لا يُسأل الطفل «تريد الخروج؟» — زر الشريط العلوي ينقله مباشرة
+  btn('الخريطة').click();
+  await sleep(200);
+  ok(!!$('.station'), 'زر الشريط العلوي بعد الإتمام يعود للخريطة بلا استئذان');
+  ok($$('.node--done').length >= 3, `العقد المنجَزة تظهر منجَزة على الخريطة (${$$('.node--done').length})`);
+
+  // ————— الصوت والأخطاء —————
+  const missing = played.filter((t) => t.startsWith('?'));
+  ok(missing.length === 0, `كل ما شُغِّل له ملف مولَّد (${played.length} تشغيلاً، ${missing.length} ناقصاً)`);
+  ok(spoken.length === 0, `لم يُستعمل النطق الآلي الاحتياطي (${spoken.length})`);
+  ok(jsErrors.length === 0, `لا أخطاء جافاسكربت (${jsErrors.join(' | ') || 'لا شيء'})`);
+} catch (e) {
+  ok(false, 'استثناء: ' + ((e && e.stack) || e));
+}
+
+await fetch('/result', { method: 'POST', body: JSON.stringify(results, null, 1) });
+</script>
+</body>
+</html>

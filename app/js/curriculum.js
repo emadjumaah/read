@@ -95,6 +95,7 @@ export const GROUPS = [
       { tiles: ['يَ', 'دْ'], say: 'يد', emoji: '✋' },
       { tiles: ['وَ', 'لَ', 'دْ'], say: 'ولد', emoji: '👦' },
       { tiles: ['تِي', 'نْ'], say: 'تين', emoji: '🍈' },
+      { tiles: ['تَ', 'مْ', 'رْ'], say: 'تمر', emoji: '🌴' },
       { tiles: ['هِ', 'لَا', 'لْ'], say: 'هلال', emoji: '🌙' },
     ],
   },
@@ -156,4 +157,50 @@ export function lettersUpTo(groupId) {
     if (g.id === groupId) break;
   }
   return out;
+}
+
+/**
+ * الحروف المدروسة لحظةَ درسِ حرفٍ بعينه: كل ما قبل مجموعته + حروف مجموعته حتى هذا الحرف.
+ * القفل تسلسلي داخل المجموعة، فهذه هي حصيلة الطفل الحقيقية — وهي المرجع في اختيار
+ * المشتّتات وكلمات الأمثلة كي لا يظهر حرف لم يُدرَّس (METHOD §٢.٤).
+ * تفشل مغلقةً: معرّف مجهول ⇒ لا شيء مدروس.
+ */
+export function lettersThrough(groupId, letter) {
+  const out = [];
+  for (const g of GROUPS) {
+    if (g.id !== groupId) {
+      out.push(...g.letters);
+      continue;
+    }
+    const index = g.letters.indexOf(letter);
+    if (index < 0) return [];
+    out.push(...g.letters.slice(0, index + 1));
+    return out;
+  }
+  return [];
+}
+
+// الحركات والسكون والشدة والتنوين (U+064B–U+0652) + الألف الخنجرية + التطويل + الفراغ
+const MARK_OR_TATWEEL = /[ً-ْٰـ\s]/g;
+
+/** تجريد النص من الحركات والتطويل — يبقى تسلسل الحروف وحده. */
+export function bareLetters(text) {
+  return text.replace(MARK_OR_TATWEEL, '');
+}
+
+/**
+ * كلمة مثال للحرف: أول كلمة في المنهج تحوي الحرف وكل حروفها مدروسة عند هذا الدرس.
+ * قد تعود null (حروف أوائل المجموعات لا تُكوِّن كلمة بعدُ) فلا يُعرض مثال أصلاً،
+ * ولا تُكسر المفكوكية بكلمة فيها حرف لم يأتِ دوره.
+ */
+export function exampleWordFor(groupId, letter) {
+  const studied = new Set(lettersThrough(groupId, letter));
+  if (!studied.has(letter)) return null;
+  for (const group of GROUPS) {
+    for (const word of group.words) {
+      const chars = bareLetters(word.tiles.join(''));
+      if (chars.includes(letter) && [...chars].every((c) => studied.has(c))) return word;
+    }
+  }
+  return null;
 }

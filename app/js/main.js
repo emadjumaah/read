@@ -1,68 +1,19 @@
 // نقطة الدخول: خريطة الرحلة (المجموعات السبع) والتوجيه بين الشاشات.
-// درس الحرف (الجلسة ٢) ولعبة الكلمات (الجلسة ٣) لهما هنا شاشتان مؤقتتان
-// تعرضان الحرف/الكلمات للاستماع فقط، وتُستبدلان بالكامل في جلستيهما.
+// درس الحرف في app/js/lesson.js؛ ولعبة الكلمات (الجلسة ٣) لها هنا شاشة مؤقتة
+// تعرض الكلمات للاستماع فقط وتُستبدل بالكامل في جلستها.
 
 import { GROUPS, LETTERS, HARAKAT } from './curriculum.js';
 import * as progress from './progress.js';
 import * as audio from './audio.js';
+import { renderLesson } from './lesson.js';
+import {
+  h, toast, go, arNum, starsRow, topbar, letterTitle, wordText,
+  ACCENTS, accentFor, DEV,
+} from './ui.js';
 
 const app = document.getElementById('app');
-const toastEl = document.getElementById('toast');
-const DEV = new URLSearchParams(location.search).get('dev') === '1';
-
-// لون لكل مجموعة على الخريطة (يتغيّر المشهد كلما تقدّم الطفل)
-const ACCENTS = ['#e8590c', '#2f9e44', '#1971c2', '#9c36b5', '#0c8599', '#c92a2a', '#f08c00'];
-
-const AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
-const arNum = (n) => String(n).replace(/\d/g, (d) => AR_DIGITS[+d]);
-
-// ————— أدوات بناء DOM (بلا إطار عمل) —————
-
-function h(tag, props = {}, ...children) {
-  const el = document.createElement(tag);
-  for (const [key, value] of Object.entries(props)) {
-    if (value == null || value === false) continue;
-    if (key === 'class') el.className = value;
-    else if (key === 'css') for (const [k, v] of Object.entries(value)) el.style.setProperty(k, v);
-    else if (key.startsWith('on')) el.addEventListener(key.slice(2).toLowerCase(), value);
-    else if (key in el) el[key] = value;
-    else el.setAttribute(key, value);
-  }
-  for (const child of children.flat(2)) {
-    if (child == null || child === false) continue;
-    el.append(child.nodeType ? child : document.createTextNode(String(child)));
-  }
-  return el;
-}
-
-let toastTimer = 0;
-function toast(message) {
-  toastEl.textContent = message;
-  toastEl.hidden = false;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { toastEl.hidden = true; }, 2200);
-}
-
-function go(hash) {
-  location.hash = hash;
-}
-
-function starsRow(count, className = 'node-stars') {
-  return h('span', { class: className, 'aria-hidden': 'true' },
-    [0, 1, 2].map((i) => h('span', { class: i < count ? 'on' : '' }, i < count ? '★' : '☆')));
-}
-
-/** اسم الحرف كما يُقرأ في العناوين: «حرف باء». */
-const letterTitle = (ch) => `حرف ${LETTERS[ch]?.name ?? ch}`;
-
-/** الكلمة كما تُعرض للطفل: تركيب مقاطعها المشكولة. */
-const wordText = (word) => word.tiles.join('');
 
 // ————— خريطة الرحلة —————
-
-function topbar(...extra) {
-  return h('header', { class: 'topbar' }, extra);
-}
 
 function renderMap() {
   const earned = progress.totalStars();
@@ -83,7 +34,7 @@ function renderMap() {
     const group = progress.findGroup(next.groupId);
     main.append(h('button', {
       class: 'continue',
-      css: { '--accent': ACCENTS[GROUPS.indexOf(group) % ACCENTS.length] },
+      css: { '--accent': accentFor(group) },
       onclick: () => openNode(next),
     },
       h('span', { class: 'continue-face' }, next.type === 'letter' ? next.letter : '🧩'),
@@ -193,52 +144,15 @@ function fillAll(stars) {
   render();
 }
 
-// ————— شاشة مؤقتة: درس الحرف (تُبنى كاملةً في الجلسة ٢) —————
-
-function renderLesson(groupId, letter) {
-  const group = progress.findGroup(groupId);
-  if (!group) return renderMap();
-  const accent = ACCENTS[GROUPS.indexOf(group) % ACCENTS.length];
-  const name = LETTERS[letter]?.name ?? letter;
-
-  audio.preload([name, ...HARAKAT.map((k) => letter + k.mark)]);
-
-  return h('div', { class: 'screen', css: { '--accent': accent } },
-    topbar(
-      h('button', { class: 'btn', onclick: () => go('#/') }, '→ الخريطة'),
-      h('span', { class: 'spacer' }),
-      h('span', { class: 'pill' }, group.title),
-    ),
-    h('main', { class: 'screen-card' },
-      h('h2', {}, letterTitle(letter)),
-      h('button', {
-        class: 'giant',
-        'aria-label': `اسمع اسم ${letterTitle(letter)}`,
-        onclick: () => audio.play(name),
-      }, letter),
-      h('p', { class: 'hint' }, 'اضغط الحرف لتسمع اسمه'),
-      h('div', { class: 'row' }, HARAKAT.map((k) => h('button', {
-        class: 'chip',
-        'aria-label': `${letter} بال${k.name}`,
-        onclick: () => audio.play(letter + k.mark),
-      }, letter + k.mark))),
-      h('p', { class: 'note' },
-        'هذه شاشة مؤقتة. درس الحرف الكامل (اسمع وشاهد · الحركات · تتبّع · ميّز بأذنك) يُبنى في الجلسة ٢.'),
-      DEV && devStars(progress.nodeId(groupId, letter)),
-    ),
-  );
-}
-
 // ————— شاشة مؤقتة: كلمات المجموعة (اللعبة في الجلسة ٣) —————
 
 function renderWords(groupId) {
   const group = progress.findGroup(groupId);
   if (!group) return renderMap();
-  const accent = ACCENTS[GROUPS.indexOf(group) % ACCENTS.length];
 
   audio.preload(group.words.map((w) => w.say));
 
-  return h('div', { class: 'screen', css: { '--accent': accent } },
+  return h('div', { class: 'screen', css: { '--accent': accentFor(group) } },
     topbar(
       h('button', { class: 'btn', onclick: () => go('#/') }, '→ الخريطة'),
       h('span', { class: 'spacer' }),
@@ -328,7 +242,7 @@ async function render() {
   if (name === 'lesson' && arg1 && arg2) {
     const letter = decodeURIComponent(arg2);
     if (!guard(arg1, letter)) return;
-    screen = renderLesson(arg1, letter);
+    screen = renderLesson(arg1, letter) || renderMap();
   } else if (name === 'words' && arg1) {
     if (!guard(arg1, progress.WORDS_PART)) return;
     screen = renderWords(arg1);
