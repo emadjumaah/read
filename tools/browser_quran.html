@@ -117,7 +117,7 @@ async function playReadQuiz(items, { mistakeAt = 1 } = {}) {
   for (let round = 1; round <= items.length; round++) {
     const mark = heardLog.length;
     await waitFor(() => $$('.vchip--word').length === 3, `خيارات الجولة ${round}`);
-    const emoji = $('.quran-pic').textContent.trim();
+    const emoji = $('.pick-pic').textContent.trim();
     const target = items.find((w) => w.emoji === emoji);
     const faces = texts('.vchip-face');
     if (round === 1) {
@@ -143,12 +143,13 @@ try {
   // ————— ١) الخريطة: محطة الخاتمة —————
   await seed([]);
   await waitFor(() => $('.station'), 'الخريطة');
-  ok($$('.station--quran').length === 1, 'الخريطة فيها محطة قرآنية واحدة خاتمة');
+  ok($$('.station--quran').length === 1, 'الخريطة فيها محطة قرآنية واحدة');
   ok($('.station--quran').classList.contains('station--locked'),
     'وهي مقفلة في بداية الرحلة');
-  ok($('.map').lastElementChild.classList.contains('station--quran')
-    || [...$('.map').children].at(-1).classList.contains('dev'),
-    'وموضعها آخر الخريطة');
+  const stationEls = $$('.station');
+  ok(stationEls.slice(0, stationEls.indexOf($('.station--quran')))
+      .every((s) => !s.classList.contains('station--garden')),
+    'وموضعها بعد محطات الحروف كلها وقبل بساتين الحزمة ٧');
   ok($$('.station--quran .node').length === QURAN.surahs.length + 4,
     `وفيها ${arNum(QURAN.surahs.length + 4)} عقد (حرفان، كلمات، رسم، مقطَّعة، وأربع سور)`);
 
@@ -290,12 +291,13 @@ try {
   for (const a of $$('.ayah')) { a.click(); await sleep(20); }
   $('.next').click();
   await waitFor(() => $('.celebrate'), 'ختام الناس');
-  ok($('.celebrate').textContent.includes('أتممتَ الرحلة'),
-    'وبإتمامها يُبشَّر الطفل بإتمام الرحلة كلها');
+  ok(!$('.celebrate').textContent.includes('أتممتَ الرحلة'),
+    'وبعد آخر سورة تبقى البساتين — فلا يُبشَّر باكتمال الرحلة قبل أوانه');
 
   $('.celebrate .btn--primary').click();
   await waitFor(() => $('.station'), 'العودة للخريطة');
-  ok($('.map .note')?.textContent.includes('أتممتَ الرحلة'), 'والخريطة تعلن اكتمالها');
+  ok(continueCard()?.textContent.includes('بستان'),
+    `والخريطة تدلّه على أول بستان (${continueCard()?.textContent.trim().split('\n')[0]})`);
 
   // ————— ٨) لا نطق آلي لنصّ المصحف، ولا صوت ناقص —————
   const silent = new Set(quranSilentTexts());

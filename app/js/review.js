@@ -99,7 +99,10 @@ export function buildSession({ letters = [], words = [], due = [], size = SESSIO
 
   for (const skill of due) {
     if (items.length >= size) break;
-    if (!known.includes(skill.letter)) continue;      // حرف لم يعد ضمن حصيلته (محو تقدّم)
+    // تمييز الحرف والحركة يحتاج الحرف في جدول حصيلته؛ أمّا التركيب فمادّته كلمةٌ من
+    // كلماته — فشرطُه وجود كلمة تحويه (الهمزة والتاء المربوطة تُدرَّسان في المرحلة
+    // القرآنية ولا تظهران في المجموعات، وترد في كلمات البساتين)، وإلا فلا تمرين.
+    if (skill.kind !== progress.KINDS.BUILD && !known.includes(skill.letter)) continue;
     add(itemForSkill(skill, known, words, rnd));
   }
 

@@ -20,7 +20,8 @@ python3 -m http.server 8000 -d app
 |---|---|
 | `docs/METHOD.md` | المنهج التعليمي الملزم |
 | `docs/SESSIONS.md` | خطة جلسات التنفيذ وحالتها |
-| `app/js/curriculum.js` | مصدر الحقيقة لبيانات المنهج |
+| `app/js/curriculum.js` | مصدر الحقيقة لبيانات المنهج (الحروف والمجموعات والمهارات والقصص والمرحلة القرآنية) |
+| `app/data/lexicon.json` | معجم «حديقة الكلمات» — ٢٥٠ كلمة في عشرة بساتين (طبقة ب١) |
 | `app/audio/` | أصوات مولّدة مسبقاً (Gemini TTS) — تُستبدل بتسجيلات بشرية دون تغيير الشيفرة |
 | `tools/` | توليد الأصوات، عدّة التسجيل البشري، فحص المفكوكية، اختبارات التقدّم |
 | `ref/` | المرجعان: القاعدة النورانية والدروس الهجائية (PDF) |
@@ -49,13 +50,20 @@ python3 -m http.server 8000 -d app
 ## الفحوص
 
 ```bash
-python3 tools/check_decodable.py     # المفكوكية والتغطية
+python3 tools/check_decodable.py     # مفكوكية المنهج والتغطية
+python3 tools/check_lexicon.py       # مفكوكية المعجم ومقاطعه وتفرّده (يرث فاحص المنهج)
 python3 tools/test_queue.py          # تصريف قائمة الانتظار الصوتية (بلا شبكة)
 node tools/test_progress.mjs         # قواعد القفل والنجوم وسجلّ المهارات والتكرار المتباعد
 node tools/test_lesson.mjs           # مفكوكية جولات درس الحرف
 node tools/test_words.mjs            # مفكوكية ألواح لعبة الكلمات وتغطية أصواتها
 node tools/test_review.mjs           # جلسة المراجعة (مفكوكيتها وتغطية أصواتها) واللوحة
+node tools/test_quran.mjs            # المرحلة القرآنية وأصالة نصّ المصحف
+node tools/test_lexicon.mjs          # المعجم والبساتين ووصل قياسها بالمراجعة
+node tools/test_pwa.mjs              # العمل دون إنترنت
 python3 tools/browser_test.py        # درس الحرف في Chrome حقيقي
 python3 tools/browser_test.py --words    # لعبة الكلمات في Chrome حقيقي (المجموعات السبع)
 python3 tools/browser_test.py --review   # المراجعة اليومية ولوحة وليّ الأمر في Chrome حقيقي
+python3 tools/browser_test.py --story    # دروس المهارات وشاشة قراءة القصص
+python3 tools/browser_test.py --quran    # المرحلة القرآنية والعمل دون إنترنت
+python3 tools/browser_test.py --garden   # بساتين الموضوعات (حديقة الكلمات)
 ```

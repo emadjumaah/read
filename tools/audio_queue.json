@@ -1,738 +1,3467 @@
 [
-  {
-    "text": "الفتحة قبل الألف تُمَدّ، والضمة قبل الواو، والكسرة قبل الياء.",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الحرف الساكن لا حركة له، تصله بما قبله ثم تقف عليه.",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الشدّة حرفان: ساكن ثم متحرّك، يُنطقان حرفاً واحداً قويّاً.",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "سُكْ كَرْ",
-    "category": "syllable",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "سُكَّرْ",
-    "category": "word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "سُلْ لَمْ",
-    "category": "syllable",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "سُلَّمْ",
-    "category": "word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "دُكْ كَانْ",
-    "category": "syllable",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "دُكَّانْ",
-    "category": "word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "التنوين نون ساكنة في آخر الكلمة، تُنطق ولا تُكتب.",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "بً",
-    "category": "letter_haraka",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "بٌ",
-    "category": "letter_haraka",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "بٍ",
-    "category": "letter_haraka",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "بَابٌ",
-    "category": "word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "قَلَمٌ",
-    "category": "word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "وَلَدٌ",
-    "category": "word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "اللام القمرية تُنطق ساكنة، واللام الشمسية لا تُنطق ويُشدَّد ما بعدها.",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الْقَمَرْ",
-    "category": "word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الشَّمْسْ",
-    "category": "word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الْبَابْ",
-    "category": "word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الدَّارْ",
-    "category": "word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الْفِيلْ",
-    "category": "word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "السَّمَكْ",
-    "category": "word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "بَيْتُ سَامِي",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "سَامِي وَلَدْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "سَامِي",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "وَلَدْ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "بَيْتُ سَامِي كَبِيرْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "بَيْتُ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "كَبِيرْ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "فِي الْبَيْتِ سُلَّمْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الْبَيْتِ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "مَعَ سَامِي كَلْبْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "مَعَ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "كَلْبْ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الْكَلْبُ نَامْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الْكَلْبُ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "نَامْ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "جَمَلُ حَسَنْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "حَسَنٌ وَلَدٌ كَبِيرْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "حَسَنٌ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "لِحَسَنٍ جَمَلْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "لِحَسَنٍ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "جَمَلْ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الْجَمَلُ يَحْمِلُ الْحَلِيبْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الْجَمَلُ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "يَحْمِلُ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الْحَلِيبْ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "حَسَنٌ يُحِبُّ جَمَلَهْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "يُحِبُّ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "جَمَلَهْ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الشَّمْسُ وَالْمَطَرْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "طَلَعَتِ الشَّمْسْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "طَلَعَتِ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "زَيْدٌ يَلْعَبُ فِي الشَّارِعْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "زَيْدٌ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "يَلْعَبُ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الشَّارِعْ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "نَزَلَ الْمَطَرْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "نَزَلَ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الْمَطَرْ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "رَجَعَ زَيْدٌ لِلدَّارْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "رَجَعَ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "لِلدَّارْ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "زَيْدٌ سَعِيدْ",
-    "category": "sentence",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "سَعِيدْ",
-    "category": "story_word",
-    "requestedBy": "session-4",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الهمزة تُكتب وحدها «ء» أو على ألف «أ» و«إ»، والتاء المربوطة «ة» في آخر الكلمة تقف عليها هاءً.",
-    "category": "sentence",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "مَاءْ",
-    "category": "word",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "أَسَدْ",
-    "category": "word",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "إِصْبَعْ",
-    "category": "word",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "وَرْدَةْ",
-    "category": "word",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "شَجَرَةْ",
-    "category": "word",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "بَقَرَةْ",
-    "category": "word",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "هذه كلمات تلقاها في القرآن، وأنت تقرؤها اليوم بحروفك كلها.",
-    "category": "sentence",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "كِتَابْ",
-    "category": "word",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "نُورْ",
-    "category": "word",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "سَمَاءْ",
-    "category": "word",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "جَنَّةْ",
-    "category": "word",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "بَحْرْ",
-    "category": "word",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "عَسَلْ",
-    "category": "word",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "نَمْلْ",
-    "category": "word",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "زَيْتُونْ",
-    "category": "word",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "المصحف يُكتب برسم خاص فيه علامات صغيرة ترشد القارئ، وحروفه هي حروفك التي تعرفها.",
-    "category": "sentence",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "ألف تنطقها إذا ابتدأت بها، وتصلها بما قبلها فلا تنطقها.",
-    "category": "sentence",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "ألف صغيرة فوق الحرف: تمدّها ألفاً وإن لم تُكتب كبيرة.",
-    "category": "sentence",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "علامة فوق الحرف تعني مدّاً أطول من المدّ الطبيعي.",
-    "category": "sentence",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "الياء في آخر الكلمة تُكتب في المصحف بلا نقطتين، وتُقرأ ياءً.",
-    "category": "sentence",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "واو صغيرة بعد الهاء: تمدّ بها الضمة.",
-    "category": "sentence",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "ميم صغيرة ترشد القارئ إلى نطق التنوين ميماً.",
-    "category": "sentence",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "في أوائل بعض السور حروف تُقرأ بأسمائها لا بأصواتها: تقول أَلِف لَام مِيم ولا تقول أَلَمْ.",
-    "category": "sentence",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "هَا",
-    "category": "syllable",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  },
-  {
-    "text": "يَا",
-    "category": "syllable",
-    "requestedBy": "session-6",
-    "priority": 100,
-    "status": "pending",
-    "doneAt": null
-  }
+ {
+  "text": "زَيْ",
+  "category": "syllable",
+  "style_hint": null,
+  "requestedBy": "manager-zayt-fix",
+  "priority": 10,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الفتحة قبل الألف تُمَدّ، والضمة قبل الواو، والكسرة قبل الياء.",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الحرف الساكن لا حركة له، تصله بما قبله ثم تقف عليه.",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الشدّة حرفان: ساكن ثم متحرّك، يُنطقان حرفاً واحداً قويّاً.",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سُكْ كَرْ",
+  "category": "syllable",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سُكَّرْ",
+  "category": "word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سُلْ لَمْ",
+  "category": "syllable",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سُلَّمْ",
+  "category": "word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دُكْ كَانْ",
+  "category": "syllable",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دُكَّانْ",
+  "category": "word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "التنوين نون ساكنة في آخر الكلمة، تُنطق ولا تُكتب.",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بً",
+  "category": "letter_haraka",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بٌ",
+  "category": "letter_haraka",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بٍ",
+  "category": "letter_haraka",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَابٌ",
+  "category": "word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قَلَمٌ",
+  "category": "word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "وَلَدٌ",
+  "category": "word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "اللام القمرية تُنطق ساكنة، واللام الشمسية لا تُنطق ويُشدَّد ما بعدها.",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الْقَمَرْ",
+  "category": "word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الشَّمْسْ",
+  "category": "word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الْبَابْ",
+  "category": "word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الدَّارْ",
+  "category": "word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الْفِيلْ",
+  "category": "word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "السَّمَكْ",
+  "category": "word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَيْتُ سَامِي",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سَامِي وَلَدْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سَامِي",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "وَلَدْ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَيْتُ سَامِي كَبِيرْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَيْتُ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "كَبِيرْ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "فِي الْبَيْتِ سُلَّمْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الْبَيْتِ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَعَ سَامِي كَلْبْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَعَ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "كَلْبْ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الْكَلْبُ نَامْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الْكَلْبُ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَامْ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَمَلُ حَسَنْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَسَنٌ وَلَدٌ كَبِيرْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَسَنٌ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "لِحَسَنٍ جَمَلْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "لِحَسَنٍ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَمَلْ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الْجَمَلُ يَحْمِلُ الْحَلِيبْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الْجَمَلُ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "يَحْمِلُ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الْحَلِيبْ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَسَنٌ يُحِبُّ جَمَلَهْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "يُحِبُّ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَمَلَهْ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الشَّمْسُ وَالْمَطَرْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طَلَعَتِ الشَّمْسْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طَلَعَتِ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "زَيْدٌ يَلْعَبُ فِي الشَّارِعْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "زَيْدٌ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "يَلْعَبُ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الشَّارِعْ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَزَلَ الْمَطَرْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَزَلَ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الْمَطَرْ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "رَجَعَ زَيْدٌ لِلدَّارْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "رَجَعَ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "لِلدَّارْ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "زَيْدٌ سَعِيدْ",
+  "category": "sentence",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سَعِيدْ",
+  "category": "story_word",
+  "requestedBy": "session-4",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الهمزة تُكتب وحدها «ء» أو على ألف «أ» و«إ»، والتاء المربوطة «ة» في آخر الكلمة تقف عليها هاءً.",
+  "category": "sentence",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَاءْ",
+  "category": "word",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أَسَدْ",
+  "category": "word",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "إِصْبَعْ",
+  "category": "word",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "وَرْدَةْ",
+  "category": "word",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شَجَرَةْ",
+  "category": "word",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَقَرَةْ",
+  "category": "word",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "هذه كلمات تلقاها في القرآن، وأنت تقرؤها اليوم بحروفك كلها.",
+  "category": "sentence",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "كِتَابْ",
+  "category": "word",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نُورْ",
+  "category": "word",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سَمَاءْ",
+  "category": "word",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَنَّةْ",
+  "category": "word",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَحْرْ",
+  "category": "word",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عَسَلْ",
+  "category": "word",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَمْلْ",
+  "category": "word",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "زَيْتُونْ",
+  "category": "word",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "المصحف يُكتب برسم خاص فيه علامات صغيرة ترشد القارئ، وحروفه هي حروفك التي تعرفها.",
+  "category": "sentence",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ألف تنطقها إذا ابتدأت بها، وتصلها بما قبلها فلا تنطقها.",
+  "category": "sentence",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ألف صغيرة فوق الحرف: تمدّها ألفاً وإن لم تُكتب كبيرة.",
+  "category": "sentence",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "علامة فوق الحرف تعني مدّاً أطول من المدّ الطبيعي.",
+  "category": "sentence",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "الياء في آخر الكلمة تُكتب في المصحف بلا نقطتين، وتُقرأ ياءً.",
+  "category": "sentence",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "واو صغيرة بعد الهاء: تمدّ بها الضمة.",
+  "category": "sentence",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ميم صغيرة ترشد القارئ إلى نطق التنوين ميماً.",
+  "category": "sentence",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "في أوائل بعض السور حروف تُقرأ بأسمائها لا بأصواتها: تقول أَلِف لَام مِيم ولا تقول أَلَمْ.",
+  "category": "sentence",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "هَا",
+  "category": "syllable",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "يَا",
+  "category": "syllable",
+  "requestedBy": "session-6",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "غُرْفَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "فَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَطْبَخْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طْ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سَرِيرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "رِي",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَافِذَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ذَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَقْعَدْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قْ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مِفْتَاحْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "تَا",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حْ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سَاعَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سَا",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مِصْبَاحْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صْ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صَحْنْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "كُوبْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "كُو",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مِلْعَقَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سِكِّينْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "كْ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "كِي",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَمَّامْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صَابُونْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بُو",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سَلَّةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "لَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مِكْنَسَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "تِلْفَازْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "فَا",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "زْ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "هَاتِفْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَدِيقَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دِي",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جِدَارْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "وِسَادَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مِرْوَحَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "خِزَانَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "زَا",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مِظَلَّةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قِدْرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أُمِّي",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أُ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مِي",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أَبِي",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أَ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بِي",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَدِّي",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَدَّةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أُخْتْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أَخْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عَمِّي",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "خَالْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "خَا",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طِفْلْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "رَجُلْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صَدِيقْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَارْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَا",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طَبِيبْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شُرْطَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "فَلَّاحْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "خَبَّازْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَجَّارْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جْ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مُهَنْدِسْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "تَاجِرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ضَيْفْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ضَيْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عَجُوزْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جُو",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "زَمِيلْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَفِيدْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أُسْرَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "رَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صَيَّادْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صَيْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "رَأْسْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أْ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أُذُنْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أَنْفْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "فَمْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ذِرَاعْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "رِجْلْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قَدَمْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شَعْرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أَسْنَانْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "لِسَانْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قَلْبْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "وَجْهْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "هْ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "كَتِفْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دَمْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عَظْمْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ظْ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صَوْتْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صَوْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دَمْعْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عَرَقْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ضِرْسْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صِحَّةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَرَضْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ضْ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حُقْنَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَوْمْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَوْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ضَحِكْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَشْيْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شْ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "خُبْزْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جُبْنْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَيْضْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "لَحْمْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سَمَكْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شُورْبَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شُو",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "تُفَّاحَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَوْزْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَوْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بُرْتُقَالْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قَا",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَطِّيخْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طِي",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "فَرَاوِلَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "لَيْمُونْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "لَيْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مُو",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَزَرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طَمَاطِمْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "خِيَارْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَصَلْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَطَاطِسْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مِلْحْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شَايْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شَا",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قَهْوَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "وَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عَصِيرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صِي",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "كَعْكْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شُوكُولَاتَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "تَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "فُولْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "فُو",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "زُبْدَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قِطَّةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دَجَاجَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حِصَانْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أَرْنَبْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "فَأْرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَمِرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قِرْدْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "زَرَافَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "تِمْسَاحْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "غَزَالْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طَاوُوسْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "وُو",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَطَّةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَمَامَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عُصْفُورْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دِيكْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَحْلَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "فَرَاشَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عَنْكَبُوتْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سُلَحْفَاةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "فَاةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قُنْفُذْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ذْ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَاعِزْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سِنْجَابْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دُودَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دُو",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دُلْفِينْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بُومَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قَمَرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَجْمْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سَحَابْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَا",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "رِيحْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ثَلْجْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَهْرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "غَابَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "غَا",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "زَهْرَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عُشْبْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَجَرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "رَمْلْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "تُرَابْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "كَهْفْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَرْقْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "رَعْدْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شَلَّالْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَزِيرَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "زِي",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَخْلَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "وَرَقْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَذْرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عَاصِفَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عَا",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ضَبَابْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دُخَانْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ظَلَامْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَقْلْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَدْرَسَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مُعَلِّمْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "تِلْمِيذْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دَفْتَرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مِمْحَاةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَاةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مِسْطَرَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَقِيبَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قِي",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "لَوْحْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "لَوْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طَبَاشِيرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شِي",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قِصَّةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَكْتَبَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَرَسْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَوَابْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "وَا",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "وَاجِبْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مِبْرَاةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "رَاةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صَمْغْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "غْ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "خَرِيطَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَقْلَمَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طَابُورْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "رَسْمْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حِسَابْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عَدَدْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَرْفْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "كَلِمَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شَهَادَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قَمِيصْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَنْطَالْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "فُسْتَانْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مِعْطَفْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قُبَّعَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "وِشَاحْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قُفَّازْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَوْرَبْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَوْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَزْمَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَظَّارَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ظَا",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "خَاتَمْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صَنْدَلْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "رَبْطَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "تَاجْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مِحْفَظَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "ظَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "خَيْطْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "خَيْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "إِبْرَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "إِ",
+  "category": "letter_haraka",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صُوفْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صُو",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شُورْتْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صُنْدُوقْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَيْبْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جَيْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَعْلْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سِرْوَالْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طَاقِيَّةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قِيْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "يَةْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سِوَارْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سَيَّارَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سَيْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَافِلَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دَرَّاجَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طَيَّارَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طَيْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سَفِينَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "قَارِبْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شَارِعْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "جِسْرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سُوقْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سُو",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عِيَادَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَسْجِدْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَطَارْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَلْعَبْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَحَطَّةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَتْحَفْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَصْنَعْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَزْرَعَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بُرْجْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طَرِيقْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "إِشَارَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَخْبَزْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صَيْدَلِيَّةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "لِيْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَكْتَبْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مَطْعَمْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَفَقْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "كُرَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "لُعْبَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دُمْيَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أُرْجُوحَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَبْلْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "مُكَعَّبْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أَحْمَرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أَزْرَقْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أَخْضَرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أَصْفَرْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أَبْيَضْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "أَسْوَدْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "شَمْعَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "طَبْلْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عُودْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "عُو",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَشِيدْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "رَقْصْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "سِبَاقْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "كَأْسْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "هَدِيَّةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "دِيْ",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "بَالُونْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "لُو",
+  "category": "syllable",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "حَاسُوبْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "صُورَةْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "لَوْنْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ },
+ {
+  "text": "نَرْدْ",
+  "category": "word",
+  "requestedBy": "session-7",
+  "priority": 100,
+  "status": "pending",
+  "doneAt": null
+ }
 ]

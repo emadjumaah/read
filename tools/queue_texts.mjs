@@ -4,9 +4,12 @@
 //   node tools/queue_texts.mjs --add     # إضافته إلى tools/audio_queue.json
 //
 // جلسات التطوير لا تشغّل المولّد ولا تلمس app/audio/ — تضيف نصوصها هنا فقط.
-// المصدر: دروس المهارات والقصص والمرحلة القرآنية في app/js/curriculum.js
-// (لم تُضَمّ بعدُ لمستخرج المولّد). النصّ يُكتب حرفياً كما يُمرَّر إلى audio.play()
-// — فالتطابق شرط لمفتاح sha1.
+// المصادر: دروس المهارات والقصص والمرحلة القرآنية في app/js/curriculum.js،
+// **ومعجم البساتين** في app/data/lexicon.json (الحزمة ٧) — كلاهما خارج مستخرج
+// المولّد بعدُ. النصّ يُكتب حرفياً كما يُمرَّر إلى audio.play() — فالتطابق شرط لمفتاح sha1.
+//
+// ترتيب الإضافة هو ترتيب التصريف: كلمات أول بستان ومقاطعها أولاً، فيصير مسموعاً
+// قبل أن يبلغه الطفل (docs/AUDIO_QUEUE.md).
 //
 // **نصّ المصحف خارج هذا كله**: `quranSilentTexts()` لا يدخل القائمة أبداً، فالتلاوة
 // بصوت قارئ متقن لا بمولّد (METHOD §٥.٦) — ويرفضه `check_decodable.py` صراحةً.
@@ -21,6 +24,9 @@ const {
   SKILLS, STORIES, QURAN, skillExamples, sentenceText, bareLetters,
   quranSpokenTexts, quranSilentTexts,
 } = await import(new URL('app/js/curriculum.js', ROOT));
+const { GARDENS } = await import(new URL('app/js/lexicon.js', ROOT));
+
+const REQUESTED_BY = process.env.QUEUE_BY || 'session-7';
 
 /** فئة النصّ (تحدّد توجيه الأداء في المولّد). */
 function categoryOf(text, fallback) {
@@ -55,6 +61,18 @@ function newTexts() {
   for (const text of quranSpokenTexts()) {
     add(text, text.includes(' ') ? 'sentence' : 'word');
   }
+  // البساتين: الكلمة ثم مقاطعها، بستاناً بستاناً وباقةً باقة (ترتيب لقاء الطفل بها).
+  // فئة المقطع تُحدَّد بعدد حروفه لا بتخمين: حرفٌ واحد بحركته، أو مقطع.
+  for (const garden of GARDENS) {
+    for (const bundle of garden.bundles) {
+      for (const word of bundle.words) {
+        if (word.say && !out.has(word.say)) out.set(word.say, 'word');
+        for (const tile of word.tiles) {
+          if (!out.has(tile)) out.set(tile, bareLetters(tile).length === 1 ? 'letter_haraka' : 'syllable');
+        }
+      }
+    }
+  }
   const forbidden = quranSilentTexts().filter((t) => out.has(t));
   if (forbidden.length) {
     console.error(`نصّ من المصحف كاد يدخل القائمة: ${forbidden.join('، ')}`);
@@ -77,7 +95,7 @@ const counts = {};
 for (const [, cat] of missing) counts[cat] = (counts[cat] || 0) + 1;
 
 const ready = [...wanted].filter(([t]) => have.has(t)).length;
-console.log(`نصوص المهارات والقصص والقرآني: ${wanted.size} | لها ملف: ${ready} `
+console.log(`نصوص المهارات والقصص والقرآني والبساتين: ${wanted.size} | لها ملف: ${ready} `
   + `| في القائمة أصلاً: ${[...wanted].filter(([t]) => queued.has(t)).length} | ناقص: ${missing.length}`);
 if (missing.length) {
   console.log(Object.entries(counts).map(([c, n]) => `${c}: ${n}`).join('، '));
@@ -88,7 +106,7 @@ if (process.argv.includes('--add') && missing.length) {
   queue.push(...missing.map(([text, category]) => ({
     text,
     category,
-    requestedBy: 'session-6',
+    requestedBy: REQUESTED_BY,
     priority: 100,
     status: 'pending',
     doneAt: null,

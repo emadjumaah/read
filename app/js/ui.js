@@ -2,6 +2,7 @@
 // لا تلمس هذه الوحدة الـDOM وقت التحميل، فتبقى قابلة للاستيراد في اختبارات node.
 
 import { GROUPS, LETTERS, QURAN } from './curriculum.js';
+import { GARDENS } from './lexicon.js';
 
 export const DEV = typeof location !== 'undefined'
   && new URLSearchParams(location.search).get('dev') === '1';
@@ -17,6 +18,11 @@ export const QURAN_ACCENT = '#1b7a43';
 
 export function accentFor(group) {
   return ACCENTS[Math.max(0, GROUPS.indexOf(group)) % ACCENTS.length];
+}
+
+/** لون البستان: ألوان المجموعات نفسها مزاحةً، فتبقى الحديقة متغيّرة المشهد كالرحلة. */
+export function accentForGarden(garden) {
+  return ACCENTS[(Math.max(0, GARDENS.indexOf(garden)) + 3) % ACCENTS.length];
 }
 
 const AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
@@ -36,25 +42,30 @@ export function arCount(n, [one, two, few, many]) {
 /** اسم الحرف كما يُقرأ في العناوين: «حرف باء». */
 export const letterTitle = (ch) => `حرف ${LETTERS[ch]?.name ?? ch}`;
 
-/** الكلمة كما تُعرض للطفل: تركيب مقاطعها المشكولة. */
-export const wordText = (word) => word.tiles.join('');
+/**
+ * الكلمة كما تُعرض للطفل. الأصل تركيب مقاطعها المشكولة، إلا أن يكون لها نصٌّ معروض
+ * خاصّ (كلمات المعجم: تُكتب «سُكَّرْ» وتُتهجّى «سُ+كْ+كَ+رْ» — فالمعروض غير التهجّي).
+ */
+export const wordText = (word) => word.text ?? word.tiles.join('');
 
-/** اسم عقدة الخريطة كما يُعرض للطفل ولوليّ أمره (حرف · لعبة · مهارة · قصة · قرآن). */
+/** اسم عقدة الخريطة كما يُعرض للطفل ولوليّ أمره (حرف · لعبة · مهارة · قصة · قرآن · باقة). */
 export function nodeTitle(node) {
   if (node.type === 'letter') return letterTitle(node.letter);
   if (node.type === 'words') return 'لعبة الكلمات';
   if (node.type === 'skill') return node.skill.title;
   if (node.type === 'story') return `قصة «${node.story.title}»`;
   if (node.type === 'quran') return node.title;
+  if (node.type === 'garden') return `باقة ${arNum(node.bundle.index)} — ${node.garden.title}`;
   return '';
 }
 
-/** موضع العقدة في الرحلة: اسم مجموعتها، أو محطة ما بين المجموعتين، أو الخاتمة. */
+/** موضع العقدة في الرحلة: اسم مجموعتها، أو محطة ما بين المجموعتين، أو الخاتمة، أو بستانها. */
 export function nodeWhere(node) {
   if (node.type === 'letter' || node.type === 'words') {
     return GROUPS.find((g) => g.id === node.groupId)?.title ?? '';
   }
   if (node.type === 'quran') return QURAN.title;
+  if (node.type === 'garden') return `بستان ${node.garden.title}`;
   return 'محطة المهارات والقصص';
 }
 
@@ -65,6 +76,7 @@ export function nodeFace(node) {
   if (node.type === 'skill') return node.skill.face;
   if (node.type === 'story') return node.story.emoji;
   if (node.type === 'quran') return node.face;
+  if (node.type === 'garden') return node.garden.emoji;
   return '';
 }
 

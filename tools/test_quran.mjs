@@ -18,10 +18,14 @@ globalThis.localStorage = {
 const {
   GROUPS, QURAN, quranParts, surahById, quranSpokenTexts, quranSilentTexts, bareLetters,
 } = await import(new URL('curriculum.js', APP));
-const { buildReadRounds, buildRasmRounds } = await import(new URL('quran.js', APP));
+const { buildRasmRounds } = await import(new URL('quran.js', APP));
+// «اقرأ واختر» انتقلت إلى screens.js في الحزمة ٧ (تشترك فيها المرحلة القرآنية والبساتين)
+const { buildReadRounds } = await import(new URL('screens.js', APP));
 const { starsForStory } = await import(new URL('story.js', APP));
 const { starsForGame } = await import(new URL('words.js', APP));
 const p = await import(new URL('progress.js', APP));
+const { GARDENS } = await import(new URL('lexicon.js', APP));
+const BUNDLES = GARDENS.reduce((s, g) => s + g.bundles.length, 0);
 
 let fails = 0;
 const ok = (cond, msg) => { if (!cond) { fails++; console.log('  ✗', msg); } else console.log('  ✓', msg); };
@@ -49,10 +53,14 @@ const nodes = p.allNodes();
 const ids = nodes.map((n) => n.id);
 ok(ids.filter((id) => id.startsWith('quran:')).length === parts.length,
   `عقد المرحلة في الرحلة (${parts.length} عقدة)`);
-ok(ids.at(-1) === 'quran:s114' && ids.at(-parts.length) === 'quran:letters',
-  'وهي خاتمة الرحلة كلها');
-ok(p.maxTotalStars() === nodes.length * p.MAX_STARS && nodes.length === 51,
-  `سقف النجوم يشمل الخاتمة (${nodes.length} عقدة، ${p.maxTotalStars()} نجمة)`);
+const quranStart = ids.indexOf('quran:letters');
+ok(ids.slice(quranStart, quranStart + parts.length).join('|') === parts.map((x) => `quran:${x}`).join('|')
+  && ids.slice(0, quranStart).every((id) => !id.startsWith('quran:')),
+  'وهي متتابعة بعد الرحلة كلها (من درس الحرفين إلى آخر سورة)');
+ok(ids.slice(quranStart + parts.length).every((id) => id.startsWith('garden:')),
+  'ولا يليها إلا بساتين الموضوعات (الحزمة ٧)');
+ok(p.maxTotalStars() === nodes.length * p.MAX_STARS && nodes.length === 51 + BUNDLES,
+  `سقف النجوم يشمل الخاتمة والبساتين (${nodes.length} عقدة، ${p.maxTotalStars()} نجمة)`);
 
 const upTo = (id) => {
   p.reset();
@@ -71,7 +79,8 @@ ok(!p.isNodeUnlockedById('quran:s1'), 'وسورة الفاتحة تنتظر در
 upTo('quran:s114');
 ok(p.isNodeUnlockedById('quran:s114'), 'وآخر سورة تُفتح بإتمام ما قبلها');
 p.setStars('quran:s114', 3);
-ok(p.nextNode() === null, 'وبإتمامها تكتمل الرحلة (لا عقدة تالية)');
+ok(p.nextNode()?.id === ids[quranStart + parts.length],
+  `وبإتمامها يُفتح أول بستان (${p.nextNode()?.id})`);
 
 // ————— ٢. جولات «اقرأ واختر» و«ميّز العلامة» —————
 

@@ -6,7 +6,8 @@
     python3 tools/browser_test.py --review     # المراجعة اليومية ولوحة وليّ الأمر
     python3 tools/browser_test.py --story      # دروس المهارات وشاشة قراءة القصص
     python3 tools/browser_test.py --quran      # المرحلة القرآنية والعمل دون إنترنت
-    python3 tools/browser_test.py --shots out.png [--words|--review|--story|--quran]   # لقطة للمراجعة
+    python3 tools/browser_test.py --garden     # بساتين الموضوعات (حديقة الكلمات)
+    python3 tools/browser_test.py --shots out.png [--words|--review|--story|--quran|--garden]
     python3 tools/browser_test.py --show       # بمتصفّح مرئي لتتبّع ما يجري
 
 كيف يعمل: خادم صغير يخدم مجلد app/ ويضيف صفحات الاختبار وحدها من هذا المجلد
@@ -45,6 +46,8 @@ PAGES = {
     "/__story_shots.html": TOOLS / "browser_story_shots.html",
     "/__quran.html": TOOLS / "browser_quran.html",
     "/__quran_shots.html": TOOLS / "browser_quran_shots.html",
+    "/__garden.html": TOOLS / "browser_garden.html",
+    "/__garden_shots.html": TOOLS / "browser_garden_shots.html",
 }
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 QUEUE_FILE = ROOT / "tools" / "audio_queue.json"
@@ -127,6 +130,7 @@ def main():
     ap.add_argument("--review", action="store_true", help="المراجعة اليومية ولوحة وليّ الأمر")
     ap.add_argument("--story", action="store_true", help="دروس المهارات وشاشة قراءة القصص")
     ap.add_argument("--quran", action="store_true", help="المرحلة القرآنية والعمل دون إنترنت")
+    ap.add_argument("--garden", action="store_true", help="بساتين الموضوعات (حديقة الكلمات)")
     ap.add_argument("--show", action="store_true", help="متصفّح مرئي")
     args = ap.parse_args()
 
@@ -140,6 +144,7 @@ def main():
         if args.shots:
             out = Path(args.shots).resolve()
             page, size = (("__review_shots.html", "1100,3050") if args.review
+                          else ("__garden_shots.html", "1100,5200") if args.garden
                           else ("__quran_shots.html", "1100,9400") if args.quran
                           else ("__story_shots.html", "1100,5400") if args.story
                           else ("__words_shots.html", "980,2100") if args.words
@@ -155,7 +160,7 @@ def main():
             return 0 if out.exists() else 1
 
         page = ("__review.html" if args.review else "__story.html" if args.story
-                else "__quran.html" if args.quran
+                else "__quran.html" if args.quran else "__garden.html" if args.garden
                 else "__words.html" if args.words else "__test.html")
         proc = run_chrome(f"{base}/{page}", profile, ["--hide-scrollbars"], args.show)
         deadline = time.time() + args.timeout

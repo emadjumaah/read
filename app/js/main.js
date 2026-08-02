@@ -10,10 +10,11 @@ import { renderReview } from './review.js';
 import { renderSkillLesson } from './skill.js';
 import { renderStory } from './story.js';
 import { renderQuran } from './quran.js';
+import { renderGarden } from './garden.js';
 import { renderParent, skillsText } from './parent.js';
 import {
-  h, toast, go, arNum, starsRow, topbar, letterTitle, nodeTitle, nodeFace, nodeWhere,
-  ACCENTS, PAUSE_ACCENT, QURAN_ACCENT, accentFor, DEV,
+  h, toast, go, arNum, arCount, starsRow, topbar, letterTitle, nodeTitle, nodeFace, nodeWhere,
+  ACCENTS, PAUSE_ACCENT, QURAN_ACCENT, accentFor, accentForGarden, DEV,
 } from './ui.js';
 
 const app = document.getElementById('app');
@@ -56,14 +57,15 @@ function renderMap() {
         h('small', {}, `تابع من هنا · ${nodeWhere(next)}`)),
     ));
   } else {
-    main.append(h('p', { class: 'note' }, '🎉 أتممتَ الرحلة كلها — من الحرف الأول إلى المصحف!'));
+    main.append(h('p', { class: 'note' }, '🎉 أتممتَ الرحلة كلها — من الحرف الأول إلى المصحف وحديقة الكلمات!'));
   }
 
   let groupIndex = 0;
   for (const section of progress.journey()) {
     main.append(section.kind === 'group' ? stationEl(section, groupIndex++, next)
       : section.kind === 'quran' ? quranEl(section, next)
-        : interludeEl(section, next));
+        : section.kind === 'garden' ? gardenEl(section, next)
+          : interludeEl(section, next));
   }
 
   if (DEV) {
@@ -182,9 +184,38 @@ function quranEl(section, next) {
   });
 }
 
+/**
+ * بستان موضوعات (الحزمة ٧): محطةٌ لكل موضوع، عقدها باقات من خمس كلمات.
+ * تأتي بعد المرحلة القرآنية — هنا يتوسّع الرصيد بعد أن اكتمل فكّ الشيفرة.
+ */
+function gardenEl(section, next) {
+  const garden = section.garden;
+  const unlocked = progress.isNodeUnlockedById(section.nodes[0].id);
+  const complete = section.nodes.every((n) => progress.isDone(n.id));
+  const earned = section.nodes.reduce((sum, n) => sum + progress.getStars(n.id), 0);
+
+  return trackEl({
+    className: `station station--garden${unlocked ? '' : ' station--locked'}${complete ? ' station--done' : ''}`,
+    accent: accentForGarden(garden),
+    label: `بستان ${garden.title}${unlocked ? '' : ' — مقفل'}`,
+    badge: garden.emoji,
+    title: `بستان ${garden.title}`,
+    sub: unlocked
+      ? `${arCount(garden.words.length, ['كلمة', 'كلمتان', 'كلمات', 'كلمة'])} في `
+        + `${arCount(section.nodes.length, ['باقة', 'باقتين', 'باقات', 'باقة'])}`
+      : `${arCount(garden.words.length, ['كلمة', 'كلمتان', 'كلمات', 'كلمة'])} جديدة`,
+    meta: unlocked
+      ? [h('b', {}, `★ ${arNum(earned)}`), ` / ${arNum(section.nodes.length * progress.MAX_STARS)}`]
+      : '🔒 مقفل',
+    nodes: section.nodes,
+    next,
+  });
+}
+
 /** لون العقدة في بطاقة «تابع من هنا»: لون مجموعتها، أو لون محطتها الخاصة. */
 function accentOf(node, group) {
   if (node.type === 'quran') return QURAN_ACCENT;
+  if (node.type === 'garden') return accentForGarden(node.garden);
   if (node.type === 'skill' || node.type === 'story') return PAUSE_ACCENT;
   return accentFor(group);
 }
@@ -318,6 +349,9 @@ async function render() {
   } else if (name === 'quran' && arg1) {
     if (!guard(`quran:${decodeURIComponent(arg1)}`)) return;
     screen = renderQuran(decodeURIComponent(arg1)) || renderMap();
+  } else if (name === 'garden' && arg1) {
+    if (!guard(`garden:${decodeURIComponent(arg1)}`)) return;
+    screen = renderGarden(decodeURIComponent(arg1)) || renderMap();
   } else if (name === 'review') {
     screen = renderReview();
     if (!screen) {                       // لا حصيلة للمراجعة بعدُ

@@ -491,9 +491,10 @@ def text_errors(text, label, taught, letters, allowed):
         if u["marks"] == SHADDA:
             errors.append(f"{label}: «{text}» فيها شدّة بلا حركة على «{u['letter']}»")
             continue
-        if u["letter"] in MADD_MATE and prev and prev["marks"].endswith(MADD_MATE[u["letter"]]):
+        # ترتيب الشدّة مع الحركة يختلف بين المصادر (شّـَ / شـَّ) فلا نتعلّق به —
+        # ولذلك تكفي الحركةُ المجانسة في علامات ما قبل حرف المدّ حيثما وقعت («سِكِّينْ»).
+        if u["letter"] in MADD_MATE and prev and MADD_MATE[u["letter"]] in prev["marks"]:
             continue
-        # ترتيب الشدّة مع الحركة يختلف بين المصادر (شّـَ / شـَّ) فلا نتعلّق به
         shamsi = (u["letter"] == "ل" and nxt and not nxt["gap"]
                   and nxt["letter"] in SUN_LETTERS and SHADDA in nxt["marks"])
         if shamsi:

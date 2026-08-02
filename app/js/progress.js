@@ -6,6 +6,7 @@
 // ولوحة وليّ الأمر. لا نصّ منطوق جديد هنا — القياس لا يضيف محتوى.
 
 import { GROUPS, SKILLS, STORIES, QURAN, quranParts, bareLetters } from './curriculum.js';
+import { GARDENS } from './lexicon.js';
 
 const STORE_KEY = 'muallim.progress.v1';
 export const VERSION = 2;            // ١ = نجوم فقط (تُرقّى تلقائياً بلا فقد)
@@ -125,7 +126,20 @@ export function quranNodes() {
   }));
 }
 
-/** الرحلة كاملةً بأقسامها بالترتيب: مجموعة ← ما بعدها من مهارات وقصص ← … ← المرحلة القرآنية. */
+/**
+ * عقد بستان الموضوعات (الحزمة ٧): باقةٌ لكل عقدة، بترتيب `lexicon.js`.
+ * موضعها بعد المرحلة القرآنية — حصيلة الطفل عندها كاملة، فالجديد رصيدٌ لا شيفرة.
+ */
+export function gardenNodes(garden) {
+  return garden.bundles.map((bundle) => ({
+    id: `garden:${bundle.id}`, type: 'garden', part: bundle.id, garden, bundle,
+  }));
+}
+
+/**
+ * الرحلة كاملةً بأقسامها بالترتيب: مجموعة ← ما بعدها من مهارات وقصص ← … ←
+ * المرحلة القرآنية ← بساتين الموضوعات.
+ */
 export function journey() {
   const out = [];
   for (const group of GROUPS) {
@@ -134,6 +148,9 @@ export function journey() {
     if (nodes.length) out.push({ kind: 'interlude', id: `after:${group.id}`, after: group.id, nodes });
   }
   out.push({ kind: 'quran', id: 'quran', nodes: quranNodes() });
+  for (const garden of GARDENS) {
+    out.push({ kind: 'garden', id: `garden:${garden.id}`, garden, nodes: gardenNodes(garden) });
+  }
   return out;
 }
 
@@ -236,13 +253,28 @@ export function studiedLetters() {
   return out;
 }
 
-/** كلمات المنهج المفكوكة بحصيلته: كل حروفها مدروسة (لا يشترط إتمام لعبة مجموعتها). */
+/**
+ * كلمات المنهج المفكوكة بحصيلته: كل حروفها مدروسة (لا يشترط إتمام لعبة مجموعتها)،
+ * **يليها ما أتمّه من كلمات البساتين** — فما قِيس في بستانٍ يُراجَع بكلماته نفسها.
+ * (الباقة المُنجَزة دليلُ فكّها: لا تُفتح إلا بعد الرحلة كلها بحروفها وعلاماتها.)
+ */
 export function studiedWords(letters = studiedLetters()) {
   const known = new Set(letters);
   const out = [];
   for (const group of GROUPS) {
     for (const word of group.words) {
       if ([...bareLetters(word.tiles.join(''))].every((c) => known.has(c))) out.push(word);
+    }
+  }
+  return [...out, ...studiedLexicon()];
+}
+
+/** كلمات الباقات التي أتمّها الطفل — رصيدُه الجديد من «حديقة الكلمات». */
+export function studiedLexicon() {
+  const out = [];
+  for (const garden of GARDENS) {
+    for (const bundle of garden.bundles) {
+      if (isDone(`garden:${bundle.id}`)) out.push(...bundle.words);
     }
   }
   return out;
@@ -329,7 +361,9 @@ export function letterStats() {
     acc.seen = Math.max(acc.seen, s.seen);
     byLetter.set(s.letter, acc);
   }
+  // ترتيب المنهج، وما ليس في المجموعات (حرفا المرحلة القرآنية) في آخر اللوحة
   const order = GROUPS.flatMap((g) => g.letters);
+  const rank = (ch) => (order.indexOf(ch) < 0 ? order.length : order.indexOf(ch));
   return [...byLetter.values()]
     .map((a) => ({
       ...a,
@@ -337,7 +371,7 @@ export function letterStats() {
       mastered: a.minBox >= MASTERED_BOX,
       struggling: a.wrong >= 2 && a.minBox <= 1,
     }))
-    .sort((a, b) => order.indexOf(a.letter) - order.indexOf(b.letter));
+    .sort((a, b) => rank(a.letter) - rank(b.letter));
 }
 
 // ————— دقائق الاستخدام —————

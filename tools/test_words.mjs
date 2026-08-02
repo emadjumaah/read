@@ -130,8 +130,11 @@ ok(starsForGame(6, 5) === 1, 'ما زاد على ذلك ⇒ نجمة');
 
 const manifest = JSON.parse(readFileSync(new URL('../app/audio/manifest.json', import.meta.url), 'utf8'));
 const haveAudio = new Set(Object.values(manifest));
+// نصوص القائمة المنتظِرة مستثناة مؤقتاً (بروتوكول AUDIO_QUEUE.md) — يعود الفحص صارماً بعد تصريفها
+const queue = JSON.parse(readFileSync(new URL('./audio_queue.json', import.meta.url), 'utf8'));
+const pendingAudio = new Set(queue.filter((e) => e.status === 'pending').map((e) => e.text));
 const needAudio = new Set(GROUPS.flatMap((g) => g.words.flatMap((w) => [...w.tiles, w.say])));
-const noAudio = [...needAudio].filter((t) => !haveAudio.has(t));
+const noAudio = [...needAudio].filter((t) => !haveAudio.has(t) && !pendingAudio.has(t));
 ok(noAudio.length === 0,
   `كل مقطع وكل كلمة له ملف صوت (${needAudio.size} نصاً${noAudio.length ? ' — الناقص: ' + noAudio.join('،') : ''})`);
 

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>لقطات بساتين الموضوعات</title>
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+    body { padding: 1rem; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; align-items: start; }
+    .cell { background: rgba(255,255,255,.35); border-radius: 24px; padding: .5rem; }
+    .cell > h4 { margin: .2rem 0 .4rem; text-align: center; color: #1971c2; }
+    .app { max-width: none; padding: 0; }
+    .dev { display: none; }
+  </style>
+</head>
+<body>
+<div id="toast" class="toast" hidden></div>
+<div class="grid" id="grid"></div>
+
+<script>
+  localStorage.setItem('muallim.progress.v1', JSON.stringify({
+    v: 2, stars: {}, skills: {}, days: {}, reviews: {}, seconds: 0,
+    startedAt: Date.now(), updatedAt: Date.now(),
+  }));
+</script>
+
+<script type="module">
+import { renderGarden } from './js/garden.js';
+import { GARDENS } from './js/lexicon.js';
+import * as progress from './js/progress.js';
+
+// صوت لا ينتهي: تُجمَّد الحالة المعروضة فلا تنتقل الخطوة تلقائياً قبل اللقطة
+window.Audio = class { play() { return new Promise(() => {}); } pause() {} };
+
+for (const node of progress.allNodes()) progress.setStars(node.id, 3);
+
+const grid = document.getElementById('grid');
+const $$ = (root, sel) => [...root.querySelectorAll(sel)];
+
+function cell(title, node) {
+  const box = document.createElement('div');
+  box.className = 'cell';
+  box.innerHTML = `<h4>${title}</h4>`;
+  const app = document.createElement('div');
+  app.className = 'app';
+  app.append(node);
+  box.append(app);
+  grid.append(box);
+  return app;
+}
+
+const step = (app, label) => $$(app, '.btn').find((b) => b.textContent.includes(label))?.click();
+
+const bundle = GARDENS[0].bundles[0];
+const animals = (GARDENS.find((g) => g.id === 'animals') ?? GARDENS[4]).bundles[0];
+
+/**
+ * يسوق الشاشة من «اقرأ واختر» إلى «ركّب الكلمة» باختيار الصواب في كل جولة.
+ * اللقطة تُلتقط عند تحميل الصفحة، فلا مجال للانتظار: نُعجّل مُهَل الانتقال آنياً.
+ */
+function driveToBuild(app, words) {
+  const realTimeout = window.setTimeout;
+  window.setTimeout = (fn) => (fn(), 0);
+  step(app, 'تابع');
+  for (let i = 0; i < words.length + 2 && !$$(app, '.tile').length; i++) {
+    const emoji = app.querySelector('.pick-pic')?.textContent.trim();
+    const target = words.find((w) => w.emoji === emoji);
+    $$(app, '.vchip--word').find((b) => b.textContent.trim() === target?.read)?.click();
+  }
+  window.setTimeout = realTimeout;
+}
+
+// ١) شاهد واسمع: كلمات الباقة بصورها
+cell(`١ — شاهد واسمع (بستان ${GARDENS[0].title})`, renderGarden(bundle.id));
+
+// ٢) اقرأ واختر: صورة وثلاث كلمات مكتوبة (ولا صوت قبل الاختيار)
+const quiz = cell('٢ — اقرأ واختر', renderGarden(bundle.id));
+step(quiz, 'تابع');
+
+// ٣) ركّب الكلمة: الخانات والبلاطات ومشتّتاتها
+const build = cell('٣ — ركّب الكلمة', renderGarden(bundle.id));
+driveToBuild(build, bundle.words);
+$$(build, '.tile').find((t) => t.textContent.trim() === bundle.words[0].tiles[0])?.click();
+
+// ٤) بستان آخر: كلمات موضوع مختلف
+cell(`٤ — بستان ${animals.garden.title}`, renderGarden(animals.id));
+
+// ٥) الخريطة: أول البساتين مفتوح بعد إتمام المرحلة القرآنية
+progress.reset();
+for (const node of progress.allNodes()) {
+  if (node.id === `garden:${bundle.id}`) break;
+  progress.setStars(node.id, 3);
+}
+const map = cell('٥ — الخريطة: بساتين الموضوعات', document.createElement('div'));
+map.id = 'app';
+Element.prototype.scrollIntoView = () => {};
+await import('./js/main.js');
+// الخريطة كلها لا تُلتقط في لقطة: نُبقي رأسها وبطاقة «تابع» وأول ثلاثة بساتين
+const track = map.querySelector('.map');
+if (track) {
+  const keep = [...track.children].filter((el) => !el.classList.contains('station')
+    || el.classList.contains('station--garden'));
+  track.replaceChildren(...keep.slice(0, 5));
+}
+</script>
+</body>
+</html>

@@ -14,7 +14,7 @@
 // عند تغيير أي ملف من ملفات الهيكل: ارفع VERSION فيُمحى المخزون القديم كله.
 // ويحرس اختبار `tools/test_pwa.mjs` أن قائمة SHELL لا تنسى ملفاً موجوداً في app/.
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL_CACHE = `muallim-shell-${VERSION}`;
 const AUDIO_CACHE = `muallim-audio-${VERSION}`;
 const KEEP = [SHELL_CACHE, AUDIO_CACHE];
@@ -24,14 +24,18 @@ const SHELL = [
   'index.html',
   'manifest.webmanifest',
   'css/app.css',
+  'data/lexicon.json',
   'js/audio.js',
   'js/curriculum.js',
+  'js/garden.js',
   'js/lesson.js',
+  'js/lexicon.js',
   'js/main.js',
   'js/parent.js',
   'js/progress.js',
   'js/quran.js',
   'js/review.js',
+  'js/screens.js',
   'js/skill.js',
   'js/story.js',
   'js/ui.js',

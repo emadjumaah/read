@@ -12,6 +12,7 @@
 - `docs/SESSIONS.md` — خطة الجلسات ومعايير قبولها وسجل حالتها
 - `docs/AUDIO_QUEUE.md` — بروتوكول فصل الصوت عن التطوير (ملزم)
 - `app/js/curriculum.js` — **مصدر الحقيقة الوحيد** لبيانات المنهج (حروف/مجموعات/كلمات/مقاطع/مهارات/قصص/المرحلة القرآنية)
+- `app/data/lexicon.json` — معجم «حديقة الكلمات» (طبقة ب١): ٢٥٠ كلمة في عشرة بساتين، يقرؤه `app/js/lexicon.js` ويفحصه `tools/check_lexicon.py`. **يوسّع رصيد المنهج ولا يكرّره** (يرفض الفاحص كلمةً درسها الطفل في `curriculum.js`)، و**مقاطعه مشتقّة** بمقطِّع نورانية لا مكتوبة بيد (`--fill-tiles`).
 - `app/sw.js` + `app/manifest.webmanifest` + `app/icons/` — العمل دون إنترنت (PWA)؛ الأيقونات تُولَّد بـ`tools/make_icons.py` من `tools/icon.html`
 - `tools/generate_audio.py` — توليد أصوات mp3 إلى `app/audio/` (استبدالها بتسجيلات بشرية لاحقاً لا يغيّر الشيفرة)
 - `tools/quran_source.txt` + `tools/sync_quran.py` — نصّ المصحف المرجعي (مشروع تنزيل، الرسم العثماني) وأداة نسخه إلى المنهج حرفاً بحرف

@@ -14,6 +14,8 @@ globalThis.localStorage = {
 
 const p = await import(new URL('progress.js', APP));
 const { GROUPS, SKILLS, STORIES, quranParts } = await import(new URL('curriculum.js', APP));
+const { GARDENS } = await import(new URL('lexicon.js', APP));
+const BUNDLES = GARDENS.reduce((s, g) => s + g.bundles.length, 0);
 
 let fails = 0;
 const ok = (cond, msg) => { if (!cond) { fails++; console.log('  ✗', msg); } else console.log('  ✓', msg); };
@@ -43,9 +45,9 @@ ok(p.isGroupUnlocked('g2'), 'المجموعة ٢ فُتحت');
 ok(p.nextNode().id === `g2:${g2.letters[0]}`, 'التالي = أول حرف في المجموعة ٢');
 
 // سقف النجوم = عقد المجموعات + عقد ما بينها (المهارات والقصص — الجلسة ٤)
-//              + عقد المرحلة القرآنية (الجلسة ٦)
+//              + عقد المرحلة القرآنية (الجلسة ٦) + باقات البساتين (الحزمة ٧)
 ok(p.maxTotalStars() === GROUPS.reduce((s, g) => s + (g.letters.length + 1) * 3, 0)
-  + (SKILLS.length + STORIES.length + quranParts().length) * 3, 'سقف النجوم الكلي');
+  + (SKILLS.length + STORIES.length + quranParts().length + BUNDLES) * 3, 'سقف النجوم الكلي');
 ok(store.size === 1, 'الحفظ في localStorage تمّ');
 
 const reloaded = JSON.parse(store.get('muallim.progress.v1'));

@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><title>اختبار بساتين الموضوعات (حديقة الكلمات)</title></head>
+<body>
+<pre id="out" style="font:14px/1.6 monospace"></pre>
+<iframe id="frame" src="index.html" style="width:420px;height:900px;border:1px solid #ccc"></iframe>
+<script>
+const report = (what) => navigator.sendBeacon('/result',
+  new Blob([JSON.stringify([{ ok: false, msg: 'استثناء في صفحة الاختبار: ' + what }])],
+    { type: 'text/plain' }));
+window.addEventListener('error', (e) => report(e.message));
+window.addEventListener('unhandledrejection', (e) => report(e.reason?.stack || e.reason));
+</script>
+<script type="module">
+const out = document.getElementById('out');
+const results = [];
+const post = () => navigator.sendBeacon('/result',
+  new Blob([JSON.stringify(results, null, 1)], { type: 'text/plain' }));
+const ok = (cond, msg) => {
+  results.push({ ok: !!cond, msg });
+  out.textContent += `${cond ? '✓' : '✗'} ${msg}\n`;
+  post();
+};
+setTimeout(() => { ok(false, 'انتهت المهلة الكلية'); post(); }, 160000);
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function waitFor(fn, label = '', ms = 5000) {
+  const t0 = Date.now();
+  for (;;) {
+    let v; try { v = fn(); } catch { v = null; }
+    if (v) return v;
+    if (Date.now() - t0 > ms) throw new Error('انتظار طويل: ' + label);
+    await sleep(25);
+  }
+}
+
+const { GARDENS, WORDS, bundleById } = await import('./js/lexicon.js');
+const { allNodes } = await import('./js/progress.js');
+const manifest = await (await fetch('audio/manifest.json')).json();
+const pendingAudio = new Set(await (await fetch('/__queue.json')).json());
+const frame = document.getElementById('frame');
+
+const played = [], spoken = [], heardLog = [], jsErrors = [];
+let win, doc;
+
+function attach() {
+  win = frame.contentWindow;
+  doc = frame.contentDocument;
+  win.addEventListener('error', (e) => jsErrors.push(String(e.message)));
+  win.addEventListener('unhandledrejection', (e) => jsErrors.push('رفض غير معالَج: ' + e.reason));
+  win.Audio = class extends win.EventTarget {
+    constructor(src = '') { super(); this.src = src; this.preload = ''; this.currentTime = 0; }
+    play() {
+      const key = (this.src.split('/').pop() || '').replace('.mp3', '');
+      const text = manifest[key] ?? `?${key}`;
+      played.push(text);
+      heardLog.push(text);
+      setTimeout(() => this.dispatchEvent(new Event('ended')), 5);
+      return Promise.resolve();
+    }
+    pause() {}
+  };
+  win.SpeechSynthesisUtterance = class {
+    constructor(text) { this.text = text; spoken.push(text); heardLog.push(text); }
+  };
+  const synth = { cancel() {}, speak(u) { setTimeout(() => u.onend && u.onend(), 5); } };
+  Object.defineProperty(win, 'speechSynthesis', { configurable: true, get: () => synth });
+}
+
+function idsBefore(id) {
+  const out = [];
+  for (const node of allNodes()) {
+    if (node.id === id) return out;
+    out.push(node.id);
+  }
+  return out;
+}
+
+async function seed(nodeIds) {
+  localStorage.setItem('muallim.progress.v1', JSON.stringify({
+    v: 2,
+    stars: Object.fromEntries(nodeIds.map((k) => [k, 3])),
+    skills: {}, days: {}, reviews: {}, seconds: 0,
+    startedAt: Date.now(), updatedAt: Date.now(),
+  }));
+  const done = new Promise((r) => frame.addEventListener('load', r, { once: true }));
+  frame.src = 'index.html';
+  await done;
+  attach();
+  await sleep(200);
+}
+
+const stored = () => JSON.parse(localStorage.getItem('muallim.progress.v1'));
+const $ = (sel) => doc.querySelector(sel);
+const $$ = (sel) => [...doc.querySelectorAll(sel)];
+const texts = (sel) => $$(sel).map((el) => el.textContent.trim());
+const lastHeard = () => heardLog[heardLog.length - 1];
+const btn = (label) => $$('.btn').find((b) => b.textContent.includes(label));
+const continueCard = () => $$('.continue').find((c) => c.textContent.includes('تابع من هنا'));
+const arNum = (n) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d]);
+
+async function goto(hash) {
+  win.location.hash = hash;
+  await sleep(180);
+}
+
+function checkTargets(where) {
+  const small = $$('.screen-card button')
+    .map((el) => [el, el.getBoundingClientRect()])
+    .filter(([, r]) => r.width && (r.height < 48 || r.width < 48))
+    .map(([el]) => el.className);
+  ok(small.length === 0, `${where}: أهداف اللمس ≥٤٨ بكسل${small.length ? ' — ' + small.join('،') : ''}`);
+}
+
+/** يلعب باقةً كاملةً: شاهد واسمع ← اقرأ واختر ← ركّب — بأخطاء مقصودة معدودة. */
+async function playBundle(bundle, { quizMistake = -1, verbose = false } = {}) {
+  // ————— ١) شاهد واسمع —————
+  await waitFor(() => $$('.example-word').length === bundle.words.length, 'كلمات الباقة');
+  if (verbose) {
+    ok(texts('.word-text').join('|') === bundle.words.map((w) => w.text).join('|'),
+      `شاهد واسمع: كلمات الباقة كما في المعجم (${texts('.word-text').join('، ')})`);
+    ok(texts('.word-emoji').join('') === bundle.words.map((w) => w.emoji).join(''),
+      'ولكل كلمة صورتها');
+  }
+  for (const el of $$('.example-word')) { el.click(); await sleep(40); }
+  if (verbose) {
+    ok(lastHeard() === bundle.words.at(-1).say, `ونقرة الكلمة تُسمعها (${lastHeard()})`);
+    ok($('.lesson-body').textContent.includes(`سمعتَ ${arNum(bundle.words.length)}`),
+      'وعدّاد المسموع يبلغ كلمات الباقة كلها');
+    checkTargets('شاهد واسمع');
+  }
+  $('.next').click();
+
+  // ————— ٢) اقرأ واختر —————
+  await waitFor(() => $('.vchip--word'), 'خطوة اقرأ واختر');
+  for (let round = 1; round <= bundle.words.length; round++) {
+    const mark = heardLog.length;
+    await waitFor(() => $$('.vchip--word').length === 3, `خيارات الجولة ${round}`);
+    const emoji = $('.pick-pic').textContent.trim();
+    const target = bundle.words.find((w) => w.emoji === emoji);
+    const faces = texts('.vchip-face');
+    if (verbose && round === 1) {
+      ok(!!target && faces.includes(target.read),
+        `اقرأ واختر: صورة «${emoji}» وكلمتها بين الخيارات (${faces.join('|')})`);
+      ok(heardLog.length === mark, 'ولا يُسمَع شيء قبل الاختيار — الحكم على القراءة لا على السمع');
+      ok(faces.every((f) => bundle.words.some((w) => w.read === f)),
+        'وكل الخيارات من كلمات الباقة (مفكوكة بالضرورة)');
+    }
+    if (round === quizMistake) {
+      const wrong = $$('.vchip--word')[faces.findIndex((f) => f !== target.read)];
+      wrong.click();
+      await sleep(120);
+      ok(wrong.classList.contains('bad'), 'والخطأ يُعلَّم ولا ينقل إلى الكلمة التالية');
+      ok($$('.vchip--word').length === 3, 'والجولة نفسها باقية');
+      await sleep(200);
+    }
+    $$('.vchip--word')[texts('.vchip-face').indexOf(target.read)].click();
+    await sleep(900);
+  }
+
+  // ————— ٣) ركّب الكلمة —————
+  await waitFor(() => $('.tile'), 'خطوة التركيب');
+  for (let i = 0; i < bundle.words.length; i++) {
+    const word = bundle.words[i];
+    await waitFor(() => $$('.dot--now').length === 1 && $$('.tile:not(.tile--used)').length, `لوح «${word.word}»`);
+    if (verbose && i === 0) {
+      ok($$('.slot').length === word.tiles.length,
+        `ركّب الكلمة: خانات بعدد مقاطع «${word.word}» (${$$('.slot').length})`);
+      ok($$('.tile').length > word.tiles.length, 'ومعها مشتّتات من مقاطع البستان');
+      const wrongTile = $$('.tile').find((t) => t.textContent.trim() !== word.tiles[0]);
+      wrongTile.click();
+      await sleep(120);
+      ok(wrongTile.classList.contains('bad') && $$('.slot--filled').length === 0,
+        'والخطأ يهزّ البلاطة ولا يملأ الخانة');
+      ok(lastHeard() === wrongTile.textContent.trim(),
+        `ويُسمعه ما اختاره لا الصواب (${lastHeard()})`);
+      await sleep(200);
+    }
+    for (const tile of word.tiles) {
+      const el = $$('.tile').find((t) => !t.disabled && t.textContent.trim() === tile);
+      if (!el) { ok(false, `مقطع «${tile}» غير موجود في لوح «${word.word}»`); return; }
+      el.click();
+      await sleep(120);
+    }
+    if (verbose && i === 0) {
+      ok($('.word-built')?.textContent.trim() === word.text,
+        `والكلمة تُعرض كما تُكتب لا كما تُتهجّى (${$('.word-built')?.textContent.trim()})`);
+      // المقطع الأخير ثم سكتة ثم الكلمة كاملةً (تهجّي النورانية) — ننتظرها لا نستعجلها
+      for (let t = 0; t < 60 && !heardLog.slice(-4).includes(word.say); t++) await sleep(50);
+      ok(heardLog.slice(-4).includes(word.say),
+        `وتُسمع كاملةً بعد مقاطعها (${heardLog.slice(-4).join(' ← ')})`);
+    }
+    if (i < bundle.words.length - 1) {
+      await waitFor(() => $$('.dot--done').length > i, 'الكلمة التالية');
+    }
+  }
+  await waitFor(() => $('.celebrate'), 'ختام الباقة');
+}
+
+try {
+  // ————— ١) الخريطة: بساتين الموضوعات —————
+  await seed([]);
+  await waitFor(() => $('.station'), 'الخريطة');
+  ok($$('.station--garden').length === GARDENS.length,
+    `الخريطة فيها ${arNum(GARDENS.length)} بساتين بعد المرحلة القرآنية`);
+  const stations = $$('.station');
+  ok(stations.indexOf($$('.station--garden')[0]) > stations.indexOf($('.station--quran')),
+    'وموضعها بعد محطة الخاتمة القرآنية');
+  ok($$('.station--garden').every((s) => s.classList.contains('station--locked')),
+    'وكلها مقفلة في بداية الرحلة');
+  ok($$('.station--garden .node').length === GARDENS.reduce((s, g) => s + g.bundles.length, 0),
+    `وعقدها باقات المعجم كلها (${arNum(GARDENS.reduce((s, g) => s + g.bundles.length, 0))} باقة)`);
+
+  const first = GARDENS[0].bundles[0];
+  await goto(`#/garden/${encodeURIComponent(first.id)}`);
+  ok(!!$('.station') && !$('.garden'), 'والدخول المباشر على باقة مقفلة يعيده إلى الخريطة');
+
+  // ————— ٢) أول باقة: الحلقة كاملة —————
+  await seed(idsBefore(`garden:${first.id}`));
+  await waitFor(() => $('.station--garden'), 'الخريطة بعد إتمام الرحلة');
+  ok(!$$('.station--garden')[0].classList.contains('station--locked'),
+    'أول بستان يُفتح بإتمام الرحلة كلها (والمرحلة القرآنية آخرها)');
+  ok(continueCard().textContent.includes(GARDENS[0].title),
+    `و«تابع من هنا» يشير إلى بستان ${GARDENS[0].title}`);
+
+  continueCard().click();
+  await waitFor(() => $('.garden'), 'شاشة الباقة');
+  ok($('.pill').textContent.includes(GARDENS[0].title), `شاشة الباقة (${$('.pill').textContent})`);
+  ok(texts('.step-name').join('|') === 'شاهد واسمع|اقرأ واختر|ركّب الكلمة',
+    `وثلاث خطوات: ${texts('.step-name').join(' ← ')}`);
+
+  await playBundle(first, { quizMistake: 2, verbose: true });
+  ok($$('.big-stars .on').length === 2,
+    `خطآن (اختيار وتركيب) ⇒ نجمتان (${$$('.big-stars .on').length})`);
+  ok(stored().stars[`garden:${first.id}`] === 2, 'والنجوم محفوظة بمعرّف عقدة الباقة');
+
+  // ————— ٣) القياس موصول: كل نقرة تركيب في سجلّ المهارات —————
+  const skills = Object.entries(stored().skills);
+  const buildKeys = skills.filter(([k]) => k.endsWith('|build'));
+  ok(buildKeys.length > 0 && buildKeys.length === skills.length,
+    `كل ما سُجّل تمارين تركيب (${buildKeys.length} مهارة) — لا قياس في «اقرأ واختر»`);
+  const taps = buildKeys.reduce((s, [, v]) => s + v.right + v.wrong, 0);
+  const need = first.words.reduce((s, w) => s + w.tiles.length, 0);
+  ok(taps === need + 1, `وعدد المحاولات = مقاطع الباقة + الخطأ المقصود (${taps} من ${need + 1})`);
+  ok(buildKeys.some(([, v]) => v.wrong === 1), 'والخطأ مسجَّل على المقطع المطلوب لا على ما لُمس');
+  const firstTile = first.words[0].tiles[0];
+  ok(skills.some(([k]) => k.startsWith(`${firstTile[0]}|`)),
+    `والمهارة مفتاحها حرفُ المقطع (${firstTile})`);
+
+  // ————— ٤) بستان ثانٍ: باقة كاملة بلا خطأ —————
+  const second = GARDENS[1].bundles[0];
+  await seed(idsBefore(`garden:${second.id}`));
+  await goto(`#/garden/${encodeURIComponent(second.id)}`);
+  await waitFor(() => $('.garden'), `شاشة باقة ${second.id}`);
+  ok($('.pill').textContent.includes(GARDENS[1].title),
+    `بستان ${GARDENS[1].title}: باقته الأولى تُفتح بإتمام ما قبلها`);
+  await playBundle(second, {});
+  ok($$('.big-stars .on').length === 3, 'بلا خطأ ⇒ ثلاث نجوم');
+  ok(stored().stars[`garden:${second.id}`] === 3, 'ونجومها محفوظة');
+  ok(Object.keys(stored().skills).length > 0, 'وقياسها مسجَّل كذلك');
+
+  $('.celebrate .btn--primary').click();
+  await waitFor(() => $('.station'), 'العودة للخريطة');
+  const done = $$('.station--garden')[1].querySelectorAll('.node--done').length;
+  ok(done === 1, `والخريطة تُظهر الباقة المُنجَزة في بستانها (${arNum(done)})`);
+
+  // ————— ٥) المراجعة تلقّفت ما قِيس في البستان —————
+  await goto('#/review');
+  await waitFor(() => $('.screen'), 'شاشة المراجعة');
+  ok(!!$('.dots') && !$('.station'), 'ومراجعة اليوم تُبنى مما قِيس في البساتين');
+
+  // ————— ٦) اكتمال الرحلة: بإتمام آخر باقة لا بإتمام آخر سورة —————
+  await seed(allNodes().map((n) => n.id));
+  await waitFor(() => $('.station'), 'الخريطة بعد إتمام كل شيء');
+  ok($('.map .note')?.textContent.includes('أتممتَ الرحلة'),
+    `والرحلة لا تكتمل إلا بآخر باقة (${$('.map .note')?.textContent.trim()})`);
+  ok($$('.station--garden.station--done').length === GARDENS.length, 'وكل البساتين مُنجَزة');
+
+  // ————— ٧) الصوت: ملفات مولَّدة، والنطق الآلي للمنتظِر وحده —————
+  const missing = played.filter((t) => t.startsWith('?'));
+  ok(missing.length === 0, `كل ما شُغِّل من الملفات له ملف مولَّد (${played.length} تشغيلاً)`);
+  const stray = spoken.filter((t) => !pendingAudio.has(t));
+  ok(stray.length === 0,
+    `والنطق الآلي لم يُستعمل إلا لنصوص تنتظر التصريف (${spoken.length} نصاً)`
+    + `${stray.length ? ' — خارج القائمة: ' + [...new Set(stray)].join('، ') : ''}`);
+  const lexTexts = new Set(WORDS.flatMap((w) => [w.say, ...w.tiles]));
+  ok(heardLog.every((t) => lexTexts.has(t) || !bundleById(first.id).words.some((w) => w.word === t)),
+    'وكل ما سُمع في البساتين من نصوص المعجم');
+
+  ok(jsErrors.length === 0, `لا أخطاء جافاسكربت (${jsErrors.join(' | ') || 'لا شيء'})`);
+} catch (e) {
+  ok(false, 'استثناء: ' + ((e && e.stack) || e));
+}
+
+await fetch('/result', { method: 'POST', body: JSON.stringify(results, null, 1) });
+</script>
+</body>
+</html>

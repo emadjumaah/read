@@ -853,13 +853,28 @@ button {
   font-size: 1.5rem;
 }
 
-/* «اقرأ واختر»: الصورة فوق والكلمات مكتوبة تحتها */
-.quran-pic {
+/* «اقرأ واختر»: الصورة فوق والكلمات مكتوبة تحتها (المرحلة القرآنية والبساتين) */
+.pick-pic {
   display: grid;
   place-items: center;
   min-height: 6rem;
   margin: .75rem 0 .25rem;
 }
+
+/* ————— بساتين الموضوعات (حديقة الكلمات) ————— */
+
+.station--garden {
+  border-inline-start-width: 8px;
+  border-inline-start-style: double;
+  background: linear-gradient(180deg, var(--card) 55%, color-mix(in srgb, var(--accent) 9%, white));
+}
+
+.station--garden .station-letters { font-family: var(--font-ui); font-size: .9rem; letter-spacing: 0; }
+.station--garden .station-num { font-size: 1.6rem; }
+.node--garden .node-face { font-family: var(--font-ui); font-size: 1.9rem; }
+
+.garden .word-built { color: var(--accent); }
+.garden .wordrow { flex-wrap: wrap; justify-content: center; }
 
 .vchip--word { min-width: 0; }
 .vchip--word .vchip-face { font-family: var(--font-letter); font-size: 2rem; white-space: nowrap; }
@@ -1071,6 +1086,7 @@ button {
   .form-cell, .example-word, .trace, .slot { background: color-mix(in srgb, var(--accent) 16%, var(--card)); }
   .station--pause { background: linear-gradient(180deg, var(--card) 55%, color-mix(in srgb, var(--accent) 22%, var(--card))); }
   .station--quran { background: linear-gradient(180deg, var(--card) 50%, color-mix(in srgb, var(--accent) 26%, var(--card))); }
+  .station--garden { background: linear-gradient(180deg, var(--card) 55%, color-mix(in srgb, var(--accent) 22%, var(--card))); }
   .sign-card, .rasm-card, .muq-card { background: color-mix(in srgb, var(--accent) 14%, var(--card)); border-color: color-mix(in srgb, var(--accent) 34%, var(--card)); }
   .sign-face, .sign-shape, .rasm-sign, .ayah-num { background: color-mix(in srgb, var(--accent) 26%, var(--card)); color: #8ce99a; }
   .sheet--mushaf { background: color-mix(in srgb, var(--accent) 14%, var(--card)); }

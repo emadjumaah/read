@@ -226,7 +226,8 @@ try {
 
     await waitFor(() => $('.celebrate'), `احتفال ${g.title}`);
     const heard = new Set(played.slice(from));
-    const silent = g.words.flatMap((w) => [...w.tiles, w.say]).filter((t) => !heard.has(t));
+    const silent = g.words.flatMap((w) => [...w.tiles, w.say])
+      .filter((t) => !heard.has(t) && !pendingAudio.has(t));
     ok(trouble.length === 0 && silent.length === 0,
       `${g.title}: ${g.words.length} كلمات بُنيت كلها وسُمع كل مقطع وكل كلمة`
       + (trouble.length ? ' — ' + trouble.join('،') : '')

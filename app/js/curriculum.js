@@ -130,7 +130,7 @@ export const GROUPS = [
     words: [
       { tiles: ['شَ', 'مْ', 'سْ'], say: 'شمس', emoji: '☀️' },
       { tiles: ['مَ', 'طَ', 'رْ'], say: 'مطر', emoji: '🌧️' },
-      { tiles: ['زَ', 'يْ', 'تْ'], say: 'زيت', emoji: '🫒' },
+      { tiles: ['زَيْ', 'تْ'], say: 'زيت', emoji: '🫒' },
       { tiles: ['صَا', 'رُو', 'خْ'], say: 'صاروخ', emoji: '🚀' },
       { tiles: ['قِ', 'طَا', 'رْ'], say: 'قطار', emoji: '🚆' },
     ],
@@ -562,13 +562,26 @@ export function markOf(haraka) {
 }
 
 /**
+ * حروف المرحلة القرآنية (الهمزة بصورها والتاء المربوطة): تُدرَّس في درسها الافتتاحي
+ * ولا تظهر في المجموعات السبع — ومع ذلك تُقاس كغيرها حين ترد في مقاطع الكلمات.
+ * مشتقّة من بيانات الدرس نفسه لا مكتوبة هنا.
+ */
+export const QURAN_LETTERS = new Set(
+  QURAN.letters.signs.flatMap((s) => [s.sign, ...s.shapes]).join('')
+    .split('').filter((c) => c && c !== TATWEEL),
+);
+
+/** هل هذا الرمز حرفٌ يعرفه المنهج؟ (المجموعات السبع + حرفا المرحلة القرآنية) */
+export const isLetter = (ch) => Boolean(LETTERS[ch]) || QURAN_LETTERS.has(ch);
+
+/**
  * مهارة المقطع: أول حرف فيه وحركته — «بَيْ» ← {ب, fatha}، «بْ» ← {ب, sukun}.
  * هي وحدة القياس في سجلّ الأخطاء (METHOD §٦: الحرف × الحركة × نوع التمرين).
  * تعود null لنصّ بلا حرف معروف.
  */
 export function syllableSkill(text) {
   const chars = [...String(text ?? '')];
-  const index = chars.findIndex((c) => LETTERS[c]);
+  const index = chars.findIndex(isLetter);
   if (index < 0) return null;
   return { letter: chars[index], haraka: HARAKA_BY_MARK[chars[index + 1]] || 'none' };
 }
