@@ -14,7 +14,7 @@ import { renderGarden } from './garden.js';
 import { renderParent, skillsText } from './parent.js';
 import {
   h, toast, go, arNum, arCount, starsRow, topbar, letterTitle, nodeTitle, nodeFace, nodeWhere,
-  ACCENTS, PAUSE_ACCENT, QURAN_ACCENT, accentFor, accentForGarden, DEV,
+  ACCENTS, PAUSE_ACCENT, STORY_ACCENT, QURAN_ACCENT, accentFor, accentForGarden, landmark, DEV,
 } from './ui.js';
 
 const app = document.getElementById('app');
@@ -60,8 +60,11 @@ function renderMap() {
     main.append(h('p', { class: 'note' }, '🎉 أتممتَ الرحلة كلها — من الحرف الأول إلى المصحف وحديقة الكلمات!'));
   }
 
+  // الدرب المتعرج: انعطافة خيط بين كل محطتين، يمنةً مرة ويسرةً مرة (DESIGN §٦)
   let groupIndex = 0;
+  let stations = 0;
   for (const section of progress.journey()) {
+    if (stations++) main.append(trailEl(stations % 2 === 0));
     main.append(section.kind === 'group' ? stationEl(section, groupIndex++, next)
       : section.kind === 'quran' ? quranEl(section, next)
         : section.kind === 'garden' ? gardenEl(section, next)
@@ -106,8 +109,7 @@ function reviewCard() {
       : 'تمارين سريعة مما درسته';
 
   return h('button', {
-    class: 'continue',
-    css: { background: done ? '#e9f8ec' : '#0c8599', color: done ? '#2b8a3e' : '#fff' },
+    class: `continue continue--review${done ? ' continue--done' : ''}`,
     onclick: () => go('#/review'),
   },
     h('span', { class: 'continue-face' }, done ? '✓' : '🔁'),
@@ -126,6 +128,7 @@ function stationEl(section, index, next) {
   return trackEl({
     className: `station${unlocked ? '' : ' station--locked'}${complete ? ' station--done' : ''}`,
     accent: ACCENTS[index % ACCENTS.length],
+    mark: 'house',
     label: `${group.title}${unlocked ? '' : ' — مقفلة'}`,
     badge: arNum(index + 1),
     title: group.title,
@@ -148,6 +151,7 @@ function interludeEl(section, next) {
   return trackEl({
     className: `station station--pause${unlocked ? '' : ' station--locked'}${complete ? ' station--done' : ''}`,
     accent: PAUSE_ACCENT,
+    mark: 'bridge',
     label: `محطة المهارات والقصص${unlocked ? '' : ' — مقفلة'}`,
     badge: '✦',
     title: 'مهارات وقصص',
@@ -172,6 +176,7 @@ function quranEl(section, next) {
   return trackEl({
     className: `station station--quran${unlocked ? '' : ' station--locked'}${complete ? ' station--done' : ''}`,
     accent: QURAN_ACCENT,
+    mark: 'dome',
     label: `${QURAN.title}${unlocked ? '' : ' — مقفلة'}`,
     badge: QURAN.face,
     title: QURAN.title,
@@ -197,6 +202,7 @@ function gardenEl(section, next) {
   return trackEl({
     className: `station station--garden${unlocked ? '' : ' station--locked'}${complete ? ' station--done' : ''}`,
     accent: accentForGarden(garden),
+    mark: 'garden',
     label: `بستان ${garden.title}${unlocked ? '' : ' — مقفل'}`,
     badge: garden.emoji,
     title: `بستان ${garden.title}`,
@@ -220,7 +226,16 @@ function accentOf(node, group) {
   return accentFor(group);
 }
 
-function trackEl({ className, accent, label, badge, title, sub, meta, nodes, next }) {
+/** انعطافة خيط الدرب بين محطتين — زخرفة صامتة. */
+function trailEl(flip) {
+  const el = h('div', { class: `trail${flip ? ' trail--flip' : ''}`, 'aria-hidden': 'true' });
+  el.innerHTML = `<svg viewBox="0 0 72 36" fill="none">
+    <path d="M14 2 C 40 10, 32 26, 58 34" stroke="var(--ink-soft)" stroke-width="3"
+      stroke-linecap="round" stroke-dasharray="1 8" opacity=".55"/></svg>`;
+  return el;
+}
+
+function trackEl({ className, accent, mark, label, badge, title, sub, meta, nodes, next }) {
   const station = h('section', { class: className, css: { '--accent': accent }, 'aria-label': label },
     h('div', { class: 'station-head' },
       h('span', { class: 'station-num' }, badge),
@@ -235,6 +250,7 @@ function trackEl({ className, accent, label, badge, title, sub, meta, nodes, nex
   const track = h('ol', { class: 'track' });
   for (const node of nodes) track.append(h('li', {}, nodeButton(node, next)));
   station.append(track);
+  if (mark) station.append(landmark(mark));
   return station;
 }
 
@@ -247,6 +263,7 @@ function nodeButton(node, next) {
 
   const btn = h('button', {
     class: `node node--${node.type} node--${state}${isNext ? ' node--next' : ''}`,
+    css: node.type === 'story' ? { '--accent': STORY_ACCENT } : {},
     'aria-label': `${label} — ${open ? (stars ? `${arNum(stars)} نجوم` : 'مفتوح') : 'مقفل'}`,
     onclick: () => {
       if (!open) {

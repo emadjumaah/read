@@ -13,13 +13,13 @@ import * as audio from './audio.js';
 import { buildBoard } from './words.js';
 import {
   h, toast, go, arNum, arCount, starsRow, topbar, letterTitle, wordText,
-  shuffle, pick, shake, DEV,
+  mascot, shuffle, pick, shake, DEV,
 } from './ui.js';
 
 export const SESSION_SIZE = 6;    // جلسة قصيرة تُنجَز في دقائق (لا تُرهق طفل السادسة)
 export const MAX_BUILD = 2;       // تركيب الكلمات أطول التمارين: اثنان على الأكثر
 const OPTIONS = 3;
-const ACCENT = '#0c8599';         // لون المراجعة على الخريطة وفي شاشتها
+const ACCENT = 'var(--accent-skills)';   // المراجعة تثبيت مهارات — لونها لون المهارات
 
 /** نجوم الجلسة: ٣ بلا خطأ، ٢ ما دامت الأخطاء ≤ عدد التمارين، وإلا ١ (عتبة متناسبة). */
 export const starsForReview = (errors, items) => (errors === 0 ? 3 : errors <= items ? 2 : 1);
@@ -334,6 +334,7 @@ export function renderReview() {
       : `أصبتَ ${arNum(state.right)} من ${arNum(state.right + state.errors)} محاولة — وما أخطأتَ فيه يعود غداً.`;
 
     body.replaceChildren(h('div', { class: 'celebrate' },
+      mascot('mascot mascot--cheer'),
       h('div', { class: 'celebrate-face' }, '🔁'),
       h('h2', {}, 'أتممتَ مراجعة اليوم!'),
       starsRow(stars, 'big-stars'),

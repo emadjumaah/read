@@ -336,9 +336,9 @@ export function renderSurah(surahId) {
   }
 
   function page() {
+    // لا إيموجي داخل شاشات السور (DESIGN §٦) — الزخرفة ذهبيّ مطفأ من CSS
     const sheet = h('div', { class: 'sheet sheet--mushaf' },
       h('div', { class: 'surah-title' },
-        h('span', { class: 'word-emoji' }, surah.emoji),
         h('span', { class: 'surah-title-text' }, `سورة ${surah.name}`),
         h('span', { class: 'pill' }, `${arNum(surah.number)}`),
       ),
@@ -381,14 +381,14 @@ export function renderSurah(surahId) {
     const last = !progress.nextNode();
 
     body.replaceChildren(h('div', { class: 'celebrate' },
-      h('div', { class: 'celebrate-face' }, surah.emoji),
+      h('div', { class: 'celebrate-face' }, '۞'),
       h('h2', {}, `قرأتَ سورة ${surah.name}!`),
       starsRow(stars, 'big-stars'),
       h('p', { class: 'hint' }, stars === 3
-        ? 'قرأتَ آياتها كلها — بارك الله فيك 🎉'
+        ? 'قرأتَ آياتها كلها — بارك الله فيك'
         : 'أعِد القراءة على مهل، آيةً آية.'),
       before > stars && h('p', { class: 'hint' }, `نجومك السابقة محفوظة: ${arNum(before)} ★`),
-      last && h('p', { class: 'note' }, '🎉 أتممتَ الرحلة كلها — من الحرف الأول إلى المصحف.'),
+      last && h('p', { class: 'note' }, 'أتممتَ الرحلة كلها — من الحرف الأول إلى المصحف.'),
       h('div', { class: 'row foot' },
         h('button', { class: 'btn btn--primary', onclick: () => go('#/') }, '→ الخريطة'),
         h('button', {

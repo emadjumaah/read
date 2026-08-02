@@ -8,7 +8,7 @@
 
 import * as progress from './progress.js';
 import * as audio from './audio.js';
-import { h, toast, go, arNum, starsRow, topbar, shuffle, shake, DEV } from './ui.js';
+import { h, toast, go, arNum, starsRow, topbar, mascot, shuffle, shake, DEV } from './ui.js';
 
 const QUIZ_OPTIONS = 3;
 const AFTER_PICK_MS = 750;
@@ -112,7 +112,10 @@ export function steppedScreen({ nodeId, className = '', accent, pill, face, step
   function paint() {
     audio.stop();
     paintSteps();
-    body.replaceChildren(steps[state.step].build({ next, fail: () => { state.errors++; } }));
+    const content = steps[state.step].build({ next, fail: () => { state.errors++; } });
+    // الشخصية المرشدة تستقبل الطفل في أول خطوة (DESIGN §٦)
+    if (state.step === 0) body.replaceChildren(mascot('mascot mascot--hello'), content);
+    else body.replaceChildren(content);
   }
 
   function next() {
@@ -136,6 +139,7 @@ export function steppedScreen({ nodeId, className = '', accent, pill, face, step
     const last = !progress.nextNode();   // بعد الحفظ: هل بقي في الرحلة شيء؟
 
     body.replaceChildren(h('div', { class: 'celebrate' },
+      mascot('mascot mascot--cheer'),
       h('div', { class: 'celebrate-face' }, face),
       h('h2', {}, 'أحسنت!'),
       starsRow(stars, 'big-stars'),

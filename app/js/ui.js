@@ -2,28 +2,29 @@
 // لا تلمس هذه الوحدة الـDOM وقت التحميل، فتبقى قابلة للاستيراد في اختبارات node.
 
 import { GROUPS, LETTERS, QURAN } from './curriculum.js';
-import { GARDENS } from './lexicon.js';
 
 export const DEV = typeof location !== 'undefined'
   && new URLSearchParams(location.search).get('dev') === '1';
 
-// لون لكل مجموعة على الخريطة (يتغيّر المشهد كلما تقدّم الطفل)
-export const ACCENTS = ['#e8590c', '#2f9e44', '#1971c2', '#9c36b5', '#0c8599', '#c92a2a', '#f08c00'];
+// ألوان المراحل — مصدر الحقيقة الوحيد للقيم في لوح `docs/DESIGN.md` §٢ (متغيرات CSS):
+// لون واحد مطفأ يميز كل مرحلة، والمشهد يتغيّر بمعالم المحطات لا بصراخ الألوان.
+export const ACCENTS = ['var(--accent-letters)'];
 
-/** لون محطات ما بين المجموعات (المهارات والقصص) — يميّزها عن محطات الحروف. */
-export const PAUSE_ACCENT = '#5f3dc4';
+/** لون محطات ما بين المجموعات (دروس المهارات) — يميّزها عن محطات الحروف. */
+export const PAUSE_ACCENT = 'var(--accent-skills)';
 
-/** لون المرحلة القرآنية — خضرة تميّز خاتمة الرحلة عن كل ما قبلها. */
-export const QURAN_ACCENT = '#1b7a43';
+/** لون شاشات القصص (طيني دافئ) — عقدها تسكن محطة المهارات وتحمل لونها الخاص. */
+export const STORY_ACCENT = 'var(--accent-stories)';
 
-export function accentFor(group) {
-  return ACCENTS[Math.max(0, GROUPS.indexOf(group)) % ACCENTS.length];
-}
+/** لون المرحلة القرآنية — أخضر مصحفي يميّز خاتمة الرحلة عن كل ما قبلها. */
+export const QURAN_ACCENT = 'var(--accent-quran)';
 
-/** لون البستان: ألوان المجموعات نفسها مزاحةً، فتبقى الحديقة متغيّرة المشهد كالرحلة. */
-export function accentForGarden(garden) {
-  return ACCENTS[(Math.max(0, GARDENS.indexOf(garden)) + 3) % ACCENTS.length];
-}
+/** لون بساتين المعجم — زيتوني ناعم. */
+export const GARDEN_ACCENT = 'var(--accent-garden)';
+
+export const accentFor = () => ACCENTS[0];
+
+export const accentForGarden = () => GARDEN_ACCENT;
 
 const AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 export const arNum = (n) => String(n).replace(/\d/g, (d) => AR_DIGITS[+d]);
@@ -120,6 +121,51 @@ export function topbar(...extra) {
 export function starsRow(count, className = 'node-stars') {
   return h('span', { class: className, 'aria-hidden': 'true' },
     [0, 1, 2].map((i) => h('span', { class: i < count ? 'on' : '' }, i < count ? '★' : '☆')));
+}
+
+// ————— عناصر الهوية (DESIGN §٦): الشخصية المرشدة ومعالم المحطات — SVG مضمّن لا صور نقطية —————
+
+// «نوري» — عصفور مرشد بسيط بعيون، ألوانه من لوح التصميم نفسه (متغيرات CSS داخل SVG).
+const MASCOT_SVG = `
+<svg viewBox="0 0 64 64" role="img">
+  <ellipse cx="32" cy="58" rx="14" ry="3" fill="var(--ink)" opacity=".08"/>
+  <circle cx="32" cy="34" r="21" fill="var(--star)"/>
+  <circle cx="32" cy="34" r="21" fill="none" stroke="var(--ink)" stroke-width="2" opacity=".25"/>
+  <ellipse cx="32" cy="42" rx="12" ry="9" fill="var(--card)"/>
+  <path d="M13 34q-7 2-9 8 7 1 11-2z" fill="var(--star)" stroke="var(--ink)" stroke-width="1.5" opacity=".9"/>
+  <path d="M51 34q7 2 9 8-7 1-11-2z" fill="var(--star)" stroke="var(--ink)" stroke-width="1.5" opacity=".9"/>
+  <circle cx="25" cy="28" r="5.5" fill="var(--card)"/>
+  <circle cx="39" cy="28" r="5.5" fill="var(--card)"/>
+  <circle cx="26" cy="29" r="2.6" fill="var(--ink)"/>
+  <circle cx="38" cy="29" r="2.6" fill="var(--ink)"/>
+  <circle cx="26.9" cy="28.1" r=".9" fill="var(--card)"/>
+  <circle cx="38.9" cy="28.1" r=".9" fill="var(--card)"/>
+  <path d="M32 33l-3.5 4h7z" fill="var(--accent-stories)"/>
+  <path d="M28 12q4-6 4 0 0-6 4 0" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" opacity=".55"/>
+</svg>`;
+
+/** الشخصية المرشدة — تظهر في بدايات الدروس والاحتفالات (لا تظهر في شاشات السور). */
+export function mascot(className = 'mascot') {
+  const el = h('span', { class: className, 'aria-hidden': 'true' });
+  el.innerHTML = MASCOT_SVG;
+  return el;
+}
+
+// معلم بصري لكل نوع محطة: بيت الحروف، جسر المهارات، شجرة القصص، قبة القرآنية، بستان المعجم.
+const LANDMARKS = {
+  house: '<path d="M10 44V26L28 10l18 16v18" /><path d="M22 44V33h10v11" /><path d="M6 26L28 7l22 19" />',
+  bridge: '<path d="M6 42h52" /><path d="M12 42v-9M52 42v-9" /><path d="M8 36q24-24 48 0" /><circle cx="50" cy="16" r="6" /><path d="M50 22v20" />',
+  dome: '<path d="M32 8q13 9 13 19v15H19V27q0-10 13-19z" /><path d="M32 8V4" /><circle cx="32" cy="3" r="1.6" /><path d="M10 42V22l3-7 3 7v20" /><path d="M15 42h38" />',
+  garden: '<path d="M8 44h48" /><circle cx="18" cy="36" r="8" /><circle cx="46" cy="34" r="10" /><path d="M32 44V28" /><circle cx="32" cy="24" r="4.5" /><path d="M32 34q-5-1-7-5M32 38q5-1 7-5" />',
+};
+
+/** معلم المحطة على الخريطة — زخرفة صامتة بلون المرحلة (DESIGN §٦). */
+export function landmark(kind) {
+  if (!LANDMARKS[kind]) return null;
+  const el = h('span', { class: 'station-mark', 'aria-hidden': 'true' });
+  el.innerHTML = `<svg viewBox="0 0 64 48" fill="none" stroke="var(--accent)"
+    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${LANDMARKS[kind]}</svg>`;
+  return el;
 }
 
 /** هزّة قصيرة تنبّه الطفل إلى خطأ دون كلام. */

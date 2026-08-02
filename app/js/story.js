@@ -12,7 +12,7 @@ import * as progress from './progress.js';
 import * as audio from './audio.js';
 import {
   h, toast, go, arNum, arCount, starsRow, topbar,
-  PAUSE_ACCENT, DEV,
+  STORY_ACCENT, mascot, DEV,
 } from './ui.js';
 
 /**
@@ -117,6 +117,7 @@ export function renderStory(storyId) {
     progress.setStars(nodeId, stars);
 
     body.replaceChildren(h('div', { class: 'celebrate' },
+      mascot('mascot mascot--cheer'),
       h('div', { class: 'celebrate-face' }, story.emoji),
       h('h2', {}, 'قرأتَ قصة كاملة!'),
       starsRow(stars, 'big-stars'),
@@ -141,7 +142,7 @@ export function renderStory(storyId) {
 
   paint();
 
-  return h('div', { class: 'screen story', css: { '--accent': PAUSE_ACCENT } },
+  return h('div', { class: 'screen story', css: { '--accent': STORY_ACCENT } },
     topbar(
       // الخروج من القراءة لا يُستأذَن فيه (بخلاف الدرس واللعبة): لا شيء يضيع،
       // والقصة تبقى مفتوحة يعود إليها متى شاء.

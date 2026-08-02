@@ -10,7 +10,7 @@ import * as progress from './progress.js';
 import * as audio from './audio.js';
 import {
   h, toast, go, arNum, starsRow, topbar, wordText,
-  accentFor, shuffle, shake, DEV,
+  accentFor, mascot, shuffle, shake, DEV,
 } from './ui.js';
 
 const MAX_DISTRACTORS = 2;   // «مشتّت أو اثنان» — والقصير (مقطعان) يكفيه واحد
@@ -230,6 +230,7 @@ export function renderWordsGame(groupId) {
         : 'أتممتَ اللعبة، وبالإعادة تزيد نجومك.';
 
     body.replaceChildren(h('div', { class: 'celebrate' },
+      mascot('mascot mascot--cheer'),
       h('div', { class: 'celebrate-face' }, '🧩'),
       h('h2', {}, 'أحسنت!'),
       starsRow(stars, 'big-stars'),

@@ -17,7 +17,7 @@ import * as audio from './audio.js';
 import { starsForErrors } from './lesson.js';
 import {
   h, toast, go, arNum, starsRow, topbar,
-  PAUSE_ACCENT, shuffle, pick, shake, DEV,
+  PAUSE_ACCENT, mascot, shuffle, pick, shake, DEV,
 } from './ui.js';
 
 const ROUNDS = 3;
@@ -100,6 +100,7 @@ export function renderSkillLesson(skillId) {
 
   function stepRule() {
     return h('div', {},
+      mascot('mascot mascot--hello'),
       h('h2', {}, skill.title),
       h('button', {
         class: 'giant',
@@ -220,6 +221,7 @@ export function renderSkillLesson(skillId) {
     paintSteps();
 
     body.replaceChildren(h('div', { class: 'celebrate' },
+      mascot('mascot mascot--cheer'),
       h('div', { class: 'celebrate-face' }, skill.face),
       h('h2', {}, 'أحسنت!'),
       starsRow(stars, 'big-stars'),

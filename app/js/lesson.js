@@ -11,7 +11,7 @@ import * as progress from './progress.js';
 import * as audio from './audio.js';
 import {
   h, toast, go, arNum, starsRow, topbar, letterTitle, wordText,
-  accentFor, shuffle, pick, shake, DEV,
+  accentFor, mascot, shuffle, pick, shake, DEV,
 } from './ui.js';
 
 const ROUNDS = 3;              // جولات «ميّز بأذنك»
@@ -120,6 +120,7 @@ export function renderLesson(groupId, letter) {
       h('small', {}, label));
 
     return h('div', {},
+      mascot('mascot mascot--hello'),
       h('h2', {}, letterTitle(letter)),
       h('button', {
         class: 'giant',
@@ -242,7 +243,7 @@ export function renderLesson(groupId, letter) {
 
     function guide() {
       ctx.clearRect(0, 0, box.width, box.height);
-      const accent = getComputedStyle(canvas).getPropertyValue('--accent').trim() || '#f5a524';
+      const accent = getComputedStyle(canvas).getPropertyValue('--accent').trim() || '#317873';
       const font = getComputedStyle(document.body).getPropertyValue('--font-letter').trim();
       ctx.save();
       ctx.globalAlpha = 0.22;
@@ -278,7 +279,7 @@ export function renderLesson(groupId, letter) {
       drawing = true;
       try { canvas.setPointerCapture(e.pointerId); } catch { /* مؤشّر غير نشط */ }
       const p = at(e);
-      ctx.strokeStyle = getComputedStyle(canvas).getPropertyValue('--accent').trim() || '#f5a524';
+      ctx.strokeStyle = getComputedStyle(canvas).getPropertyValue('--accent').trim() || '#317873';
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(p.x + 0.01, p.y);   // نقطة واحدة تُرى ولو لم يتحرّك الإصبع
@@ -390,6 +391,7 @@ export function renderLesson(groupId, letter) {
         : 'أتممتَ الدرس، وبالتكرار تزيد نجومك.';
 
     body.replaceChildren(h('div', { class: 'celebrate' },
+      mascot('mascot mascot--cheer'),
       h('div', { class: 'celebrate-face' }, letter),
       h('h2', {}, 'أحسنت!'),
       starsRow(stars, 'big-stars'),

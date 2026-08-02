@@ -7,9 +7,9 @@
 import * as progress from './progress.js';
 import { h, go, arNum, arCount, topbar, letterTitle, nodeTitle, nodeWhere, shake } from './ui.js';
 
-const ACCENT = '#5f3dc4';
-const GOOD = '#2f9e44';
-const BAD = '#e03131';
+const ACCENT = 'var(--accent-skills)';
+const GOOD = 'var(--ok)';
+const BAD = 'var(--err)';
 const DAY_NAMES = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
 const ENOUGH_MINUTES = 20;   // نصيب اليوم لطفل السادسة — بعده تُنصح الاستراحة
 
@@ -182,7 +182,7 @@ function dashboard() {
         const minutes = Math.round(day.seconds / 60);
         return h('span', {
           class: 'pill',
-          css: day.seconds ? { color: 'var(--gold-deep)' } : { opacity: '.55' },
+          css: day.seconds ? { color: 'var(--star-text)' } : { opacity: '.55' },
         }, `${DAY_NAMES[d.getDay()]}: `, h('b', {}, minutes ? arNum(minutes) : '—'));
       })),
       h('p', { class: 'hint' }, 'الزمن يُحسب وقت انتباهه للشاشة فقط (لا يُحسب إن تركها مفتوحة).')),

@@ -14,7 +14,7 @@
 // عند تغيير أي ملف من ملفات الهيكل: ارفع VERSION فيُمحى المخزون القديم كله.
 // ويحرس اختبار `tools/test_pwa.mjs` أن قائمة SHELL لا تنسى ملفاً موجوداً في app/.
 
-const VERSION = 'v2';
+const VERSION = 'v3';   // v3: الهوية البصرية — الخطوط المضمّنة ولوح DESIGN
 const SHELL_CACHE = `muallim-shell-${VERSION}`;
 const AUDIO_CACHE = `muallim-audio-${VERSION}`;
 const KEEP = [SHELL_CACHE, AUDIO_CACHE];
@@ -25,6 +25,11 @@ const SHELL = [
   'manifest.webmanifest',
   'css/app.css',
   'data/lexicon.json',
+  'fonts/NotoNaskhArabic-arabic.woff2',
+  'fonts/NotoNaskhArabic-latin.woff2',
+  'fonts/BalooBhaijaan2-arabic.woff2',
+  'fonts/BalooBhaijaan2-latin.woff2',
+  'fonts/KFGQPCUthmanicHafs.woff2',
   'js/audio.js',
   'js/curriculum.js',
   'js/garden.js',

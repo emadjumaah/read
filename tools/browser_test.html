@@ -214,9 +214,12 @@ try {
   ok(texts('.lit').join('|') === 'بَ|بَ', `الحرف ملوَّن داخل الكلمة مرتين (${texts('.lit').join('|')})`);
   ok(texts('.form-face').join('|') === 'ب|بـ|ـبـ|ـب', `أشكال الباء الأربعة (${texts('.form-face').join('|')})`);
   assertDecodable('اب', 'درس الباء');
+  // لون المرحلة يأتي من لوح DESIGN §٢ (متغيرات CSS) — يُقاس مقصد التلوين لا قيمة اللون:
+  // الحرف المستهدف بلون حروف المرحلة نفسه (كالأشكال الأربعة) ومختلفاً عن نص الكلمة.
   const litColor = win.getComputedStyle($('.lit')).color;
-  ok(litColor === 'rgb(232, 89, 12)' && litColor !== win.getComputedStyle($('.example-word')).color,
-    `الحرف المستهدف بلون المجموعة داخل الكلمة (${litColor})`);
+  ok(litColor === win.getComputedStyle($('.form-face')).color
+    && litColor !== win.getComputedStyle($('.example-word')).color,
+    `الحرف المستهدف بلون المرحلة داخل الكلمة (${litColor})`);
   checkTargets('الخطوة الأولى');
   $('.example-word').click();
   await sleep(40);
