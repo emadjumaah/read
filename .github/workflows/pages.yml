@@ -1,0 +1,48 @@
+# نشر «المُعلِّم» إلى GitHub Pages — مجلد `app/` وحده هو الموقع.
+#
+# لماذا `app/` لا جذر المستودع: التطبيق كله ملفات ثابتة (HTML/CSS/JS بوحدات ES،
+# بلا أدوات بناء ولا npm)، فالنشر نسخٌ لا بناء. وما سواه (docs/ و tools/ و ref/)
+# عدّةُ عملٍ لا تُخدَم للطفل.
+#
+# المسار الفرعي `/read/`: كل مسارات التطبيق نسبية أصلاً (`import.meta.url` في
+# الشيفرة، و`./` في المانيفست، و`registration.scope` في عامل الخدمة)، فيعمل تحت
+# أي مسار بلا تعديل — يثبّت ذلك تحقّقُ ما بعد النشر في `docs/SESSIONS.md`.
+
+name: نشر إلى GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# نشرةٌ واحدة في كل لحظة، ولا تُلغى الجارية: آخر دفعةٍ تصل هي آخر ما يُنشَر.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: جلب المستودع
+        uses: actions/checkout@v4
+
+      - name: تهيئة Pages
+        uses: actions/configure-pages@v5
+
+      - name: رفع مجلد التطبيق أثراً
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: app
+
+      - name: النشر
+        id: deployment
+        uses: actions/deploy-pages@v4
