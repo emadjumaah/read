@@ -781,6 +781,165 @@ document.addEventListener('click', (e) => {{
     (out_dir / "index.html").write_text(html, encoding="utf-8")
 
 
+# ————————————————————————— احتياط المدود (أفضل من ثلاث) —————————————————————————
+
+MADD_DIR = ROOT / "scratch" / "madd_pick"
+MADD_STYLE = ("انطق الحرف ممدوداً مدّاً طبيعياً حركتين، صوتاً واحداً متصلاً، "
+              "بتأنٍّ ووضوح لطفل يتعلم القراءة: ")
+MADD_VARIANTS = 3
+
+
+def madd_targets() -> list:
+    """مدودٌ يستعملها التطبيق فعلاً ولا ملف لها — لا التوسعة الآلية ٢٨×٣.
+
+    التوسعة الميكانيكية تُنتج مستحيلاً («اَا» والألف نفسها حرف مدّ)، فيؤخذ من
+    النصوص التي يستعملها المنهج أو قائمة الانتظار فقط.
+    """
+    texts, pending = expected_texts()
+    known = {**texts, **pending}
+    out = []
+    for text, cat in known.items():
+        if cat not in ("syllable", "letter_haraka"):
+            continue
+        if len(text) == 3 and text[1] in HARAKAT.values() and text[2] in "اوي":
+            if not (OUT_DIR / f"{key_for(text)}.mp3").exists():
+                out.append(text)
+    return sorted(out)
+
+
+def madd_batch(api_key: str, voice: str, variants: int = MADD_VARIANTS,
+               dry_run: bool = False) -> int:
+    """ثلاث محاولات لكل مدّ ناقص على نموذج النواة وحده (2.5-pro موثَّق فشلُه في «بَا»).
+
+    المخرجات في `scratch/madd_pick/` وصفحة انتقاء — لا يدخل `app/audio` شيء حتى
+    يختار المالك بأذنه (`--apply-madd-pick`).
+    """
+    targets = madd_targets()
+    if not targets:
+        print("لا مدّ ناقصاً — لا حاجة للاحتياط التوليدي.")
+        return 0
+    MADD_DIR.mkdir(parents=True, exist_ok=True)
+    todo = [(t, v) for t in targets for v in range(1, variants + 1)
+            if not (MADD_DIR / f"{key_for(t)}__{v}.mp3").exists()]
+    print(f"احتياط المدود: {len(targets)} نصاً × {variants} محاولات "
+          f"= {len(targets) * variants} ملفاً ({len(todo)} باقٍ) · {short_model(MODEL_CORE)} حصراً")
+    if dry_run:
+        print("  " + " ".join(targets))
+        return 0
+
+    made = failed = 0
+    for text, v in todo:
+        path = MADD_DIR / f"{key_for(text)}__{v}.mp3"
+        try:
+            pcm, rate = gemini_pcm(text, MADD_STYLE, MODEL_CORE, voice, api_key)
+            pcm_to_mp3(pcm, rate, path)
+            made += 1
+            print(f"  ✓ {text} [{v}/{variants}] → {path.name} {path.stat().st_size // 1024}KB")
+        except QuotaExhausted as e:
+            print(f"\n  ⏸ {short_model(MODEL_CORE)}: {e} (وُلِّد {made})", file=sys.stderr)
+            print(f"RETRY_AFTER_SECONDS={e.seconds}")
+            break
+        except Exception as e:  # noqa: BLE001
+            failed += 1
+            print(f"  ✗ {text} [{v}]: {e}", file=sys.stderr)
+
+    write_madd_page(targets, variants)
+    left = sum(1 for t in targets for v in range(1, variants + 1)
+               if not (MADD_DIR / f"{key_for(t)}__{v}.mp3").exists())
+    print(f"\nتم: {made} مولّد، {failed} فشل، {left} باقٍ لحصة الغد.")
+    print(f"صفحة الانتقاء: {MADD_DIR}/index.html "
+          f"(.venv/bin/python -m http.server 8060 -d {MADD_DIR})")
+    return failed
+
+
+def write_madd_page(targets: list, variants: int) -> None:
+    rows = []
+    for text in targets:
+        have = [(v, f"{key_for(text)}__{v}.mp3") for v in range(1, variants + 1)
+                if (MADD_DIR / f"{key_for(text)}__{v}.mp3").exists()]
+        if not have:
+            continue
+        btns = "".join(
+            f'<button data-src="{f}">▶ {v}</button>'
+            f'<button class="pick" data-text="{text}" data-variant="{v}">اختر {v}</button>'
+            for v, f in have)
+        rows.append(f'<tr data-text="{text}"><th>{text}</th><td>{btns}</td>'
+                    f'<td class="chosen"></td></tr>')
+    html = f"""<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>انتقاء المدود — أفضل من ثلاث</title>
+<style>
+ body {{ font-family:"Noto Naskh Arabic","Geeza Pro",serif; margin:2rem; background:#faf7f2; color:#241f1a }}
+ h1 {{ font-size:1.35rem }}
+ p.note {{ background:#fff3d6; padding:.8rem 1rem; border-radius:.6rem; max-width:54rem; line-height:1.9 }}
+ table {{ border-collapse:collapse; margin-top:1rem }}
+ th, td {{ border:1px solid #ddd2c2; padding:.45rem .7rem; background:#fff; text-align:center }}
+ th {{ background:#f0e8db; font-size:1.4rem; min-width:4.5rem }}
+ button {{ font-family:inherit; font-size:.95rem; padding:.3rem .7rem; margin:0 .15rem; cursor:pointer;
+           border:1px solid #c9bba6; border-radius:.45rem; background:#fdfaf4 }}
+ button.pick {{ background:#eef3fb; border-color:#a9bcd6; font-size:.8rem }}
+ button.playing {{ background:#2f7d4f; color:#fff }}
+ td.chosen {{ font-family:system-ui; font-size:.9rem; color:#2f7d4f; min-width:5rem }}
+ #out {{ position:sticky; bottom:0; background:#241f1a; color:#fdfaf4; padding:.8rem 1rem;
+         border-radius:.6rem; margin-top:1.5rem; font-family:system-ui; font-size:.85rem }}
+ #out button {{ background:#fdfaf4 }}
+</style></head><body>
+<h1>انتقاء المدود — ثلاث محاولات لكل نصّ</h1>
+<p class="note">اسمع الثلاث واختر أوضحها مدّاً (حركتان، صوت واحد متصل بلا قطع).
+ما لم تختر له شيئاً يبقى بلا ملف ويُعاد توليده.
+<br>بعد الفراغ: اضغط «انسخ الاختيارات» وأعطِني النصّ المنسوخ لأطبّقه.</p>
+<table><tbody>{"".join(rows)}</tbody></table>
+<div id="out">لم تُختر بعد — <button id="copy">انسخ الاختيارات</button>
+  <span id="count"></span></div>
+<script>
+const picks = {{}};
+let cur = null, btn = null;
+document.addEventListener('click', (e) => {{
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'copy') {{
+    navigator.clipboard.writeText(JSON.stringify(picks, null, 1));
+    b.textContent = 'نُسخت ✓'; setTimeout(() => b.textContent = 'انسخ الاختيارات', 1500);
+    return;
+  }}
+  if (b.dataset.src) {{
+    if (cur) cur.pause();
+    if (btn) btn.classList.remove('playing');
+    cur = new Audio(b.dataset.src); btn = b; b.classList.add('playing');
+    cur.onended = () => b.classList.remove('playing');
+    cur.play(); return;
+  }}
+  if (b.classList.contains('pick')) {{
+    picks[b.dataset.text] = +b.dataset.variant;
+    b.closest('tr').querySelector('.chosen').textContent = `المحاولة ${{b.dataset.variant}}`;
+    document.getElementById('count').textContent =
+      `(${{Object.keys(picks).length}} اختياراً)`;
+  }}
+}});
+</script></body></html>"""
+    (MADD_DIR / "index.html").write_text(html, encoding="utf-8")
+
+
+def apply_madd_pick(spec: str) -> int:
+    """يطبّق اختيار المالك: {"بَا": 2, …} — ملفاً أو نصّاً JSON."""
+    raw = Path(spec).read_text(encoding="utf-8") if Path(spec).exists() else spec
+    picks = json.loads(raw)
+    n = 0
+    for text, variant in picks.items():
+        src = MADD_DIR / f"{key_for(text)}__{int(variant)}.mp3"
+        if not src.exists():
+            print(f"  ✗ «{text}»: لا محاولة رقم {variant}", file=sys.stderr)
+            continue
+        shutil.copy2(src, OUT_DIR / f"{key_for(text)}.mp3")
+        mark_done(text, f"{MODEL_CORE}#madd-{variant}")
+        n += 1
+        print(f"  ✓ «{text}» ← المحاولة {variant}")
+    if n:
+        write_manifest(manifest_map())
+    print(f"\nطُبِّق {n} اختياراً.")
+    return 0 if n else 1
+
+
 # ————————————————————————— فحص الصمام (تجاور النموذجين) —————————————————————————
 
 LEXICON_FILE = ROOT / "app" / "data" / "lexicon.json"
@@ -1029,6 +1188,11 @@ def main():
                     help="مع --from-queue: اقتصر على ما يوجَّه إلى هذا النموذج")
     ap.add_argument("--route-report", action="store_true",
                     help="خريطة توجيه القائمة على النماذج الثلاثة بلا أي طلب")
+    ap.add_argument("--madd-batch", action="store_true",
+                    help="احتياط المدود: ٣ محاولات لكل مدّ ناقص على نموذج النواة")
+    ap.add_argument("--madd-variants", type=int, default=MADD_VARIANTS)
+    ap.add_argument("--apply-madd-pick", metavar="JSON",
+                    help="تطبيق اختيار المالك: ملف أو نصّ JSON {\"بَا\": 2}")
     ap.add_argument("--seam-audition", action="store_true",
                     help="صمام السياسة: باقة كاملة (مقاطع 3.1 + كلمة 2.5) للسماع — بلا شبكة")
     ap.add_argument("--model-audition", action="store_true",
@@ -1054,6 +1218,9 @@ def main():
     if args.archive_current:
         archive_current(ROOT / args.archive_current)
         return
+
+    if args.apply_madd_pick:
+        sys.exit(apply_madd_pick(args.apply_madd_pick))
 
     if args.seam_audition:
         sys.exit(run_seam_audition(ROOT / "scratch" / "seam_audition"))
@@ -1090,6 +1257,13 @@ def main():
 
     api_key = read_env_key()
     engine = args.engine or ("gemini" if api_key else "edge")
+
+    if args.madd_batch:
+        if not api_key and not args.dry_run:
+            sys.exit("الاحتياط التوليدي يحتاج GEMINI_API_KEY")
+        set_rpm(args.rpm)
+        sys.exit(1 if madd_batch(api_key or "", args.tts_voice,
+                                 args.madd_variants, args.dry_run) else 0)
 
     if args.model_audition:
         if not api_key:
