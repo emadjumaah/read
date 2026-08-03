@@ -29,7 +29,13 @@ import { renderQuran } from './js/quran.js';
 import * as progress from './js/progress.js';
 
 // صوت لا ينتهي: تُجمَّد الحالة المعروضة فلا تنتقل الخطوة تلقائياً قبل اللقطة
-window.Audio = class { play() { return new Promise(() => {}); } pause() {} };
+// (EventTarget لأنّ التلاوة تنتظر «ended» — وهي هنا لا تأتي أبداً، فتبقى الحالة معروضة)
+window.Audio = class extends EventTarget {
+  constructor(src = '') { super(); this.src = src; this.preload = ''; this.currentTime = 0; }
+  play() { return new Promise(() => {}); }
+  pause() {}
+  load() {}
+};
 
 for (const node of progress.allNodes()) progress.setStars(node.id, 3);
 
@@ -66,8 +72,8 @@ cell('٤ — الحروف المقطَّعة', renderQuran('muqattaat'));
 // ٥) سورة الفاتحة (البسملة آيتها الأولى)
 cell('٥ — سورة الفاتحة', renderQuran('s1'));
 
-// ٦) سورة الإخلاص (البسملة سطر مستقلّ)
-cell('٦ — سورة الإخلاص', renderQuran('s112'));
+// ٦) سورة الإخلاص (البسملة سطر مستقلّ) — وهي **أثناء التلاوة**: السطر المتلوّ معلَّم
+const ikhlas = cell('٦ — سورة الإخلاص أثناء التلاوة', renderQuran('s112'));
 
 // ٧) الخريطة: محطة الخاتمة القرآنية (طفل أتمّ الرحلة حتى قبلها)
 progress.reset();
@@ -81,6 +87,10 @@ map.id = 'app';
 Element.prototype.scrollIntoView = () => {};
 await import('./js/main.js');
 setInterval(() => window.scrollTo(0, 0), 50);   // تثبيت أعلى الصفحة حتى تُلتقط
+
+// وأخيراً: تلاوةُ آيةٍ في الإخلاص لتظهر حالةُ «يُتلى الآن» في اللقطة.
+// بعد استيراد main.js لا قبله — فتوجيهُه يوقف التلاوة عند كل عرض (وهو الصواب).
+$$(ikhlas, '.ayah-listen')[2].click();
 </script>
 </body>
 </html>

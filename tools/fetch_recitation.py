@@ -4,6 +4,7 @@
     python3 tools/fetch_recitation.py                 # الناقص فقط
     python3 tools/fetch_recitation.py --force         # إعادة جلب الكل
     python3 tools/fetch_recitation.py --dry-run       # ما سيُجلب ومن أين
+    python3 tools/fetch_recitation.py --sync-only     # إعادة بناء البيانين بلا شبكة
     python3 tools/fetch_recitation.py --reciter Husary_64kbps
 
 المصدر: everyayah.com (ترقيم `سسسآآآ.mp3` = ٣ خانات للسورة و٣ للآية)، والقارئ
@@ -16,6 +17,11 @@
 في `tools/recitations.json` (نصّ ← سورة:آية ← القارئ ← الملف) — وهو **بيان مستقل**
 عن `app/audio/manifest.json` عمداً: الفهرس بيانُ الأصوات المولّدة، ونصّ المصحف
 ممنوع منه (`docs/AUDIO_QUEUE.md`).
+
+ويُكتب منه **بيانٌ مختصر يقرؤه التطبيق**: `app/data/recitations.json` (مفتاح ← نصّ
+الآية + اسم القارئ) — به يعرف `app/js/recitation.js` أيَّ آيةٍ يملك تلاوتَها،
+ويخزنه عاملُ الخدمة كما يخزن فهرس الأصوات. `--sync-only` يعيد بناء البيانين من
+الملفات الموجودة **بلا أي طلب شبكة** (تستعمله جلسات التطوير بلا مساس بالجلب).
 """
 
 import argparse
@@ -32,10 +38,19 @@ ROOT = Path(__file__).resolve().parent.parent
 CURRICULUM = ROOT / "app" / "js" / "curriculum.js"
 OUT_DIR = ROOT / "app" / "audio"
 RECITATIONS = ROOT / "tools" / "recitations.json"
+APP_MANIFEST = ROOT / "app" / "data" / "recitations.json"
 
 BASE = "https://everyayah.com/data"
 DEFAULT_RECITER = "Husary_64kbps"      # الحصري المرتّل — قرار المدير
 MIN_BYTES = 4000                        # أقصر آية بـ64kbps تتجاوز هذا بكثير
+
+# اسم القارئ كما يُعرَض للطفل ووليّه (المعرّف التقني اسم مجلد everyayah)
+RECITER_NAMES = {
+    "Husary_64kbps": "محمود خليل الحصري — المرتّل",
+    "Husary_128kbps": "محمود خليل الحصري — المرتّل",
+    "Abdul_Basit_Murattal_64kbps": "عبد الباسط عبد الصمد — المرتّل",
+    "Minshawy_Murattal_128kbps": "محمد صديق المنشاوي — المرتّل",
+}
 
 
 def key_for(text: str) -> str:
@@ -90,16 +105,59 @@ def is_mp3(data: bytes) -> bool:
     return data[:3] == b"ID3" or (len(data) > 2 and data[0] == 0xFF and data[1] & 0xE0 == 0xE0)
 
 
+def write_manifests(record: list, reciter: str) -> None:
+    """البيانان: الكامل في `tools/` للتتبّع، والمختصر في `app/data/` ليقرأه التطبيق.
+
+    المختصر «مفتاح ← نصّ» على صورة `app/audio/manifest.json` نفسِها — فمَن يعرف
+    أحدَهما يعرف الآخر، ويبقى نصّ المصحف **خارج فهرس الأصوات المولّدة** كما أُمر.
+    """
+    RECITATIONS.write_text(json.dumps(record, ensure_ascii=False, indent=1) + "\n",
+                           encoding="utf-8")
+    app_manifest = {
+        "reciter": reciter,
+        "reciterName": RECITER_NAMES.get(reciter, reciter),
+        "ayat": {Path(e["file"]).stem: e["text"] for e in record},
+    }
+    APP_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
+    APP_MANIFEST.write_text(json.dumps(app_manifest, ensure_ascii=False, indent=1) + "\n",
+                            encoding="utf-8")
+    print(f"البيان: {RECITATIONS.relative_to(ROOT)} ({len(record)} آية)")
+    print(f"بيان التطبيق: {APP_MANIFEST.relative_to(ROOT)} ({len(app_manifest['ayat'])} مفتاحاً)")
+
+
+def sync_only(items: list, reciter: str) -> int:
+    """إعادة بناء البيانين من الملفات الموجودة على القرص — بلا شبكة وبلا كتابة صوت."""
+    record, missing = [], []
+    for text, surah, ayah in items:
+        key = key_for(text)
+        if not (OUT_DIR / f"{key}.mp3").exists():
+            missing.append(f"{surah:03d}:{ayah:03d}")
+            continue
+        record.append({"text": text, "surah": surah, "ayah": ayah, "reciter": reciter,
+                       "file": f"{key}.mp3",
+                       "source": f"{BASE}/{reciter}/{surah:03d}{ayah:03d}.mp3"})
+    write_manifests(record, reciter)
+    if missing:
+        print(f"  ! {len(missing)} آية بلا ملف (تُجلب بلا --sync-only): " + "، ".join(missing),
+              file=sys.stderr)
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description="جلب التلاوة للمرحلة القرآنية")
     ap.add_argument("--reciter", default=DEFAULT_RECITER)
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--sync-only", action="store_true",
+                    help="إعادة بناء البيانين من الملفات الموجودة بلا أي طلب شبكة")
     args = ap.parse_args()
 
     data = surahs_from_curriculum()
     items = plan(data)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    if args.sync_only:
+        return sync_only(items, args.reciter)
 
     print(f"القارئ: {args.reciter} · {len(items)} آية (منها البسملة).")
     record, made, skipped, failed = [], 0, 0, 0
@@ -133,10 +191,8 @@ def main():
         print(f"\nسيُجلب: {len(record)} (تجربة جافّة — لم يُنزَّل شيء)")
         return 0
 
-    RECITATIONS.write_text(json.dumps(record, ensure_ascii=False, indent=1) + "\n",
-                           encoding="utf-8")
     print(f"\nتم: {made} مجلوب، {skipped} موجود مسبقاً، {failed} فشل.")
-    print(f"البيان: {RECITATIONS.relative_to(ROOT)} ({len(record)} آية)")
+    write_manifests(record, args.reciter)
     return 1 if failed else 0
 
 

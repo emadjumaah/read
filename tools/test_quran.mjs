@@ -1,10 +1,11 @@
 // اختبار المرحلة القرآنية (الجلسة ٦) بلا متصفّح:
 //   node tools/test_quran.mjs
-// المحروس هنا أربعة: موضع المرحلة من الرحلة وقفلها، وسلامة جولاتها،
+// المحروس هنا خمسة: موضع المرحلة من الرحلة وقفلها، وسلامة جولاتها،
 // وأصالة نصّ المصحف (مطابقة المصدر المرجعي حرفاً بحرف — فحص مستقلّ عن البايثوني)،
-// و**حرمة نطق المصحف آلياً**: لا آية ولا كلمة عثمانية في الأصوات ولا في قائمة الانتظار.
+// و**حرمة توليد صوت المصحف**: لا آية ولا كلمة عثمانية في الأصوات المولّدة ولا في
+// قائمة الانتظار، **ووصلة التلاوة**: لكل آية تسجيلُ قارئ بمفتاح نصّها (وصلة الجلسة ٩).
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const APP = new URL('../app/js/', import.meta.url);
 
@@ -16,8 +17,9 @@ globalThis.localStorage = {
 };
 
 const {
-  GROUPS, QURAN, quranParts, surahById, quranSpokenTexts, quranSilentTexts, bareLetters,
+  GROUPS, QURAN, quranParts, surahById, quranSpokenTexts, quranMushafTexts, bareLetters,
 } = await import(new URL('curriculum.js', APP));
+const { keyFor } = await import(new URL('audio.js', APP));   // مفتاح النصّ نفسه في كل المشروع
 const { buildRasmRounds } = await import(new URL('quran.js', APP));
 // «اقرأ واختر» انتقلت إلى screens.js في الحزمة ٧ (تشترك فيها المرحلة القرآنية والبساتين)
 const { buildReadRounds } = await import(new URL('screens.js', APP));
@@ -172,7 +174,7 @@ ok(quoted.every((t) => joined.includes(t)),
 ok(QURAN.rasm.signs.every((s) => s.read.includes(s.sign.replace('ـ', ''))),
   'وكل علامة رسم ظاهرة فعلاً في مثالها');
 
-// ————— ٥. الصوت: منطوقٌ له ملف أو مكان في القائمة، وعثمانيٌّ لا يُنطق أبداً —————
+// ————— ٥. الصوت: مولَّدٌ له ملف أو مكان في القائمة، وعثمانيٌّ لا يُولَّد أبداً —————
 
 const manifest = JSON.parse(readFileSync(new URL('../app/audio/manifest.json', import.meta.url), 'utf8'));
 const queue = JSON.parse(readFileSync(new URL('audio_queue.json', import.meta.url), 'utf8'));
@@ -184,13 +186,43 @@ const orphan = spoken.filter((t) => !have.has(t) && !pending.has(t));
 ok(orphan.length === 0,
   `كل منطوق له ملف أو مكان في القائمة (${spoken.length} نصاً: ${spoken.filter((t) => have.has(t)).length} جاهز، ${spoken.filter((t) => pending.has(t)).length} منتظِر)${orphan.length ? ' — ' + orphan.join('،') : ''}`);
 
-const silent = [...new Set(quranSilentTexts())];
-const voiced = silent.filter((t) => have.has(t) || pending.has(t));
-ok(silent.length >= 30 && voiced.length === 0,
-  `ولا نصّ من المصحف (${silent.length} نصاً) له صوت مولَّد ولا مكان في القائمة`
+const mushaf = [...new Set(quranMushafTexts())];
+const voiced = mushaf.filter((t) => have.has(t) || pending.has(t));
+ok(mushaf.length >= 30 && voiced.length === 0,
+  `ولا نصّ من المصحف (${mushaf.length} نصاً) له صوت مولَّد ولا مكان في القائمة`
   + `${voiced.length ? ' — ' + voiced.join('،') : ''} (METHOD §٥.٦)`);
-ok(silent.every((t) => !spoken.includes(t)),
-  'والقائمتان منفصلتان تماماً: ما يُعرض من المصحف لا يُنطق');
+ok(mushaf.every((t) => !spoken.includes(t)),
+  'والقائمتان منفصلتان تماماً: ما يُعرض من المصحف لا يُولَّد صوتُه');
+
+// ————— ٥ب. وصلة التلاوة: تسجيل قارئ متقن بمفتاح نصّ الآية —————
+
+const recitations = JSON.parse(
+  readFileSync(new URL('../app/data/recitations.json', import.meta.url), 'utf8'));
+const recited = new Map(Object.entries(recitations.ayat));
+
+ok(!!recitations.reciter && !!recitations.reciterName,
+  `بيان التلاوة يسمّي قارئه (${recitations.reciterName})`);
+const wanted = [...new Set([QURAN.basmala, ...QURAN.surahs.flatMap((s) => s.ayat)])];
+const unrecited = wanted.filter((t) => ![...recited.values()].includes(t));
+ok(unrecited.length === 0,
+  `وكل آيةٍ لها تلاوة (${wanted.length} نصاً، منها البسملة)`
+  + `${unrecited.length ? ' — ناقص: ' + unrecited.length : ''}`);
+ok([...recited].every(([key, text]) => key === keyFor(text)),
+  'ومفتاح كل تلاوة sha1 نصّها — فلا يسمع الطفل آيةً وهو ينظر إلى أخرى');
+ok([...recited.values()].every((t) => mushaf.includes(t)),
+  'ولا تلاوة إلا لنصّ مصحفٍ من المنهج');
+ok([...recited.keys()].every((key) => existsSync(new URL(`../app/audio/${key}.mp3`, import.meta.url))),
+  `وملفاتها كلها على القرص (${recited.size} تلاوة في app/audio/)`);
+ok([...recited.keys()].every((key) => !(key in manifest)),
+  'وليست في فهرس الأصوات المولّدة — بيانان منفصلان عمداً');
+
+// وحدة التلاوة نفسها: لا تعرف النطق الآلي أصلاً (لا يسدّ مسدَّ القارئ شيء)
+const recitationSrc = readFileSync(new URL('../app/js/recitation.js', import.meta.url), 'utf8');
+ok(!/speechSynthesis|SpeechSynthesisUtterance/.test(recitationSrc),
+  'ووحدة التلاوة لا تعرف النطق الآلي البتّة (غياب الملف صمتٌ لا نطقُ مولّد)');
+const quranSrc = readFileSync(new URL('../app/js/quran.js', import.meta.url), 'utf8');
+ok(/recitation\.play|recitation\.playSequence/.test(quranSrc),
+  'وشاشة السورة تتلو من `recitation.js` لا من `audio.js`');
 
 // ————— ٦. النجوم —————
 

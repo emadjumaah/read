@@ -4,6 +4,7 @@
 import { GROUPS, LETTERS, HARAKAT, QURAN } from './curriculum.js';
 import * as progress from './progress.js';
 import * as audio from './audio.js';
+import * as recitation from './recitation.js';
 import { renderLesson } from './lesson.js';
 import { renderWordsGame } from './words.js';
 import { renderReview } from './review.js';
@@ -370,6 +371,7 @@ let renderToken = 0;
 
 async function render() {
   audio.stop();
+  recitation.stop();     // ولا تتبع التلاوةُ الطفلَ إلى شاشةٍ أخرى
   const token = ++renderToken;
   const [name, arg1, arg2] = location.hash.replace(/^#\/?/, '').split('/');
 

@@ -12,8 +12,9 @@
 // ترتيب الإضافة هو ترتيب التصريف: كلمات أول بستان ومقاطعها أولاً، ثم جمل سلّمه،
 // فيصير مسموعاً قبل أن يبلغه الطفل (docs/AUDIO_QUEUE.md).
 //
-// **نصّ المصحف خارج هذا كله**: `quranSilentTexts()` لا يدخل القائمة أبداً، فالتلاوة
-// بصوت قارئ متقن لا بمولّد (METHOD §٥.٦) — ويرفضه `check_decodable.py` صراحةً.
+// **نصّ المصحف خارج هذا كله**: `quranMushafTexts()` لا يدخل القائمة أبداً، فالتلاوة
+// بصوت قارئ متقن لا بمولّد (METHOD §٥.٦) — تُجلب تسجيلاً بـ`fetch_recitation.py`،
+// ويرفض `check_decodable.py` صراحةً أن يُولَّد لها صوت.
 
 import { readFileSync, writeFileSync } from 'node:fs';
 
@@ -23,7 +24,7 @@ const MANIFEST = new URL('app/audio/manifest.json', ROOT);
 
 const {
   SKILLS, STORIES, QURAN, skillExamples, sentenceText, bareLetters,
-  quranSpokenTexts, quranSilentTexts,
+  quranSpokenTexts, quranMushafTexts,
 } = await import(new URL('app/js/curriculum.js', ROOT));
 const { GARDENS } = await import(new URL('app/js/lexicon.js', ROOT));
 const { RUNGS } = await import(new URL('app/js/sentences.js', ROOT));
@@ -83,7 +84,7 @@ function newTexts() {
       if (sentence.mechanic === 'order') for (const word of sentence.words) add(word, 'story_word');
     }
   }
-  const forbidden = quranSilentTexts().filter((t) => out.has(t));
+  const forbidden = quranMushafTexts().filter((t) => out.has(t));
   if (forbidden.length) {
     console.error(`نصّ من المصحف كاد يدخل القائمة: ${forbidden.join('، ')}`);
     process.exit(1);

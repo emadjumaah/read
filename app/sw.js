@@ -11,10 +11,14 @@
 //   • الصوت (mp3): من المخزون دائماً — اسم كل ملف sha1 نصّه، فمحتواه لا يتغيّر
 //     تحت اسمه أبداً، وأيّ تسجيل بشري بديل يأتي باسم جديد أو بترقية النسخة أدناه.
 //
+// والصوت هنا **بيانان لا واحد**: فهرس الأصوات المولّدة (`audio/manifest.json`)
+// وبيان التلاوة بصوت القارئ (`data/recitations.json`) — منفصلان عمداً (نصّ المصحف
+// ممنوع من فهرس المولَّد)، ويُخزَن كلاهما فتعمل التلاوة دون إنترنت كبقية الأصوات.
+//
 // عند تغيير أي ملف من ملفات الهيكل: ارفع VERSION فيُمحى المخزون القديم كله.
 // ويحرس اختبار `tools/test_pwa.mjs` أن قائمة SHELL لا تنسى ملفاً موجوداً في app/.
 
-const VERSION = 'v4';   // v4: سلّم الجمل (الحزمة ٨) — ملفّا `sentences.js` و`ladder.js`
+const VERSION = 'v5';   // v5: وصلة التلاوة — `recitation.js` وبيانها وملفات القارئ
 const SHELL_CACHE = `muallim-shell-${VERSION}`;
 const AUDIO_CACHE = `muallim-audio-${VERSION}`;
 const KEEP = [SHELL_CACHE, AUDIO_CACHE];
@@ -25,6 +29,7 @@ const SHELL = [
   'manifest.webmanifest',
   'css/app.css',
   'data/lexicon.json',
+  'data/recitations.json',
   'fonts/NotoNaskhArabic-arabic.woff2',
   'fonts/NotoNaskhArabic-latin.woff2',
   'fonts/BalooBhaijaan2-arabic.woff2',
@@ -40,6 +45,7 @@ const SHELL = [
   'js/parent.js',
   'js/progress.js',
   'js/quran.js',
+  'js/recitation.js',
   'js/review.js',
   'js/screens.js',
   'js/sentences.js',
@@ -56,13 +62,19 @@ const SHELL = [
 
 const AUDIO_RE = /\/audio\/[0-9a-f]{12}\.mp3$/;
 
-/** خزن الأصوات كلها من فهرسها — بعدها لا يحتاج التطبيق شبكةً البتّة. */
+const json = (path) => fetch(new URL(path, self.registration.scope))
+  .then((r) => (r.ok ? r.json() : null))
+  .catch(() => null);
+
+/** خزن الأصوات كلها من بياناتها — بعدها لا يحتاج التطبيق شبكةً البتّة.
+ *  البيانان: فهرس المولَّد، وبيان التلاوة بصوت القارئ (كلاهما «مفتاح ← نصّ»). */
 async function precacheAudio() {
   const cache = await caches.open(AUDIO_CACHE);
-  const manifest = await fetch(new URL('audio/manifest.json', self.registration.scope))
-    .then((r) => (r.ok ? r.json() : {}))
-    .catch(() => ({}));
-  const urls = Object.keys(manifest).map((key) => new URL(`audio/${key}.mp3`, self.registration.scope).href);
+  const [generated, recitations] = await Promise.all([
+    json('audio/manifest.json'), json('data/recitations.json'),
+  ]);
+  const keys = [...Object.keys(generated || {}), ...Object.keys(recitations?.ayat || {})];
+  const urls = keys.map((key) => new URL(`audio/${key}.mp3`, self.registration.scope).href);
   // واحداً واحداً: ملفٌ ناقص لا يُسقِط الخزن كله (بخلاف cache.addAll)
   await Promise.all(urls.map((url) => cache.add(url).catch(() => {})));
 }

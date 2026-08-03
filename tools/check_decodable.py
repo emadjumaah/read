@@ -33,6 +33,8 @@ CURRICULUM = ROOT / "app" / "js" / "curriculum.js"
 AUDIO_DIR = ROOT / "app" / "audio"
 QUEUE_FILE = ROOT / "tools" / "audio_queue.json"
 QURAN_SOURCE = ROOT / "tools" / "quran_source.txt"
+RECITATIONS = ROOT / "tools" / "recitations.json"          # بيان التتبّع (يكتبه fetch_recitation.py)
+APP_RECITATIONS = ROOT / "app" / "data" / "recitations.json"   # البيان الذي يقرؤه التطبيق
 
 # العلامات المتاحة منذ المجموعة الأولى: الحركات الثلاث + السكون
 # (السكون يظهر في نهايات الكلمات من البداية «بابْ» ويُفرد بدرس بعد المجموعة ٣ — METHOD §٥.٣).
@@ -70,6 +72,16 @@ MADD_MATE = {"و": "ُ", "ي": "ِ"}       # حرف المدّ وحركته ال
 def key_for(text: str) -> str:
     """نفس مفتاح tools/generate_audio.py — sha1 أول ١٢ خانة."""
     return hashlib.sha1(text.encode("utf-8")).hexdigest()[:12]
+
+
+def read_json(path: Path):
+    """قراءة ملف JSON — None إن غاب أو فسد (يقرّره النداء: تنبيهٌ أم خطأ)."""
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
 
 
 def queue_pending() -> set:
@@ -276,16 +288,19 @@ def quran_source() -> dict:
 
 
 def check_quran(quran, taught, letters, source):
-    """فحص المرحلة القرآنية: مفكوكيةُ الإملائي، وأصالةُ العثماني، وحرمةُ نطقه آلياً.
+    """فحص المرحلة القرآنية: مفكوكيةُ الإملائي، وأصالةُ العثماني، وحرمةُ توليد صوته.
 
     ثلاث قواعد يفرضها هذا الفحص:
     ١) كلمات هذه المرحلة بالرسم الإملائي مفكوكة كغيرها (حروف مدروسة + الحرفان الجديدان).
     ٢) كل رمز في نصّ المصحف إما حرفٌ مدروس أو علامةٌ معروضة في درس الرسم قبله —
        فسورةٌ فيها علامة بلا درس لا تمرّ، والفاحص يشتقّ «المعروض» من البيانات نفسها.
     ٣) كل نصّ عثماني يطابق tools/quran_source.txt حرفاً بحرف (لا يُكتب المصحف بيدنا).
+
+    و«المصحف» المُرجَع هنا هو ما يحرم **توليدُ** صوته (METHOD §٥.٦) — لا ما يحرم
+    سماعُه: تلاوتُه من تسجيل قارئ متقن مطلوبة، ويفحصها `check_recitations` أدناه.
     """
     errors, warnings = [], []
-    spoken, silent = [], []
+    spoken, mushaf = [], []
 
     # ١. الحرفان الجديدان يوسّعان الحروف المدروسة في هذه المرحلة وحدها
     new_signs = [s["sign"] for s in quran["letters"]["signs"]]
@@ -363,15 +378,15 @@ def check_quran(quran, taught, letters, source):
             if s["read"] and s["read"] not in joined:
                 errors.append(f"[قرآن/الرسم] المثال «{s['read']}» ليس في المصدر المرجعي")
 
-    # ٥. رموز كل نصّ عثماني + جمعُه في قائمة «ما لا يُنطق آلياً»
+    # ٥. رموز كل نصّ عثماني + جمعُه في قائمة «ما لا يُولَّد صوتُه»
     if not quran["surahs"]:
         errors.append("[قرآن] لا سورة في المرحلة")
     for s in quran["rasm"]["signs"]:
         errors += mushaf_errors(s["read"], "[قرآن/الرسم]")
-        silent.append(s["read"])
+        mushaf.append(s["read"])
     for item in quran["muqattaat"]["items"]:
         errors += mushaf_errors(item["read"], "[قرآن/المقطَّعة]")
-        silent.append(item["read"])
+        mushaf.append(item["read"])
         for ch, say in item["parts"]:
             if ch not in taught:
                 errors.append(f"[قرآن/المقطَّعة] الحرف «{ch}» غير مدروس")
@@ -380,18 +395,77 @@ def check_quran(quran, taught, letters, source):
             spoken.append(say)
         if not item["parts"]:
             errors.append(f"[قرآن/المقطَّعة] «{item['read']}» بلا أسماء حروف")
-    silent.append(quran["basmala"])
+    mushaf.append(quran["basmala"])
     for surah in quran["surahs"]:
         for i, ayah in enumerate(surah["ayat"], 1):
             errors += mushaf_errors(ayah, f"[قرآن/{surah['id']}:{i}]")
-        silent += surah["ayat"]
+        mushaf += surah["ayat"]
 
     for text in (quran["letters"]["rule"], quran["words"]["rule"],
                  quran["rasm"]["rule"], quran["muqattaat"]["rule"]):
         if text:
             spoken.append(text)
 
-    return errors, warnings, spoken, [t for t in silent if t]
+    return errors, warnings, spoken, [t for t in mushaf if t]
+
+
+def check_recitations(quran, mushaf_texts):
+    """التلاوة بصوت قارئ متقن — الطريق المشروع الوحيد لصوت نصّ المصحف (METHOD §٥.٦).
+
+    القاعدة ليست «لا صوت» بل «لا صوتَ مولَّداً»: الآية تُتلى من تسجيلٍ جُلب مرةً
+    واحدة، ويحرسه هذا الفحص من ثلاث جهات:
+    ١) **البيانان متطابقان** — `tools/recitations.json` (التتبّع) و`app/data/recitations.json`
+       (الذي يقرؤه التطبيق)، ومفتاحُ كل تلاوة هو sha1 نصّها؛ ومفتاحٌ لا يطابق نصَّه
+       يعني طفلاً يسمع آيةً وهو ينظر إلى أخرى — أخطر من ألّا يسمع شيئاً.
+    ٢) **لا تلاوة لغير المصحف**: كل نصّ في البيان نصُّ مصحفٍ من المنهج نفسه.
+    ٣) **الدعوى تُصدَّق**: ما أعلن البيانُ ملفَّه فليكن على القرص؛ وما لم يُجلب بعدُ
+       تنبيهٌ لا خطأ (الجلب مهمة جلسة الصوتيات — `tools/fetch_recitation.py`).
+    """
+    return recitation_errors(quran, mushaf_texts, read_json(APP_RECITATIONS),
+                             read_json(RECITATIONS),
+                             lambda key: not AUDIO_DIR.exists()
+                             or (AUDIO_DIR / f"{key}.mp3").exists())
+
+
+def recitation_errors(quran, mushaf_texts, app_data, bayan, has_file):
+    """لبّ فحص التلاوة بلا قراءة قرص — كي يفحص `--self-test` الفاحصَ نفسه."""
+    errors, warnings = [], []
+    if app_data is None and bayan is None:
+        warnings.append("لا تلاوات بعد (python3 tools/fetch_recitation.py) — شاشات السور "
+                        "تُقرأ بالعين حتى تُجلب")
+        return errors, warnings, 0
+    if app_data is None:
+        errors.append("[تلاوة] بيان التطبيق app/data/recitations.json مفقود مع وجود "
+                      "tools/recitations.json (--sync-only يعيد بناءه)")
+        return errors, warnings, 0
+
+    ayat = app_data.get("ayat") or {}
+    if not app_data.get("reciter"):
+        errors.append("[تلاوة] بيان التطبيق بلا اسم قارئ — التلاوة تُنسب إلى صاحبها")
+
+    for key, text in sorted(ayat.items()):
+        if key != key_for(text):
+            errors.append(f"[تلاوة] مفتاح لا يطابق نصّه: «{key}» لـ«{text}» "
+                          f"(الصواب {key_for(text)})")
+        if text not in mushaf_texts:
+            errors.append(f"[تلاوة] تلاوةٌ لنصّ ليس من مصحف المنهج: «{text}»")
+        if not has_file(key):
+            errors.append(f"[تلاوة] البيان يعلن ملفاً غير موجود: {key}.mp3 «{text}»")
+
+    if bayan is not None:
+        pairs = {Path(e["file"]).stem: e["text"] for e in bayan if e.get("text")}
+        if pairs != ayat:
+            errors.append(f"[تلاوة] البيانان لا يتطابقان: {len(pairs)} في tools/ "
+                          f"و{len(ayat)} في app/data/ (--sync-only يوحّدهما)")
+
+    # التغطية: البسملة وكل آية — ما نقص منها تنبيهٌ لجلسة الصوتيات
+    wanted = [quran["basmala"]] + [a for s in quran["surahs"] for a in s["ayat"]]
+    have = set(ayat.values())
+    missing = [t for t in dict.fromkeys(wanted) if t and t not in have]
+    if missing:
+        warnings.append(f"{len(missing)} آية بلا تلاوة (python3 tools/fetch_recitation.py): "
+                        + "، ".join(missing[:5]) + ("…" if len(missing) > 5 else ""))
+    return errors, warnings, len(ayat)
 
 
 def parse_curriculum(src: str):
@@ -516,7 +590,7 @@ def check(letters, groups, skills=(), stories=(), parts=None, quiet=False, quran
     errors, warnings = [], []
     seen_letters = set()   # الحروف المدروسة تراكمياً
     audio_texts = set()
-    silent_texts = set()   # نصّ المصحف: يُعرض ولا يُنطق آلياً (METHOD §٥.٦)
+    mushaf_texts = set()   # نصّ المصحف: يُعرض ويُتلى بتسجيل قارئ، ولا يُولَّد صوته (METHOD §٥.٦)
     pending_audio = queue_pending()
 
     # ١. سلامة جدول الحروف والمجموعات
@@ -639,12 +713,12 @@ def check(letters, groups, skills=(), stories=(), parts=None, quiet=False, quran
     if quran:
         if quran["after"] != group_ids[-1]:
             errors.append(f"[قرآن] موضعها «{quran['after']}» وليس بعد المجموعة الأخيرة")
-        q_errors, q_warnings, q_spoken, q_silent = check_quran(quran, taught, letters, quran_source())
+        q_errors, q_warnings, q_spoken, q_mushaf = check_quran(quran, taught, letters, quran_source())
         errors += q_errors
         warnings += q_warnings
         audio_texts.update(q_spoken)
-        silent_texts.update(q_silent)
-        quran_literals = set(q_spoken) | set(q_silent) | {
+        mushaf_texts.update(q_mushaf)
+        quran_literals = set(q_spoken) | set(q_mushaf) | {
             quran["title"], quran["basmala"],
             *[quran[k][f] for k in ("letters", "words", "rasm", "muqattaat") for f in ("title", "face")],
             *[s[f] for s in quran["letters"]["signs"] for f in ("sign", "name")],
@@ -678,12 +752,18 @@ def check(letters, groups, skills=(), stories=(), parts=None, quiet=False, quran
                 if re.search(r"[ء-ي]", lit) and lit not in quran_literals:
                     errors.append(f"[QURAN] نصّ لم يقرأه الفاحص: «{lit}» — راجع محلّل الملف")
 
-    # ٤أ. حرمة النطق الآلي لنصّ المصحف (METHOD §٥.٦: التلاوة بصوت قارئ متقن لا بمولّد).
+    # ٤أ. حرمة توليد صوت المصحف (METHOD §٥.٦: التلاوة بصوت قارئ متقن لا بمولّد).
     #     الفاحص يمنعه من بابه: لا يدخل نصّ عثماني بيانَ الأصوات ولا قائمة الانتظار.
-    for text in sorted(silent_texts & audio_texts):
+    #     وطريقُه المشروع وحده تسجيلُ القارئ — يفحصه check_recitations أدناه.
+    for text in sorted(mushaf_texts & audio_texts):
         errors.append(f"[قرآن] نصّ من المصحف مطلوبٌ له صوت مولَّد: «{text}»")
-    for text in sorted(silent_texts & pending_audio):
+    for text in sorted(mushaf_texts & pending_audio):
         errors.append(f"[قرآن] نصّ من المصحف في قائمة الانتظار الصوتية: «{text}»")
+
+    if quran:
+        r_errors, r_warnings, r_count = check_recitations(quran, mushaf_texts)
+        errors += r_errors
+        warnings += r_warnings
 
     # ٤. تغطية الصوت (تنبيه فقط — يعالجها tools/generate_audio.py وقائمة الانتظار)
     for ch, name in letters.items():
@@ -707,7 +787,7 @@ def check(letters, groups, skills=(), stories=(), parts=None, quiet=False, quran
         manifest_path = AUDIO_DIR / "manifest.json"
         if manifest_path.exists():
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            recited = sorted(silent_texts & set(manifest.values()))
+            recited = sorted(mushaf_texts & set(manifest.values()))
             for text in recited:
                 errors.append(f"[قرآن] نصّ من المصحف له ملف صوت مولَّد: «{text}»")
             stale = sorted(set(manifest.values()) - audio_texts)
@@ -730,7 +810,8 @@ def check(letters, groups, skills=(), stories=(), parts=None, quiet=False, quran
               f"(في {sum(len(s['ayat']) for s in quran['surahs'])} آية) "
               f"| كلمات: {len(quran['words']['items'])} | علامات رسم: {len(quran['rasm']['signs'])} "
               f"| مقطَّعة: {len(quran['muqattaat']['items'])} "
-              f"| نصوص مصحف لا تُنطق آلياً: {len(silent_texts)}")
+              f"| نصوص مصحف لا يُولَّد صوتها: {len(mushaf_texts)} "
+              f"| تلاوات قارئ: {r_count}")
 
     if warnings and not quiet:
         print(f"\nتنبيهات ({len(warnings)}):")
@@ -805,10 +886,10 @@ def self_test(letters, skills, stories, parts, quran=None) -> int:
            f"ومحلّل علامات الرسم يقرأ {len(quran['rasm']['signs'])} علامة بأمثلتها")
         ok(bool(source) and len(source) >= 22, f"والمصدر المرجعي مقروء ({len(source)} آية)")
 
-        errs, _, spoken, silent = check_quran(quran, all_letters, letters, source)
+        errs, _, spoken, mushaf = check_quran(quran, all_letters, letters, source)
         ok(not errs, f"والمرحلة القرآنية تمرّ نظيفةً{'' if not errs else ': ' + errs[0]}")
-        ok(len(silent) > 25 and all(t not in spoken for t in silent),
-           f"ولا نصّ مصحف واحد في المنطوق ({len(silent)} نصاً صامتاً، {len(spoken)} منطوقاً)")
+        ok(len(mushaf) > 25 and all(t not in spoken for t in mushaf),
+           f"ولا نصّ مصحف واحد في المولَّد ({len(mushaf)} نصّ مصحف، {len(spoken)} مولَّداً)")
 
         # عبث مقصود: آية محرَّفة، وعلامة بلا درس، وحرف جديد بلا كلمة
         broken = json.loads(json.dumps(quran))
@@ -825,6 +906,30 @@ def self_test(letters, skills, stories, parts, quran=None) -> int:
         broken["words"]["items"] = [["كِتَاب", "📖"]] + broken["words"]["items"][1:]
         ok(any("بلا حركة" in e for e in check_quran(broken, all_letters, letters, source)[0]),
            "وكلمة إملائية ناقصة الشكل تُمسَك كغيرها من مادة القراءة")
+
+        # ————— التلاوة: الطريق المشروع الوحيد لصوت المصحف —————
+        mushaf = set(check_quran(quran, all_letters, letters, source)[3])
+        ayah = quran["surahs"][1]["ayat"][0]
+        good = {"reciter": "Husary_64kbps", "reciterName": "قارئ",
+                "ayat": {key_for(ayah): ayah}}
+        recite = lambda data, have=True: recitation_errors(  # noqa: E731
+            quran, mushaf, data, None, lambda key: have)[0]
+
+        ok(not recite(good), "بيان تلاوةٍ سليم يمرّ")
+        ok(any("لا يطابق نصّه" in e
+               for e in recite({**good, "ayat": {"0" * 12: ayah}})),
+           "ومفتاحٌ لا يطابق نصَّه يُمسَك (وإلا سمع الطفل آيةً وهو ينظر إلى أخرى)")
+        ok(any("ليس من مصحف المنهج" in e
+               for e in recite({**good, "ayat": {key_for("كِتَابْ"): "كِتَابْ"}})),
+           "وتلاوةٌ لنصّ ليس من المصحف تُمسَك")
+        ok(any("ملفاً غير موجود" in e for e in recite(good, have=False)),
+           "ودعوى ملفٍ غير موجود تُمسَك")
+        ok(any("لا يتطابقان" in e for e in recitation_errors(
+               quran, mushaf, good, [], lambda key: True)[0]),
+           "واختلاف البيانين (tools/ عن app/data/) يُمسَك")
+        ok(any("آية بلا تلاوة" in w for w in recitation_errors(
+               quran, mushaf, good, None, lambda key: True)[1]),
+           "ونقصُ تلاوةٍ تنبيهٌ لجلسة الصوتيات لا خطأ")
 
     print(f"\n{fails} فشل" if fails else "\n✓ الفاحص يمسك المخالفات كلها")
     return 1 if fails else 0

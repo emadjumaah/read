@@ -16,6 +16,7 @@
 - `app/sw.js` + `app/manifest.webmanifest` + `app/icons/` — العمل دون إنترنت (PWA)؛ الأيقونات تُولَّد بـ`tools/make_icons.py` من `tools/icon.html`
 - `tools/generate_audio.py` — توليد أصوات mp3 إلى `app/audio/` (استبدالها بتسجيلات بشرية لاحقاً لا يغيّر الشيفرة)
 - `tools/quran_source.txt` + `tools/sync_quran.py` — نصّ المصحف المرجعي (مشروع تنزيل، الرسم العثماني) وأداة نسخه إلى المنهج حرفاً بحرف
+- `tools/fetch_recitation.py` → `app/data/recitations.json` + `app/js/recitation.js` — تلاوة القارئ (الحصري المرتّل) لآيات المرحلة القرآنية: **مسار مستقلّ عن المولّد وعن `manifest.json`**، وحدَه يُسمع نصَّ المصحف (لا مولّد ولا نطق آلي — انظر `AUDIO_QUEUE.md`)
 - `ref/` — الكتابان المرجعيان: القاعدة النورانية والدروس الهجائية (PDF)
 
 ## قواعد ثابتة

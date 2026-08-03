@@ -1170,28 +1170,71 @@ button {
 }
 
 .basmala {
+  flex: 1;
+  min-width: 0;
   margin: .8rem 0;
   text-align: center;
   color: color-mix(in srgb, var(--accent) 78%, var(--ink));
   font-size: 2rem;
 }
 
+/* سطر الصفحة: نصٌّ يُضغط للقراءة، وزرُّ تلاوةٍ بجانبه (لا إيموجي — DESIGN §٦) */
+.ayah-row {
+  display: flex;
+  align-items: flex-start;
+  gap: .3rem;
+  border-top: 2px dotted color-mix(in srgb, var(--star) 40%, var(--mix));
+  border-radius: 14px;
+  transition: background .2s ease;
+}
+
+.ayah-row:first-of-type { border-top: 0; }
+
+/* السطر المتلوّ: يتبعه الطفل بعينه وهو يسمع — فليكن بيّناً بلا صراخ */
+.ayah-row--playing {
+  background: color-mix(in srgb, var(--star) 38%, var(--mix));
+  box-shadow: inset 3px 0 0 var(--star), inset -3px 0 0 var(--star);
+}
+
 .ayah {
   display: flex;
   align-items: flex-start;
   gap: .5rem;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: .5rem .4rem;
   border-radius: 14px;
-  border-top: 2px dotted color-mix(in srgb, var(--star) 40%, var(--mix));
   text-align: start;
   transition: background .2s ease;
 }
 
-.ayah:first-of-type { border-top: 0; }
 .ayah:active { background: color-mix(in srgb, var(--accent) 12%, var(--mix)); }
 .ayah--read { background: color-mix(in srgb, var(--accent) 8%, var(--mix)); }
 .ayah--read .ayah-num { background: var(--accent); color: var(--on-accent); }
+
+.ayah-listen {
+  flex: none;
+  align-self: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--star) 55%, var(--mix));
+  background: var(--card);
+  color: color-mix(in srgb, var(--accent) 78%, var(--ink));
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.ayah-listen:active { background: color-mix(in srgb, var(--star) 25%, var(--mix)); }
+.ayah-row--playing .ayah-listen {
+  background: var(--star);
+  border-color: color-mix(in srgb, var(--star) 70%, var(--ink));
+  color: var(--ink);
+}
+.ayah-row--playing .basmala { color: color-mix(in srgb, var(--accent) 90%, var(--ink)); }
+
+.listen-row { margin-bottom: .6rem; }
+.listen-all { letter-spacing: .02em; }
 
 .ayah-num {
   flex: none;

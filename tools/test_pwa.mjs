@@ -4,7 +4,8 @@
 //   ١) قائمة SHELL في app/sw.js لا تنسى ملفاً موجوداً في app/ ولا تعِد بملف غير موجود
 //      — نسيانُ وحدة جافاسكربت واحدة يعني تطبيقاً معطوباً دون إنترنت، ولا يظهر إلا هناك.
 //   ٢) بيان التطبيق (manifest) صالح: أيقوناته موجودة بمقاساتها، ولغته عربية.
-//   ٣) الأصوات كلها مخزونة من فهرسها (لا قائمة يدوية تتخلّف عن المنهج).
+//   ٣) الأصوات كلها مخزونة من بياناتها (لا قائمة يدوية تتخلّف عن المنهج) — والبيانان
+//      اثنان: فهرس المولَّد، وبيان تلاوة القارئ (وصلة الجلسة ٩)، فتعمل التلاوة دون إنترنت.
 
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 
@@ -17,6 +18,7 @@ const ok = (cond, msg) => { if (!cond) { fails++; console.log('  ✗', msg); } e
 const sw = read('sw.js');
 const manifest = JSON.parse(read('manifest.webmanifest'));
 const audioManifest = JSON.parse(read('audio/manifest.json'));
+const recitations = JSON.parse(read('data/recitations.json'));
 
 // ————— ١. قائمة الهيكل تطابق ما في app/ فعلاً —————
 
@@ -70,6 +72,10 @@ ok(sw.includes('cacheFirst') && sw.includes('staleWhileRevalidate'),
 ok(sw.includes('precacheAudio') && sw.includes('audio/manifest.json'),
   'وخزن الأصوات مشتقّ من الفهرس لا من قائمة يدوية '
   + `(${Object.keys(audioManifest).length} ملفاً اليوم)`);
+ok(sw.includes('data/recitations.json') && /recitations\?\.ayat/.test(sw),
+  'وتلاوةُ القارئ مخزونة معها من بيانها المستقلّ '
+  + `(${Object.keys(recitations.ayat).length} تلاوة — فتعمل دون إنترنت)`);
+ok(shell.includes('data/recitations.json'), 'وبيانُ التلاوة نفسه من ملفات الهيكل');
 ok(/request\.method !== 'GET'/.test(sw), 'ولا يعترض إلا طلبات GET');
 ok(sw.includes('self.location.origin'), 'ولا يمسّ أي مصدر خارجي');
 ok(/caches\.delete/.test(sw) && /VERSION/.test(sw),

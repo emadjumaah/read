@@ -3,10 +3,12 @@
 // خمس شاشات على خمس درجات: حرفان جديدان ← كلمات قرآنية مألوفة ← رسم المصحف ←
 // الحروف المقطَّعة ← السور الأربع بالرسم العثماني.
 //
-// **قاعدة هذا الملف الأولى**: نصّ المصحف يُعرض ولا يُنطق آلياً. لا تمرّ آيةٌ ولا كلمةٌ
-// عثمانية على `audio.play()` أبداً — التلاوة بصوت قارئ متقن لا بمولّد (METHOD §٥.٦)،
-// وحتى تأتي تسجيلاتها تبقى شاشات السور شاشات قراءة بالعين. المنطوق هنا ثلاثة أصناف
-// لا رابع لها: قواعدُنا نحن، وكلماتٌ بالرسم الإملائي، وأسماءُ حروف.
+// **قاعدة هذا الملف الأولى**: نصّ المصحف **لا يُولَّد آلياً**. لا تمرّ آيةٌ ولا كلمةٌ
+// عثمانية على `audio.play()` أبداً — فاحتياطُه النطق الآلي بالمتصفّح، وكلاهما محرَّم
+// على كلام الله (METHOD §٥.٦). تلاوتُه من `recitation.js` وحدها: تسجيلُ قارئ متقن
+// جُلب مرةً واحدة (الحصري المرتّل)، وإن غاب ملفُه صمتت الآيةُ ولم يَنُبْ عنها مولّد.
+// وما يمرّ على `audio.play()` هنا ثلاثة أصناف لا رابع لها: قواعدُنا نحن، وكلماتٌ
+// بالرسم الإملائي، وأسماءُ حروف.
 //
 // **الثانية**: لا قياس (كما في دروس المهارات) — المقيس في §٦ حرفٌ بحركة في تمرين،
 // والمقيس هنا علامةُ رسم أو كلمة كاملة، فلا يُبنى منه تكرارٌ متباعد لا تمرين له.
@@ -14,6 +16,7 @@
 import { QURAN, surahById } from './curriculum.js';
 import * as progress from './progress.js';
 import * as audio from './audio.js';
+import * as recitation from './recitation.js';
 import { starsForGame } from './words.js';
 import { starsForStory } from './story.js';
 import { steppedScreen, readQuizStep, nextButton } from './screens.js';
@@ -307,7 +310,10 @@ function renderQuranMuqattaat() {
   });
 }
 
-// ————— ٥) شاشة السورة: قراءة بالعين، بلا صوت —————
+// ————— ٥) شاشة السورة: قراءة بالعين، وتلاوةٌ بصوت قارئ —————
+
+const LISTEN = '◀';       // مثلث تشغيل هندسيّ (لا إيموجي في شاشات السور — DESIGN §٦)
+const HALT = '■';
 
 export function renderSurah(surahId) {
   const surah = surahById(surahId);
@@ -317,6 +323,14 @@ export function renderSurah(surahId) {
   const total = surah.ayat.length;
   const read = new Set();
   let done = false;
+
+  // سطور الصفحة بترتيبها: البسملة سطراً مستقلاً في السور الثلاث ثم الآيات.
+  // هي نفسها ترتيب التلاوة، فموضع ما يُتلى موضعُه في الصفحة بلا حساب ثانٍ.
+  const lines = [...(surah.basmalaIsAyah ? [] : [QURAN.basmala]), ...surah.ayat];
+  const rows = [];          // عنصر كل سطر (لتعليم ما يُتلى الآن)
+  let listenBtn = null;
+  let playingIndex = -1;
+  let listenRun = 0;        // رقم تسلسل «اسمع السورة» الجاري (يُبطل تعليمَ ما أوقفه)
 
   const body = h('div', { class: 'story-body' });
   const foot = h('div', { class: 'row foot' });
@@ -335,6 +349,53 @@ export function renderSurah(surahId) {
     paintFoot();
   }
 
+  // ——— التلاوة: من ملف قارئ متقن وحده، ولا يمسّ نجومَ القراءة بالعين ———
+
+  /** تعليم السطر الذي يُتلى الآن (-1 = لا تلاوة) وإتباع الطفل موضعَه. */
+  function markPlaying(index) {
+    playingIndex = index;
+    rows.forEach((row, i) => {
+      row.classList.toggle('ayah-row--playing', i === index);
+      row.querySelector('.ayah-listen').textContent = i === index ? HALT : LISTEN;
+    });
+    if (index >= 0) rows[index]?.scrollIntoView?.({ block: 'nearest' });
+    if (listenBtn) {
+      const on = index >= 0;
+      listenBtn.textContent = on ? `${HALT} أوقف التلاوة` : `${LISTEN} اسمع السورة`;
+      listenBtn.classList.toggle('btn--primary', !on);
+    }
+  }
+
+  const halt = () => { recitation.stop(); markPlaying(-1); };
+
+  /** تلاوة سطرٍ واحد — والضغط عليه وهو يُتلى يوقفه. */
+  async function reciteLine(index) {
+    if (playingIndex === index) return halt();
+    markPlaying(index);
+    await recitation.play(lines[index]);
+    if (playingIndex === index) markPlaying(-1);
+  }
+
+  /** «اسمع السورة»: البسملة ثم الآيات بالتتابع، بجلبٍ مسبق فلا تنقطع بينها. */
+  async function reciteAll() {
+    if (playingIndex >= 0) return halt();
+    const mine = ++listenRun;
+    await recitation.playSequence(lines, (_text, index) => markPlaying(index));
+    if (mine === listenRun) markPlaying(-1);
+  }
+
+  /** سطرٌ من الصفحة: نصّه (يُضغط للقراءة) وزرّ تلاوته. */
+  function line(index, textEl, label) {
+    const listen = h('button', {
+      class: 'ayah-listen',
+      'aria-label': `اسمع ${label} بصوت القارئ`,
+      onclick: () => reciteLine(index),
+    }, LISTEN);
+    const row = h('div', { class: 'ayah-row' }, textEl, listen);
+    rows[index] = row;
+    return row;
+  }
+
   function page() {
     // لا إيموجي داخل شاشات السور (DESIGN §٦) — الزخرفة ذهبيّ مطفأ من CSS
     const sheet = h('div', { class: 'sheet sheet--mushaf' },
@@ -344,12 +405,14 @@ export function renderSurah(surahId) {
       ),
     );
 
+    rows.length = 0;
     // البسملة سطرٌ مستقلّ في السور الثلاث، وهي الآية الأولى في الفاتحة وحدها
     if (!surah.basmalaIsAyah) {
-      sheet.append(h('p', { class: 'mushaf basmala' }, QURAN.basmala));
+      sheet.append(line(0, h('p', { class: 'mushaf basmala' }, QURAN.basmala), 'البسملة'));
     }
 
     surah.ayat.forEach((ayah, index) => {
+      const at = index + (surah.basmalaIsAyah ? 0 : 1);   // موضع الآية من سطور الصفحة
       const btn = h('button', {
         class: 'ayah',
         'aria-label': `الآية ${arNum(index + 1)}`,
@@ -361,7 +424,7 @@ export function renderSurah(surahId) {
         h('span', { class: 'mushaf' }, ayah),
         h('span', { class: 'ayah-num' }, arNum(index + 1)),
       );
-      sheet.append(btn);
+      sheet.append(line(at, btn, `الآية ${arNum(index + 1)}`));
     });
 
     return sheet;
@@ -369,11 +432,24 @@ export function renderSurah(surahId) {
 
   function paint() {
     audio.stop();
-    body.replaceChildren(page());
+    recitation.stop();
+    playingIndex = -1;
+    listenBtn = h('button', {
+      class: 'btn btn--primary btn--wide listen-all',
+      onclick: reciteAll,
+    }, `${LISTEN} اسمع السورة`);
+
+    body.replaceChildren(
+      h('div', { class: 'row listen-row' }, listenBtn),
+      page(),
+    );
     paintFoot();
+    // تلاواتُ الصفحة كلها مسبقاً (كما تفعل القصة بأصواتها) — فأول نقرةٍ فوريّة
+    recitation.ready().then(() => recitation.prefetch(lines));
   }
 
   function finish() {
+    halt();
     done = true;
     const stars = starsForStory(read.size, total);
     const before = progress.getStars(nodeId);
@@ -402,6 +478,14 @@ export function renderSurah(surahId) {
 
   paint();
 
+  // اسم القارئ يُذكر حين يُقرأ بيانُه — أمانةُ نسبةِ التلاوة إلى صاحبها
+  const credit = h('p', { class: 'note' },
+    'التلاوة بصوت قارئ متقن. استمع واتبعْ بعينك، ثم اقرأها بنفسك.');
+  recitation.ready().then(() => {
+    if (recitation.reciter()) credit.textContent = `التلاوة بصوت ${recitation.reciter()}. `
+      + 'استمع واتبعْ بعينك، ثم اقرأها بنفسك.';
+  });
+
   return h('div', { class: 'screen story quran', css: { '--accent': QURAN_ACCENT } },
     topbar(
       h('button', { class: 'btn', onclick: () => go('#/') }, '→ الخريطة'),
@@ -409,11 +493,10 @@ export function renderSurah(surahId) {
       h('span', { class: 'pill' }, 'سورة'),
     ),
     h('main', { class: 'screen-card' },
-      h('p', { class: 'hint' }, 'اقرأ بعينك، واضغط الآية إذا أتممتها'),
+      h('p', { class: 'hint' }, `اقرأ بعينك واضغط الآية إذا أتممتها، و${LISTEN} لتسمعها`),
       body,
       foot,
-      h('p', { class: 'note' },
-        'نصّ المصحف هنا للقراءة لا للسماع — التلاوة تأتي بصوت قارئ متقن بإذن الله.'),
+      credit,
       DEV && h('div', { class: 'dev' },
         h('div', { class: 'dev-title' }, 'أدوات التجربة (?dev=1)'),
         h('div', { class: 'dev-row' },

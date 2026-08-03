@@ -34,13 +34,14 @@ async function waitFor(fn, label = '', ms = 4000) {
   }
 }
 
-const { QURAN, quranSilentTexts, quranSpokenTexts } = await import('./js/curriculum.js');
+const { QURAN, quranMushafTexts, quranSpokenTexts } = await import('./js/curriculum.js');
 const { allNodes } = await import('./js/progress.js');
 const manifest = await (await fetch('audio/manifest.json')).json();
+const recitations = await (await fetch('data/recitations.json')).json();
 const pendingAudio = new Set(await (await fetch('/__queue.json')).json());
 const frame = document.getElementById('frame');
 
-const played = [], spoken = [], heardLog = [], jsErrors = [];
+const played = [], spoken = [], recited = [], heardLog = [], jsErrors = [];
 let win, doc;
 
 function attach() {
@@ -48,17 +49,25 @@ function attach() {
   doc = frame.contentDocument;
   win.addEventListener('error', (e) => jsErrors.push(String(e.message)));
   win.addEventListener('unhandledrejection', (e) => jsErrors.push('رفض غير معالَج: ' + e.reason));
+  // مشغّل مزيّف يميّز مصدر كل صوت: فهرس المولَّد أم بيان تلاوة القارئ.
+  // (التلاوة الحقيقية تُفحص بفكّها في متصفّح حقيقي — القسم ١٠ أدناه.)
   win.Audio = class extends win.EventTarget {
     constructor(src = '') { super(); this.src = src; this.preload = ''; this.currentTime = 0; }
     play() {
       const key = (this.src.split('/').pop() || '').replace('.mp3', '');
-      const text = manifest[key] ?? `?${key}`;
-      played.push(text);
-      heardLog.push(text);
+      if (key in recitations.ayat) {
+        recited.push(recitations.ayat[key]);
+        heardLog.push(recitations.ayat[key]);
+      } else {
+        const text = manifest[key] ?? `?${key}`;
+        played.push(text);
+        heardLog.push(text);
+      }
       setTimeout(() => this.dispatchEvent(new Event('ended')), 5);
       return Promise.resolve();
     }
-    pause() {}
+    pause() { this.dispatchEvent(new Event('pause')); }
+    load() {}
   };
   win.SpeechSynthesisUtterance = class {
     constructor(text) { this.text = text; spoken.push(text); heardLog.push(text); }
@@ -270,10 +279,35 @@ try {
   const ayat = $$('.ayah');
   for (const a of ayat) { a.click(); await sleep(30); }
   ok(heardLog.length === heardBefore,
-    `لا صوت البتّة في صفحة السورة — التلاوة بصوت قارئ متقن (سُمع ${heardLog.length - heardBefore})`);
+    `ضغطُ الآية قراءةٌ بالعين لا سماع — لا صوت (سُمع ${heardLog.length - heardBefore})`);
   ok(ayat.every((a) => a.classList.contains('ayah--read')), 'والآية المقروءة تُعلَّم فيتتبّع موضعه');
   ok($('.foot .hint').textContent.includes(`قرأتَ ${arNum(7)}`),
     `وعدّاد المقروء يبلغ الآيات كلها (${$('.foot .hint').textContent})`);
+
+  // ————— ٦ب) التلاوة بصوت القارئ: زرّ الآية وزرّ السورة —————
+  ok($$('.ayah-listen').length === fatiha.ayat.length,
+    `لكل آية زرّ تلاوة (${$$('.ayah-listen').length})`);
+  ok(!$$('.screen-card').some((c) => /[\u{1F300}-\u{1FAFF}]/u.test(c.textContent)),
+    'ولا إيموجي في شاشة السورة (DESIGN §٦) — الزرّ شكل هندسيّ');
+
+  const beforeAyah = [recited.length, played.length, spoken.length];
+  $$('.ayah-listen')[2].click();
+  await waitFor(() => recited.length > beforeAyah[0], 'تلاوة الآية الثالثة');
+  await sleep(60);
+  ok(recited.at(-1) === fatiha.ayat[2],
+    `زرّ الآية يتلوها بعينها من تسجيل القارئ (${recited.at(-1) === fatiha.ayat[2]})`);
+  ok(played.length === beforeAyah[1] && spoken.length === beforeAyah[2],
+    'ولا صوت مولَّد ولا نطق آلي معها البتّة');
+  ok(!$$('.ayah').some((a, i) => i !== 2 && a.closest('.ayah-row').classList.contains('ayah-row--playing')),
+    'والسطر المتلوّ وحده يُعلَّم — فيتبع الطفل موضعه بعينه');
+  const beforeAll = recited.length;
+  btn('اسمع السورة').click();
+  await waitFor(() => recited.length >= beforeAll + fatiha.ayat.length, 'تلاوة السورة كاملة', 8000);
+  ok(recited.slice(beforeAll, beforeAll + fatiha.ayat.length).join('|') === fatiha.ayat.join('|'),
+    `و«اسمع السورة» يتلوها آيةً آية بالترتيب (${fatiha.ayat.length} آيات)`);
+  await sleep(120);
+  ok(!$('.ayah-row--playing'), 'وبانتهائها لا يبقى سطرٌ معلَّماً');
+  ok(btn('اسمع السورة'), 'ويعود الزرّ إلى حاله');
 
   $('.next').click();
   await waitFor(() => $('.celebrate'), 'ختام السورة');
@@ -288,6 +322,20 @@ try {
   ok($('.basmala')?.textContent.trim() === QURAN.basmala,
     'البسملة سطر مستقلّ فوق سور ما بعد الفاتحة');
   ok(texts('.ayah .mushaf').join('|') === nas.ayat.join('|'), 'وآياتها تطابق المنهج حرفاً بحرف');
+  ok($$('.ayah-listen').length === nas.ayat.length + 1,
+    `ولها زرّ تلاوةٍ لكل آية وللبسملة (${$$('.ayah-listen').length})`);
+
+  // «اسمع السورة» هنا يبدأ بالبسملة ثم الآيات — والسماع لا يُحسب قراءةً
+  const beforeNas = recited.length;
+  btn('اسمع السورة').click();
+  await waitFor(() => recited.length >= beforeNas + nas.ayat.length + 1, 'تلاوة الناس', 8000);
+  ok(recited.slice(beforeNas, beforeNas + nas.ayat.length + 1).join('|')
+      === [QURAN.basmala, ...nas.ayat].join('|'),
+    'وتلاوتها تبدأ بالبسملة ثم آياتها بالترتيب');
+  await sleep(120);
+  ok($('.foot .hint').textContent.includes(`قرأتَ ${arNum(0)}`),
+    `والسماع لا يُحسب قراءةً — النجوم للقراءة بالعين (${$('.foot .hint').textContent})`);
+
   for (const a of $$('.ayah')) { a.click(); await sleep(20); }
   $('.next').click();
   await waitFor(() => $('.celebrate'), 'ختام الناس');
@@ -299,20 +347,26 @@ try {
   ok(continueCard()?.textContent.includes('بستان'),
     `والخريطة تدلّه على أول بستان (${continueCard()?.textContent.trim().split('\n')[0]})`);
 
-  // ————— ٨) لا نطق آلي لنصّ المصحف، ولا صوت ناقص —————
-  const silent = new Set(quranSilentTexts());
-  const recited = heardLog.filter((t) => silent.has(t));
-  ok(recited.length === 0,
-    `لم يُنطق نصّ من المصحف ولا مرة (${heardLog.length} تشغيلاً في المرحلة كلها)`
-    + `${recited.length ? ' — ' + recited.join('، ') : ''}`);
+  // ————— ٨) نصّ المصحف: يُتلى من تسجيل القارئ ولا يُولَّد صوتُه أبداً —————
+  const mushaf = new Set(quranMushafTexts());
+  const generated = played.filter((t) => mushaf.has(t));
+  ok(generated.length === 0,
+    `لم يُشغَّل لنصّ مصحفٍ صوتٌ مولَّد ولا مرة (${played.length} تشغيلاً مولَّداً في المرحلة)`
+    + `${generated.length ? ' — ' + generated.join('، ') : ''}`);
+  const synthesized = spoken.filter((t) => mushaf.has(t));
+  ok(synthesized.length === 0,
+    `ولا نُطق نصّ مصحفٍ نطقاً آلياً ولا مرة (${spoken.length} نصاً منطوقاً آلياً)`
+    + `${synthesized.length ? ' — ' + synthesized.join('، ') : ''}`);
+  ok(recited.length > 0 && recited.every((t) => mushaf.has(t)),
+    `وما تُلي من تسجيل القارئ كلُّه نصّ مصحف (${recited.length} تلاوة)`);
   const missing = played.filter((t) => t.startsWith('?'));
   ok(missing.length === 0, `وكل ما شُغِّل من الملفات له ملف مولَّد (${played.length} تشغيلاً)`);
   const stray = spoken.filter((t) => !pendingAudio.has(t));
   ok(stray.length === 0,
     `والنطق الآلي لم يُستعمل إلا لنصوص تنتظر التصريف (${spoken.length} نصاً)`
     + `${stray.length ? ' — خارج القائمة: ' + stray.join('، ') : ''}`);
-  ok(spoken.concat(played).every((t) => quranSpokenTexts().includes(t) || !silent.has(t)),
-    'وما سُمع كلّه من المنطوق المأذون فيه');
+  ok(spoken.concat(played).every((t) => quranSpokenTexts().includes(t) || !mushaf.has(t)),
+    'وما وُلِّد صوتُه كلّه من المأذون فيه');
 
   // ————— ٩) العمل دون إنترنت: عامل الخدمة يُسجَّل ويخزن —————
   const reg = await waitFor(async () => {
@@ -336,6 +390,35 @@ try {
   const cached = await shellCache.match(new URL('js/curriculum.js', win.location.href));
   ok(!!cached && (await cached.text()).includes('QURAN'),
     'ومحتواها صالح للقراءة من المخزون دون شبكة');
+  ok(paths.some((p) => p.endsWith('/data/recitations.json')),
+    'وبيانُ التلاوة في مخزون الهيكل');
+
+  const audioName = (await win.caches.keys()).find((n) => n.startsWith('muallim-audio'));
+  const audioCache = audioName && await win.caches.open(audioName);
+  const cachedAudio = audioCache
+    ? new Set((await audioCache.keys()).map((r) => new URL(r.url).pathname.split('/').pop()))
+    : new Set();
+  const offline = Object.keys(recitations.ayat).filter((k) => cachedAudio.has(`${k}.mp3`));
+  ok(offline.length === Object.keys(recitations.ayat).length,
+    `وتلاواتُ القارئ كلها مخزونة فتعمل دون إنترنت (${offline.length}/`
+    + `${Object.keys(recitations.ayat).length} في ${audioName})`);
+
+  // ————— ١٠) التلاوة نفسها: ملفٌّ حقيقيّ يفكّه Chrome (لا مشغّل مزيّف) —————
+  // القسم السابق يفحص الوصل بمشغّل مزيَّف؛ وهذا يفحص المادة: كل تلاوةٍ تُفكّ فعلاً
+  // ولها مدّة معقولة — فلا يمرّ ملفٌ مبتور أو صفحةُ خطأ باسم mp3.
+  const durations = await Promise.all(Object.keys(recitations.ayat).map((key) =>
+    new Promise((resolve) => {
+      const el = new Audio(`audio/${key}.mp3`);   // Audio الحقيقي (خارج الإطار)
+      el.preload = 'metadata';
+      el.addEventListener('loadedmetadata', () => resolve(el.duration), { once: true });
+      el.addEventListener('error', () => resolve(0), { once: true });
+      setTimeout(() => resolve(-1), 15000);
+    })));
+  const broken = durations.filter((d) => !(d > 1));
+  ok(broken.length === 0,
+    `كل تلاوة تُفكّ في متصفّح حقيقي بمدّة معقولة (${durations.length} ملفاً، `
+    + `${Math.min(...durations).toFixed(1)}–${Math.max(...durations).toFixed(1)} ثانية)`
+    + `${broken.length ? ' — معطوب: ' + broken.length : ''}`);
 
   ok(jsErrors.length === 0, `لا أخطاء جافاسكربت (${jsErrors.join(' | ') || 'لا شيء'})`);
 } catch (e) {
