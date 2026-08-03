@@ -145,7 +145,7 @@ export function steppedScreen({ nodeId, className = '', accent, pill, face, step
       starsRow(stars, 'big-stars'),
       h('p', { class: 'hint' }, line),
       before > stars && h('p', { class: 'hint' }, `نجومك السابقة محفوظة: ${arNum(before)} ★`),
-      last && h('p', { class: 'note' }, '🎉 أتممتَ الرحلة كلها — من الحرف الأول إلى حديقة الكلمات.'),
+      last && h('p', { class: 'note' }, '🎉 أتممتَ الرحلة كلها — من الحرف الأول إلى سلّم الجمل.'),
       h('div', { class: 'row foot' },
         h('button', { class: 'btn btn--primary', onclick: () => go('#/') }, '→ الخريطة'),
         h('button', {

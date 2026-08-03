@@ -13,13 +13,21 @@
   ٣) **المقاطع مشتقّة لا مكتوبة**: مقطِّع نورانيّ يولّدها من الكلمة، والمخزون يجب أن
      يطابقه حرفاً بحرف — فلا يتسرّب خطأ تقطيع يدويّ إلى ٢٥٠ كلمة.
   ٤) تفرّد الكلمات والصور (صورتان متشابهتان في باقة واحدة تُفسدان «اقرأ واختر»).
-  ٥) تغطية الصوت: كل منطوق له ملف مولَّد أو مكان في قائمة الانتظار (تنبيه لا خطأ).
+  ٥) **معجم الجمل** (الحزمة ٨): لا كلمة في جملةٍ خارج المدروس — كلُّ كلمة إمّا كلمة
+     معجمٍ (بجذعها، ولو معرَّفةً مُعرَبة) أو كلمة منهجٍ درسها، أو من قائمة `support`
+     **المعلَنة في الملف**: مفرداتُ الربط والوصف والفعل التي لا بستان لها. ما ليس فيها
+     يُرفض، وما فيها ولا تستعمله جملةٌ يُرفض كذلك (لا مفردات ميتة).
+  ٦) **موضع الجملة في السلّم**: أبعدُ بستانٍ تنتمي إليه كلمةٌ من كلماتها — فجملةٌ تستعمل
+     كلمةً من بستان لاحق تُؤجَّل إلى درجاته ولا تُعرض على طفل لم يبلغها (`sentences.js`
+     يبني السلّم على هذه القاعدة نفسها، و`tools/test_sentences.mjs` يحرسها من جهته).
+  ٧) تغطية الصوت: كل منطوق له ملف مولَّد أو مكان في قائمة الانتظار (تنبيه لا خطأ).
 
 الاستعمال:
-    python3 tools/check_lexicon.py               # أخطاء + تنبيهات
-    python3 tools/check_lexicon.py -q            # الأخطاء فقط
-    python3 tools/check_lexicon.py --fill-tiles  # يكتب المقاطع المشتقّة في الملف
-    python3 tools/check_lexicon.py --self-test   # فحص الفاحص: هل يمسك المخالفات؟
+    python3 tools/check_lexicon.py                 # أخطاء + تنبيهات
+    python3 tools/check_lexicon.py -q              # الأخطاء فقط
+    python3 tools/check_lexicon.py --fill-tiles    # يكتب المقاطع المشتقّة في الملف
+    python3 tools/check_lexicon.py --fill-support  # يكتب معجم الجمل المساند في الملف
+    python3 tools/check_lexicon.py --self-test     # فحص الفاحص: هل يمسك المخالفات؟
 
 يخرج بـ ١ عند وجود خطأ واحد على الأقل، وبـ ٠ إن مرّ الفحص.
 """
@@ -28,6 +36,7 @@ import argparse
 import contextlib
 import io
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -59,6 +68,10 @@ MIN_BUNDLES = 2            # بستان بأقلّ من باقتين لا يست
 SENTENCE_WORDS = (2, 5)    # جملة المثال قصيرة: من كلمتين إلى خمس
 ROOT_LETTERS = (3, 4)      # الجذر العربي ثلاثيّ أو رباعيّ
 FIELDS = ("word", "tiles", "root", "theme", "emoji", "sentence")
+
+SUPPORT_FIELD = "support"  # معجم الجمل المساند: ما ليس كلمةَ معجمٍ ولا كلمةَ منهج
+AL_RE = re.compile(r"^اْ?لْ?(.+)$")        # «الْ» التعريف (والشمسية بلا سكون)
+TAIL_RE = re.compile(r"[ً-ِْ]+$")     # علامة الإعراب الأخيرة (لا الشدّة)
 
 HARAKA_MARKS = set(MARKS) - {SUKUN}     # فتحة، كسرة، ضمة
 MADD_HARAKA = {"ا": "َ", "و": "ُ", "ي": "ِ"}   # حرف المدّ وحركته المجانسة قبله
@@ -137,6 +150,23 @@ def spelled(text: str, letters: dict) -> str:
     return "".join(ch + marks for ch, marks in unshadda(word_units(text, letters)))
 
 
+# ————— جذع الكلمة: مطابقة كلمة الجملة بكلمة المعجم (الحزمة ٨) —————
+#
+# الكلمة في الجملة معرَّفةٌ مُعرَبة («الْغُرْفَةُ») والمعجم يفردها موقوفة («غُرْفَةْ»)،
+# فالمطابقة على الجذع: بلا «ال» ولا شدّةِ شمسيّها ولا علامة إعرابها. والمطابقة
+# **بالحركات** لا بالحروف المجرّدة، وإلا لالتبست «رَجُل» بـ«رِجْل».
+# (نظيرتها في التطبيق `stemOf` في `app/js/sentences.js` — القاعدة واحدة في الجهتين.)
+
+
+def stem(text: str) -> str:
+    out = str(text or "")
+    rest = AL_RE.match(out)
+    if rest and len(bare(rest.group(1))) >= 2:
+        out = rest.group(1)
+        out = out[0] + out[1:3].replace(SHADDA, "") + out[3:]
+    return TAIL_RE.sub("", out)
+
+
 # ————— قراءة المنهج: الحروف والعلامات المتاحة للبساتين —————
 
 
@@ -173,6 +203,33 @@ def taught_words() -> set:
     return {w for w in words if w}
 
 
+def theme_place(themes: list, theme_id_: str) -> int:
+    """موضع البستان في الترتيب — وهو موضع ما يُدرَّس فيه من كلمات وجمل."""
+    ids = [t.get("id") for t in themes]
+    return ids.index(theme_id_) if theme_id_ in ids else 0
+
+
+def theme_id(themes: list, place: int) -> str:
+    return themes[place].get("id", "?") if 0 <= place < len(themes) else "?"
+
+
+def support_texts(data: dict, known: set) -> list:
+    """معجم الجمل المساند مشتقّاً من الجمل نفسها: ما ليس كلمةَ معجمٍ ولا كلمةَ منهج.
+
+    يُكتب في الملف ليصير **معلَناً مراجَعاً**: أيّ جملةٍ جديدة تأتي بمفردة خارجه
+    يرفضها الفاحص حتى تُضاف بمراجعةٍ صريحة (لا تتسلّل مفردة إلى طفل بلا قرار).
+    """
+    stems = {stem(w.get("word", "")) for w in data.get("words", [])}
+    out = set()
+    for entry in data.get("words", []):
+        for part in str(entry.get("sentence", "")).split():
+            root_stem = stem(part)
+            if root_stem in stems or bare(root_stem) in known or bare(part) in known:
+                continue
+            out.add(part)
+    return sorted(out)
+
+
 def load(path: Path = LEXICON) -> dict:
     if not path.exists():
         sys.exit(f"لا يوجد {path.relative_to(ROOT)}")
@@ -192,6 +249,18 @@ def check(data: dict, letters: dict, known: set = None, quiet: bool = False) -> 
     themes = data.get("themes") or []
     words = data.get("words") or []
     size = data.get("bundleSize") or 0
+    support = data.get(SUPPORT_FIELD)
+    if support is None:
+        errors.append(f"[بنية] لا حقل «{SUPPORT_FIELD}» (معجم الجمل المساند) — "
+                      "شغّل --fill-support ثم راجع ما يضيفه كلمةً كلمة")
+        support = []
+    support_set = set(support)
+    used_support = set()
+    # جذع كل كلمة معجم ← موضع بستانها (به يُعرف أوّلُ موضعٍ تصلح فيه الجملة)
+    lex_place = {}
+    for entry in words:
+        lex_place.setdefault(stem(entry.get("word", "")), theme_place(themes, entry.get("theme")))
+    deferred = []
 
     # ١. البنية العامة
     if not isinstance(size, int) or size < 3:
@@ -289,6 +358,31 @@ def check(data: dict, letters: dict, known: set = None, quiet: bool = False) -> 
         if bare(word) not in bare(sentence):
             errors.append(f"{label}: جملة المثال لا تحوي الكلمة «{word}»")
 
+        # ٢هـ. معجم الجملة وموضعها في السلّم (الحزمة ٨): لا كلمة خارج المدروس،
+        # والجملة تُؤجَّل إلى أبعد بستانٍ تنتمي إليه كلمةٌ من كلماتها.
+        place = theme_place(themes, entry["theme"])
+        for part in parts:
+            root_stem = stem(part)
+            if root_stem in lex_place:
+                place = max(place, lex_place[root_stem])
+            elif bare(root_stem) in known or bare(part) in known:
+                pass                     # كلمة درسها في المنهج نفسه
+            elif part in support_set:
+                used_support.add(part)
+            else:
+                errors.append(f"{label}: «{part}» في الجملة ليست كلمةَ معجمٍ ولا منهجٍ "
+                              f"ولا في «{SUPPORT_FIELD}» (شغّل --fill-support بعد مراجعتها)")
+        if place != theme_place(themes, entry["theme"]):
+            deferred.append((word, entry["theme"], theme_id(themes, place)))
+
+    # ٢و. معجم الجمل المساند: معلَنٌ كلُّه مستعمَل (لا مفردة ميتة تمرّ بلا مراجعة)
+    idle = sorted(support_set - used_support)
+    if idle:
+        errors.append(f"[{SUPPORT_FIELD}] {len(idle)} مفردة معلَنة لا تستعملها جملة: "
+                      + "، ".join(idle[:10]) + ("…" if len(idle) > 10 else ""))
+    for text in sorted(support_set):
+        errors += text_errors(text, f"[{SUPPORT_FIELD}/«{text}»]", taught, letters, allowed)
+
     # ٣. البساتين وباقاتها
     for theme in themes:
         count = by_theme.get(theme.get("id"), 0)
@@ -325,6 +419,10 @@ def check(data: dict, letters: dict, known: set = None, quiet: bool = False) -> 
           f"(جاهز: {len(audio_texts & have)})")
     print("  " + " · ".join(f"{t.get('emoji', '')}{t.get('title', '?')}: "
                             f"{by_theme.get(t.get('id'), 0)}" for t in themes))
+    print(f"الجمل: {len(words)} | معجمها المساند: {len(support_set)} مفردة "
+          f"| مؤجَّلة إلى بستان لاحق: {len(deferred)}"
+          + (" (" + "، ".join(f"«{w}» {a}←{b}" for w, a, b in deferred[:4])
+             + ("…" if len(deferred) > 4 else "") + ")" if deferred else ""))
 
     if warnings and not quiet:
         print(f"\nتنبيهات ({len(warnings)}):")
@@ -339,7 +437,8 @@ def check(data: dict, letters: dict, known: set = None, quiet: bool = False) -> 
             print(f"  … و{len(errors) - 60} خطأ آخر")
         return 1
 
-    print("\n✓ المعجم مفكوك ١٠٠٪: كل كلمة وجملة داخل حصيلة الطفل، ومقاطعها مشتقّة لا مكتوبة.")
+    print("\n✓ المعجم مفكوك ١٠٠٪: كل كلمة وجملة داخل حصيلة الطفل، ومقاطعها مشتقّة لا مكتوبة،"
+          "\n  ولا مفردة في جملةٍ خارج المعجم والمنهج والمعجم المساند المعلَن.")
     return 0
 
 
@@ -351,7 +450,7 @@ def dump(data: dict) -> str:
     j = lambda v: json.dumps(v, ensure_ascii=False)
     lines = ["{"]
     for key, value in data.items():
-        if key in ("themes", "words"):
+        if key in ("themes", "words", SUPPORT_FIELD):
             lines.append(f"  {j(key)}: [")
             rows = [f"    {j(v)}" for v in value]
             lines.append(",\n".join(rows))
@@ -361,6 +460,22 @@ def dump(data: dict) -> str:
     lines[-1] = lines[-1].rstrip(",")
     lines.append("}")
     return "\n".join(lines) + "\n"
+
+
+def fill_support(data: dict) -> int:
+    """اشتقاق معجم الجمل المساند من الجمل وكتابته في الملف (يُراجَع بعدها بالعين)."""
+    want = support_texts(data, taught_words())
+    before = data.get(SUPPORT_FIELD) or []
+    data[SUPPORT_FIELD] = want
+    added = [t for t in want if t not in before]
+    dropped = [t for t in before if t not in want]
+    LEXICON.write_text(dump(data), encoding="utf-8")
+    print(f"معجم الجمل المساند: {len(want)} مفردة (+{len(added)} / −{len(dropped)})")
+    for text in added[:40]:
+        print(f"  + {text}")
+    for text in dropped[:40]:
+        print(f"  − {text}")
+    return 0
 
 
 def fill_tiles(data: dict, letters: dict) -> int:
@@ -422,9 +537,10 @@ def self_test(letters: dict) -> int:
             "theme": "t", "emoji": "🔑", "sentence": "الْمِفْتَاحُ صَغِيرْ"}
     known = taught_words()
 
-    def run(entry_patch=None, words=None):
+    def run(entry_patch=None, words=None, support=("صَغِيرْ",), themes=(theme,)):
         entry = {**good, **(entry_patch or {})}
-        data = {"bundleSize": 1, "themes": [theme],
+        data = {"bundleSize": 1, "themes": list(themes),
+                SUPPORT_FIELD: list(support),
                 "words": words if words is not None else [entry]}
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
@@ -458,8 +574,44 @@ def self_test(letters: dict) -> int:
     ok("بالسكون لا بالتنوين" in run({"word": "مِفْتَاحٌ", "tiles": syllabify("مِفْتَاحٌ", letters)}),
        "وكلمة منوَّنة في المعجم تُمسَك (الوقف بالسكون)")
 
+    # ٣. معجم الجمل وموضعها في السلّم (الحزمة ٨)
+    ok(stem("الْغُرْفَةُ") == stem("غُرْفَةْ") == "غُرْفَة",
+       f"جذع الكلمة يوحّد المعرَّفة المُعرَبة بالمفردة الموقوفة (الْغُرْفَةُ ← {stem('الْغُرْفَةُ')})")
+    ok(stem("السَّرِيرُ") == "سَرِير" and stem("الشَّمْسُ") == "شَمْس",
+       "ويفكّ شدّة الشمسيّ بعد «ال» (السَّرِيرُ ← سَرِير)")
+    ok(stem("الرَّجُلُ") != stem("رِجْلْ"),
+       f"ويميّز بالحركات لا بالحروف وحدها ({stem('الرَّجُلُ')} ≠ {stem('رِجْلْ')})")
+    ok(stem("أَلَمْ") == "أَلَم" and stem("فِي") == "فِي",
+       "ولا ينزع «ال» من غير التعريف ولا يمسّ حرف الجرّ")
+
+    ok("ليست كلمةَ معجمٍ ولا منهجٍ" in run(support=[]),
+       "ومفردةٌ في جملةٍ خارج المعجم والمنهج والمعجم المساند تُمسَك")
+    ok("لا تستعملها جملة" in run(support=["صَغِيرْ", "طَوِيلْ"]),
+       "ومفردةٌ معلَنة لا تستعملها جملة تُمسَك (لا معجم ميت)")
+    ok("بلا حركة" in run(support=["صَغِيرْ", "صغير"]),
+       "ومفردةٌ مساندة غير مشكولة تُمسَك")
+    ok(f"لا حقل «{SUPPORT_FIELD}»" in _no_support(good, theme, letters, known),
+       "وملفٌّ بلا حقل «support» أصلاً يُمسَك (لا يمرّ بصمت)")
+
+    late = {"id": "t2", "title": "بستان ثانٍ", "emoji": "🌴"}
+    second = {"word": "مِصْبَاحْ", "tiles": ["مِ", "صْ", "بَا", "حْ"], "root": "صبح",
+              "theme": "t2", "emoji": "💡", "sentence": "الْمِصْبَاحُ صَغِيرْ"}
+    both = run(words=[{**good, "sentence": "الْمِفْتَاحُ فِي الْمِصْبَاحْ"}, second],
+               support=["صَغِيرْ", "فِي"], themes=(theme, late))
+    ok("مؤجَّلة إلى بستان لاحق: 1" in both,
+       "وجملةٌ تستعمل كلمةً من بستان لاحق تُؤجَّل إلى درجاته (لا تُعرض قبل تعلّمها)")
+
     print(f"\n{fails} فشل" if fails else "\n✓ الفاحص والمقطِّع يمسكان المخالفات كلها")
     return 1 if fails else 0
+
+
+def _no_support(good: dict, theme: dict, letters: dict, known: set) -> str:
+    """خرج الفحص على ملفٍّ بلا حقل `support` أصلاً (لا قائمةٍ فارغة)."""
+    data = {"bundleSize": 1, "themes": [theme], "words": [dict(good)]}
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        check(data, letters, known, quiet=True)
+    return buf.getvalue()
 
 
 def main():
@@ -467,6 +619,8 @@ def main():
     ap.add_argument("-q", "--quiet", action="store_true", help="إخفاء التنبيهات")
     ap.add_argument("--fill-tiles", action="store_true",
                     help="اشتقاق المقاطع من الكلمات وكتابتها في الملف")
+    ap.add_argument("--fill-support", action="store_true",
+                    help="اشتقاق معجم الجمل المساند من الجمل وكتابته في الملف")
     ap.add_argument("--self-test", action="store_true", help="فحص الفاحص والمقطِّع")
     args = ap.parse_args()
 
@@ -476,6 +630,8 @@ def main():
     data = load()
     if args.fill_tiles:
         sys.exit(fill_tiles(data, letters))
+    if args.fill_support:
+        sys.exit(fill_support(data))
     sys.exit(check(data, letters, quiet=args.quiet))
 
 

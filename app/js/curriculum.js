@@ -586,6 +586,29 @@ export function syllableSkill(text) {
   return { letter: chars[index], haraka: HARAKA_BY_MARK[chars[index + 1]] || 'none' };
 }
 
+/** علامة تشكيل (حركة أو تنوين أو شدّة أو سكون) — لا حرف. */
+const DIACRITIC = /[ً-ْ]/;
+
+/**
+ * مهارة الكلمة: **أول حرف متحرّك فيها** وحركته — «الْغُرْفَةُ» ← {غ, damma}،
+ * «الرَّجُلُ» ← {ر, fatha}. تتخطّى لام التعريف وألفَها (لا حركة عليهما، ولو قِيست
+ * لصارت كلُّ كلمة معرَّفة مهارةَ ألفٍ واحدة لا تدلّ على شيء).
+ * وحدة القياس في «رتّب الجملة» (الحزمة ٨) — كما `syllableSkill` في تركيب المقاطع.
+ */
+export function wordSkill(text) {
+  const chars = [...String(text ?? '')];
+  for (let i = 0; i < chars.length; i++) {
+    if (!isLetter(chars[i])) continue;
+    let haraka = '';
+    // علامات هذا الحرف وحده (لا تتعدّاه إلى ما بعده): الشدّة قد تسبق الحركة أو تتبعها
+    for (let j = i + 1; j < chars.length && DIACRITIC.test(chars[j]) && !haraka; j++) {
+      haraka = HARAKA_BY_MARK[chars[j]] || '';
+    }
+    if (haraka && haraka !== 'sukun') return { letter: chars[i], haraka };
+  }
+  return syllableSkill(text);
+}
+
 // الحركات والسكون والشدة والتنوين (U+064B–U+0652) + الألف الخنجرية + التطويل + الفراغ
 const MARK_OR_TATWEEL = /[ً-ْٰـ\s]/g;
 

@@ -120,12 +120,14 @@ async function playQuiz(studied, expectedOptions) {
 try {
   // ————— الخريطة —————
   await waitFor(() => $('.station'), 'الخريطة');
-  ok($$('.station:not(.station--pause):not(.station--quran):not(.station--garden)').length === 7,
+  ok($$('.station:not(.station--pause):not(.station--quran):not(.station--garden):not(.station--ladder)').length === 7,
     'الخريطة تعرض المحطات السبع');
   ok($$('.station--pause').length === 4,
     `ومحطات المهارات والقصص بينها (${$$('.station--pause').length})`);
   ok($$('.station--quran').length === 1, 'والمرحلة القرآنية بعدها (الجلسة ٦)');
-  ok($$('.station--garden').length >= 8, `وبساتين الموضوعات خاتمةً (${$$('.station--garden').length} بستاناً — الحزمة ٧)`);
+  ok($$('.station--garden').length >= 8, `وبساتين الموضوعات بعدها (${$$('.station--garden').length} بستاناً — الحزمة ٧)`);
+  ok($$('.station--ladder').length === $$('.station--garden').length,
+    `وسلّم جملٍ بعد كل بستان خاتمةً (${$$('.station--ladder').length} سلّماً — الحزمة ٨)`);
 
   // ————— درس الألف: أول درس في الرحلة —————
   await goto('#/lesson/g1/%D8%A7');

@@ -81,8 +81,9 @@ const ids = nodes.map((n) => n.id);
 const gardenIds = bundles.map((b) => `garden:${b.id}`);
 ok(gardenIds.every((id) => ids.includes(id)) && nodeIdOf(bundles[0].id) === gardenIds[0],
   `عقد البساتين في الرحلة (${gardenIds.length} عقدة)`);
-ok(ids.slice(-gardenIds.length).join('|') === gardenIds.join('|'),
-  'وهي خاتمة الرحلة، بعد المرحلة القرآنية');
+ok(gardenIds.every((id, i) => i === 0 || ids.indexOf(id) > ids.indexOf(gardenIds[i - 1]))
+  && ids.indexOf(gardenIds[0]) > ids.lastIndexOf('quran:s114'),
+  'وهي بعد المرحلة القرآنية بترتيبها، يتخلّلها سلّم جمل كل بستان (الحزمة ٨)');
 ok(ids.indexOf(gardenIds[0]) > ids.indexOf('quran:s114'), 'وأول باقة بعد آخر سورة');
 
 p.reset();

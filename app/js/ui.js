@@ -22,6 +22,12 @@ export const QURAN_ACCENT = 'var(--accent-quran)';
 /** لون بساتين المعجم — زيتوني ناعم. */
 export const GARDEN_ACCENT = 'var(--accent-garden)';
 
+/**
+ * لون «سلّم الجمل» — لون القصص نفسُه (طيني دافئ): الجملة والقصة قراءةٌ متصلة واحدة،
+ * والسلّم مدخلها. ولا لون جديد في اللوح (DESIGN §٢) — يميّزه معلمُ محطته لا صراخُ لونه.
+ */
+export const SENTENCE_ACCENT = 'var(--accent-stories)';
+
 export const accentFor = () => ACCENTS[0];
 
 export const accentForGarden = () => GARDEN_ACCENT;
@@ -57,6 +63,7 @@ export function nodeTitle(node) {
   if (node.type === 'story') return `قصة «${node.story.title}»`;
   if (node.type === 'quran') return node.title;
   if (node.type === 'garden') return `باقة ${arNum(node.bundle.index)} — ${node.garden.title}`;
+  if (node.type === 'ladder') return `جمل ${node.garden.title} — درجة ${arNum(node.rung.index)}`;
   return '';
 }
 
@@ -67,6 +74,7 @@ export function nodeWhere(node) {
   }
   if (node.type === 'quran') return QURAN.title;
   if (node.type === 'garden') return `بستان ${node.garden.title}`;
+  if (node.type === 'ladder') return `سلّم جمل ${node.garden.title}`;
   return 'محطة المهارات والقصص';
 }
 
@@ -78,6 +86,7 @@ export function nodeFace(node) {
   if (node.type === 'story') return node.story.emoji;
   if (node.type === 'quran') return node.face;
   if (node.type === 'garden') return node.garden.emoji;
+  if (node.type === 'ladder') return '📖';
   return '';
 }
 
@@ -151,12 +160,13 @@ export function mascot(className = 'mascot') {
   return el;
 }
 
-// معلم بصري لكل نوع محطة: بيت الحروف، جسر المهارات، شجرة القصص، قبة القرآنية، بستان المعجم.
+// معلم بصري لكل نوع محطة: بيت الحروف، جسر المهارات، قبة القرآنية، بستان المعجم، سلّم الجمل.
 const LANDMARKS = {
   house: '<path d="M10 44V26L28 10l18 16v18" /><path d="M22 44V33h10v11" /><path d="M6 26L28 7l22 19" />',
   bridge: '<path d="M6 42h52" /><path d="M12 42v-9M52 42v-9" /><path d="M8 36q24-24 48 0" /><circle cx="50" cy="16" r="6" /><path d="M50 22v20" />',
   dome: '<path d="M32 8q13 9 13 19v15H19V27q0-10 13-19z" /><path d="M32 8V4" /><circle cx="32" cy="3" r="1.6" /><path d="M10 42V22l3-7 3 7v20" /><path d="M15 42h38" />',
   garden: '<path d="M8 44h48" /><circle cx="18" cy="36" r="8" /><circle cx="46" cy="34" r="10" /><path d="M32 44V28" /><circle cx="32" cy="24" r="4.5" /><path d="M32 34q-5-1-7-5M32 38q5-1 7-5" />',
+  ladder: '<path d="M20 46V6M44 46V6" /><path d="M20 38h24M20 30h24M20 22h24M20 14h24" /><path d="M10 46h44" />',
 };
 
 /** معلم المحطة على الخريطة — زخرفة صامتة بلون المرحلة (DESIGN §٦). */

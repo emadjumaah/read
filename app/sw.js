@@ -14,7 +14,7 @@
 // عند تغيير أي ملف من ملفات الهيكل: ارفع VERSION فيُمحى المخزون القديم كله.
 // ويحرس اختبار `tools/test_pwa.mjs` أن قائمة SHELL لا تنسى ملفاً موجوداً في app/.
 
-const VERSION = 'v3';   // v3: الهوية البصرية — الخطوط المضمّنة ولوح DESIGN
+const VERSION = 'v4';   // v4: سلّم الجمل (الحزمة ٨) — ملفّا `sentences.js` و`ladder.js`
 const SHELL_CACHE = `muallim-shell-${VERSION}`;
 const AUDIO_CACHE = `muallim-audio-${VERSION}`;
 const KEEP = [SHELL_CACHE, AUDIO_CACHE];
@@ -33,6 +33,7 @@ const SHELL = [
   'js/audio.js',
   'js/curriculum.js',
   'js/garden.js',
+  'js/ladder.js',
   'js/lesson.js',
   'js/lexicon.js',
   'js/main.js',
@@ -41,6 +42,7 @@ const SHELL = [
   'js/quran.js',
   'js/review.js',
   'js/screens.js',
+  'js/sentences.js',
   'js/skill.js',
   'js/story.js',
   'js/ui.js',

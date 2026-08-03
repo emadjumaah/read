@@ -5,11 +5,12 @@
 //
 // جلسات التطوير لا تشغّل المولّد ولا تلمس app/audio/ — تضيف نصوصها هنا فقط.
 // المصادر: دروس المهارات والقصص والمرحلة القرآنية في app/js/curriculum.js،
-// **ومعجم البساتين** في app/data/lexicon.json (الحزمة ٧) — كلاهما خارج مستخرج
-// المولّد بعدُ. النصّ يُكتب حرفياً كما يُمرَّر إلى audio.play() — فالتطابق شرط لمفتاح sha1.
+// **ومعجم البساتين** في app/data/lexicon.json (الحزمة ٧)، **وسلّم الجمل** المبنيّ منه
+// (الحزمة ٨) — كلها خارج مستخرج المولّد بعدُ. النصّ يُكتب حرفياً كما يُمرَّر إلى
+// audio.play() — فالتطابق شرط لمفتاح sha1.
 //
-// ترتيب الإضافة هو ترتيب التصريف: كلمات أول بستان ومقاطعها أولاً، فيصير مسموعاً
-// قبل أن يبلغه الطفل (docs/AUDIO_QUEUE.md).
+// ترتيب الإضافة هو ترتيب التصريف: كلمات أول بستان ومقاطعها أولاً، ثم جمل سلّمه،
+// فيصير مسموعاً قبل أن يبلغه الطفل (docs/AUDIO_QUEUE.md).
 //
 // **نصّ المصحف خارج هذا كله**: `quranSilentTexts()` لا يدخل القائمة أبداً، فالتلاوة
 // بصوت قارئ متقن لا بمولّد (METHOD §٥.٦) — ويرفضه `check_decodable.py` صراحةً.
@@ -25,6 +26,7 @@ const {
   quranSpokenTexts, quranSilentTexts,
 } = await import(new URL('app/js/curriculum.js', ROOT));
 const { GARDENS } = await import(new URL('app/js/lexicon.js', ROOT));
+const { RUNGS } = await import(new URL('app/js/sentences.js', ROOT));
 
 const REQUESTED_BY = process.env.QUEUE_BY || 'session-7';
 
@@ -73,6 +75,14 @@ function newTexts() {
       }
     }
   }
+  // سلّم الجمل: الجملة كاملةً، وكلماتُها مفردةً في «رتّب» وحدها (بها تُنقر الكلمة).
+  // بستاناً بستاناً ودرجةً درجة — يلي كلماتِ بستانه، فيكتمل البستان صوتاً قبل ما بعده.
+  for (const rung of RUNGS) {
+    for (const sentence of rung.sentences) {
+      add(sentence.text, 'sentence');
+      if (sentence.mechanic === 'order') for (const word of sentence.words) add(word, 'story_word');
+    }
+  }
   const forbidden = quranSilentTexts().filter((t) => out.has(t));
   if (forbidden.length) {
     console.error(`نصّ من المصحف كاد يدخل القائمة: ${forbidden.join('، ')}`);
@@ -95,7 +105,7 @@ const counts = {};
 for (const [, cat] of missing) counts[cat] = (counts[cat] || 0) + 1;
 
 const ready = [...wanted].filter(([t]) => have.has(t)).length;
-console.log(`نصوص المهارات والقصص والقرآني والبساتين: ${wanted.size} | لها ملف: ${ready} `
+console.log(`نصوص المهارات والقصص والقرآني والبساتين والجمل: ${wanted.size} | لها ملف: ${ready} `
   + `| في القائمة أصلاً: ${[...wanted].filter(([t]) => queued.has(t)).length} | ناقص: ${missing.length}`);
 if (missing.length) {
   console.log(Object.entries(counts).map(([c, n]) => `${c}: ${n}`).join('، '));

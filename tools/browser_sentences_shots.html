@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>لقطات سلّم الجمل</title>
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+    body { padding: 1rem; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; align-items: start; }
+    .cell { background: rgba(255,255,255,.35); border-radius: 24px; padding: .5rem; }
+    .cell > h4 { margin: .2rem 0 .4rem; text-align: center; color: #1971c2; }
+    .app { max-width: none; padding: 0; }
+    .dev { display: none; }
+  </style>
+</head>
+<body>
+<div id="toast" class="toast" hidden></div>
+<div class="grid" id="grid"></div>
+
+<script>
+  localStorage.setItem('muallim.progress.v1', JSON.stringify({
+    v: 2, stars: {}, skills: {}, days: {}, reviews: {}, seconds: 0,
+    startedAt: Date.now(), updatedAt: Date.now(),
+  }));
+</script>
+
+<script type="module">
+import { renderLadder } from './js/ladder.js';
+import { LADDERS } from './js/sentences.js';
+import * as progress from './js/progress.js';
+import * as audio from './js/audio.js';
+
+// يُقرأ فهرس الأصوات مرة واحدة قبل السَّوق: بعده لا ينتظر الانتقالُ شبكةً،
+// فتكفي دورةُ مُهلةٍ واحدة لاستيفاء وعوده قبل اللقطة.
+await audio.ready();
+
+// صوت لا ينتهي: تُجمَّد الحالة المعروضة فلا تنتقل الجولة تلقائياً قبل اللقطة،
+// ويُسرَّع وقت السَّوق وحده. والنطق الآلي مثله — أكثر نصوص السلّم تنتظر التصريف بعدُ.
+const realTimeout = window.setTimeout;
+const Frozen = class { play() { return new Promise(() => {}); } pause() {} };
+const Instant = class { play() { return Promise.resolve(); } pause() {} };
+window.Audio = Frozen;
+window.SpeechSynthesisUtterance = class { constructor(text) { this.text = text; } };
+const synth = {
+  cancel() {},
+  speak(u) { if (window.Audio === Instant) realTimeout(() => u.onend && u.onend(), 0); },
+};
+Object.defineProperty(window, 'speechSynthesis', { configurable: true, get: () => synth });
+
+for (const node of progress.allNodes()) progress.setStars(node.id, 3);
+
+const grid = document.getElementById('grid');
+const $$ = (root, sel) => [...root.querySelectorAll(sel)];
+
+function cell(title, node) {
+  const box = document.createElement('div');
+  box.className = 'cell';
+  box.innerHTML = `<h4>${title}</h4>`;
+  const app = document.createElement('div');
+  app.className = 'app';
+  app.append(node);
+  box.append(app);
+  grid.append(box);
+  return app;
+}
+
+const rung = LADDERS[0].rungs[0];
+
+/**
+ * يسوق الشاشة إلى أول جملةٍ بميكانيكيةٍ بعينها باختيار الصواب فيما قبلها.
+ * اللقطة تُلتقط عند تحميل الصفحة، فلا مجال للانتظار: نُعجّل مُهَل الانتقال آنياً
+ * ونجعل الصوت ينتهي فوراً (الانتقال ينتظر انتهاءه)، ثم نعيد التجميد للّقطة.
+ */
+async function driveTo(app, mechanic, sentences = rung.sentences) {
+  window.setTimeout = (fn) => (fn(), 0);
+  window.Audio = Instant;
+  for (let i = 0; i < sentences.length; i++) {
+    const sentence = sentences[i];
+    if (sentence.mechanic === mechanic) break;
+    if (sentence.mechanic === 'read') {
+      $$(app, '.piccard').find((b) => b.textContent.trim() === sentence.target.emoji)?.click();
+    } else if (sentence.mechanic === 'fill') {
+      $$(app, '.vchip--pic').find((b) => b.textContent.includes(sentence.target.word))?.click();
+    } else {
+      for (const word of sentence.words) {
+        $$(app, '.tiles--words .tile').find((t) => !t.disabled && t.textContent.trim() === word)?.click();
+      }
+    }
+    // الانتقال ينتظر انتهاء الصوت — دوراتٌ قليلة تكفي لاستيفاء وعوده
+    for (let t = 0; t < 6 && $$(app, '.dot--done').length <= i; t++) {
+      await new Promise((r) => realTimeout(r, 0));
+    }
+  }
+  window.setTimeout = realTimeout;
+  window.Audio = Frozen;
+  return app;
+}
+
+// الشاشة تُضاف إلى الصفحة **قبل** سَوقها: الانتقال يتوقّف إن لم تكن معروضة
+// (`root.isConnected` في `ladder.js` — حارسُ ألّا يتسرّب صوتٌ إلى شاشةٍ غادرها الطفل).
+
+// ١) اقرأ ونفّذ: الجملة مكتوبة وثلاث صور (ولا صوت قبل الاختيار)
+await driveTo(cell(`١ — اقرأ ونفّذ (جمل ${LADDERS[0].garden.title})`, renderLadder(rung.id)), 'read');
+
+// ٢) رتّب الجملة: خانات الكلمات وبلاطاتها المخلوطة بمشتّتاتها (وأولاها موضوعة)
+const order = await driveTo(cell('٢ — رتّب الجملة', renderLadder(rung.id)), 'order');
+const ordered = rung.sentences.find((s) => s.mechanic === 'order');
+$$(order, '.tiles--words .tile').find((t) => t.textContent.trim() === ordered.words[0])?.click();
+
+// ٣) أكمل الجملة: فراغٌ وثلاث كلمات مصوّرة
+await driveTo(cell('٣ — أكمل الجملة', renderLadder(rung.id)), 'fill');
+
+// ٤) درجة من بستان آخر
+const other = LADDERS[4] ?? LADDERS[1];
+const otherRung = other.rungs[0];
+await driveTo(cell(`٤ — جمل ${other.garden.title}`, renderLadder(otherRung.id)),
+  'order', otherRung.sentences);
+
+// ٥) الخريطة: البستان وسلّمه بعده
+progress.reset();
+for (const node of progress.allNodes()) {
+  if (node.id === `ladder:${rung.id}`) break;
+  progress.setStars(node.id, 3);
+}
+const map = cell('٥ — الخريطة: البستان ثم سلّم جمله', document.createElement('div'));
+map.id = 'app';
+Element.prototype.scrollIntoView = () => {};
+await import('./js/main.js');
+// الخريطة كلها لا تُلتقط في لقطة: نُبقي بطاقتَي المراجعة و«تابع» وأول بستان وسلّمه
+const track = map.querySelector('.map');
+if (track) {
+  const keep = [...track.children].filter((el) => el.classList.contains('continue')
+    || el.classList.contains('station--garden') || el.classList.contains('station--ladder'));
+  track.replaceChildren(...keep.slice(0, 4));
+}
+</script>
+</body>
+</html>

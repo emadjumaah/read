@@ -1207,6 +1207,80 @@ button {
   font-weight: 700;
 }
 
+/* ————— سلّم الجمل (المرحلة ج) — درجاتٌ بعد كل بستان ————— */
+
+.station--ladder {
+  border-inline-start-width: 8px;
+  border-inline-start-style: dashed;
+  background: linear-gradient(180deg, var(--card) 55%, color-mix(in srgb, var(--accent) 9%, var(--mix)));
+}
+
+.station--ladder .station-letters { font-family: var(--font-ui); font-size: .9rem; letter-spacing: 0; line-height: 1.7; }
+.station--ladder .station-num { font-size: 1.5rem; }
+.node--ladder .node-face { font-family: var(--font-ui); font-size: 1.9rem; }
+
+/* الجملة المعروضة للقراءة — نص قراءة ≥ ٣٢ بكسل بهواءٍ لحركاته (DESIGN §٣) */
+.sentence {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: .1rem .5rem;
+  margin: 1.25rem 0 1rem;
+  font-family: var(--font-letter);
+  font-size: 2rem;
+  line-height: 1.9;
+}
+
+.sentence-word { padding: .1rem .2rem; border-radius: 10px; }
+
+.sentence-blank {
+  display: inline-block;
+  min-width: 5rem;
+  padding: .1rem .6rem;
+  border-radius: 12px;
+  border-bottom: 4px dashed color-mix(in srgb, var(--accent) 45%, var(--mix));
+  background: color-mix(in srgb, var(--accent) 6%, var(--mix));
+}
+
+.sentence-word--filled {
+  color: var(--ok-text);
+  background: color-mix(in srgb, var(--ok) 14%, var(--mix));
+  animation: pop .4s ease;
+}
+
+.sentence--built { color: var(--ok-text); margin-top: 0; animation: pop .4s ease; }
+
+/* «اقرأ ونفّذ»: ثلاث صور كبيرة بلا كلمة — الحكم على قراءة الجملة */
+.picrow { flex-wrap: wrap; gap: .75rem; margin-top: .5rem; }
+
+.piccard {
+  display: grid;
+  place-items: center;
+  width: 6.5rem;
+  height: 6.5rem;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 3px solid color-mix(in srgb, var(--accent) 22%, var(--mix));
+  box-shadow: var(--shadow);
+  transition: transform .15s ease;
+}
+
+.piccard:active { transform: scale(.95); }
+.piccard.good { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--mix)); }
+.piccard.bad { border-color: var(--err); background: color-mix(in srgb, var(--err) 12%, var(--mix)); }
+
+/* «أكمل الجملة»: الكلمة المصوّرة خياراً — ونصّها نصُّ قراءة ≥ ٣٢ بكسل (DESIGN §٣) */
+.vchip--pic { min-width: 0; }
+.vchip--pic .vchip-pic { display: block; font-size: 2.2rem; line-height: 1.2; }
+.vchip--pic .vchip-face { font-family: var(--font-letter); font-size: 2rem; white-space: nowrap; }
+
+/* «رتّب الجملة»: بلاطات كلماتٍ لا مقاطع — أعرض وأقصر، والكلمة تُقرأ فلا تصغر */
+.tiles--words { gap: .5rem; margin-top: 1.5rem; }
+.tiles--words .tile { min-width: 5.5rem; min-height: 4rem; padding: .2rem .7rem; }
+.tiles--words .tile-face { font-size: 2rem; }
+.slot--word { min-width: 5.5rem; min-height: 4rem; font-size: 2rem; }
+
 /* ————— أدوات المطوّر (?dev=1) ————— */
 
 .dev {

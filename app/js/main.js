@@ -11,10 +11,12 @@ import { renderSkillLesson } from './skill.js';
 import { renderStory } from './story.js';
 import { renderQuran } from './quran.js';
 import { renderGarden } from './garden.js';
+import { renderLadder } from './ladder.js';
 import { renderParent, skillsText } from './parent.js';
 import {
   h, toast, go, arNum, arCount, starsRow, topbar, letterTitle, nodeTitle, nodeFace, nodeWhere,
-  ACCENTS, PAUSE_ACCENT, STORY_ACCENT, QURAN_ACCENT, accentFor, accentForGarden, landmark, DEV,
+  ACCENTS, PAUSE_ACCENT, STORY_ACCENT, QURAN_ACCENT, SENTENCE_ACCENT,
+  accentFor, accentForGarden, landmark, DEV,
 } from './ui.js';
 
 const app = document.getElementById('app');
@@ -57,7 +59,8 @@ function renderMap() {
         h('small', {}, `تابع من هنا · ${nodeWhere(next)}`)),
     ));
   } else {
-    main.append(h('p', { class: 'note' }, '🎉 أتممتَ الرحلة كلها — من الحرف الأول إلى المصحف وحديقة الكلمات!'));
+    main.append(h('p', { class: 'note' },
+      '🎉 أتممتَ الرحلة كلها — من الحرف الأول إلى المصحف وحديقة الكلمات وسلّم الجمل!'));
   }
 
   // الدرب المتعرج: انعطافة خيط بين كل محطتين، يمنةً مرة ويسرةً مرة (DESIGN §٦)
@@ -68,7 +71,8 @@ function renderMap() {
     main.append(section.kind === 'group' ? stationEl(section, groupIndex++, next)
       : section.kind === 'quran' ? quranEl(section, next)
         : section.kind === 'garden' ? gardenEl(section, next)
-          : interludeEl(section, next));
+          : section.kind === 'ladder' ? ladderEl(section, next)
+            : interludeEl(section, next));
   }
 
   if (DEV) {
@@ -218,10 +222,39 @@ function gardenEl(section, next) {
   });
 }
 
+/**
+ * محطة «سلّم الجمل» (الحزمة ٨): درجاتٌ بعد كل بستان — من الكلمة إلى الجملة.
+ * لونها لون القصص (قراءة متصلة)، ومعلمها سلّم يميّزها عن بستانها الزيتوني.
+ */
+function ladderEl(section, next) {
+  const garden = section.garden;
+  const unlocked = progress.isNodeUnlockedById(section.nodes[0].id);
+  const complete = section.nodes.every((n) => progress.isDone(n.id));
+  const earned = section.nodes.reduce((sum, n) => sum + progress.getStars(n.id), 0);
+  const sentences = section.ladder.rungs.reduce((sum, r) => sum + r.sentences.length, 0);
+
+  return trackEl({
+    className: `station station--ladder${unlocked ? '' : ' station--locked'}${complete ? ' station--done' : ''}`,
+    accent: SENTENCE_ACCENT,
+    mark: 'ladder',
+    label: `سلّم جمل ${garden.title}${unlocked ? '' : ' — مقفل'}`,
+    badge: '📖',
+    title: `جمل ${garden.title}`,
+    sub: `${arCount(sentences, ['جملة', 'جملتان', 'جمل', 'جملة'])} في `
+      + `${arCount(section.nodes.length, ['درجة', 'درجتين', 'درجات', 'درجة'])}`,
+    meta: unlocked
+      ? [h('b', {}, `★ ${arNum(earned)}`), ` / ${arNum(section.nodes.length * progress.MAX_STARS)}`]
+      : '🔒 مقفل',
+    nodes: section.nodes,
+    next,
+  });
+}
+
 /** لون العقدة في بطاقة «تابع من هنا»: لون مجموعتها، أو لون محطتها الخاصة. */
 function accentOf(node, group) {
   if (node.type === 'quran') return QURAN_ACCENT;
   if (node.type === 'garden') return accentForGarden(node.garden);
+  if (node.type === 'ladder') return SENTENCE_ACCENT;
   if (node.type === 'skill' || node.type === 'story') return PAUSE_ACCENT;
   return accentFor(group);
 }
@@ -369,6 +402,9 @@ async function render() {
   } else if (name === 'garden' && arg1) {
     if (!guard(`garden:${decodeURIComponent(arg1)}`)) return;
     screen = renderGarden(decodeURIComponent(arg1)) || renderMap();
+  } else if (name === 'ladder' && arg1) {
+    if (!guard(`ladder:${decodeURIComponent(arg1)}`)) return;
+    screen = renderLadder(decodeURIComponent(arg1)) || renderMap();
   } else if (name === 'review') {
     screen = renderReview();
     if (!screen) {                       // لا حصيلة للمراجعة بعدُ

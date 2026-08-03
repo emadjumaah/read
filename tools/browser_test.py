@@ -7,7 +7,8 @@
     python3 tools/browser_test.py --story      # دروس المهارات وشاشة قراءة القصص
     python3 tools/browser_test.py --quran      # المرحلة القرآنية والعمل دون إنترنت
     python3 tools/browser_test.py --garden     # بساتين الموضوعات (حديقة الكلمات)
-    python3 tools/browser_test.py --shots out.png [--words|--review|--story|--quran|--garden]
+    python3 tools/browser_test.py --sentences  # سلّم الجمل (المرحلة ج)
+    python3 tools/browser_test.py --shots out.png [--words|--review|--story|--quran|--garden|--sentences]
     python3 tools/browser_test.py --show       # بمتصفّح مرئي لتتبّع ما يجري
 
 كيف يعمل: خادم صغير يخدم مجلد app/ ويضيف صفحات الاختبار وحدها من هذا المجلد
@@ -48,6 +49,8 @@ PAGES = {
     "/__quran_shots.html": TOOLS / "browser_quran_shots.html",
     "/__garden.html": TOOLS / "browser_garden.html",
     "/__garden_shots.html": TOOLS / "browser_garden_shots.html",
+    "/__sentences.html": TOOLS / "browser_sentences.html",
+    "/__sentences_shots.html": TOOLS / "browser_sentences_shots.html",
 }
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 QUEUE_FILE = ROOT / "tools" / "audio_queue.json"
@@ -124,13 +127,14 @@ def run_chrome(url: str, profile: Path, extra: list, show: bool):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8790)
-    ap.add_argument("--timeout", type=int, default=90, help="ثوانٍ قبل الاستسلام")
+    ap.add_argument("--timeout", type=int, default=140, help="ثوانٍ قبل الاستسلام")
     ap.add_argument("--shots", metavar="PNG", help="لقطة للمراجعة البصرية بدل تشغيل الاختبارات")
     ap.add_argument("--words", action="store_true", help="لعبة تركيب الكلمات بدل درس الحرف")
     ap.add_argument("--review", action="store_true", help="المراجعة اليومية ولوحة وليّ الأمر")
     ap.add_argument("--story", action="store_true", help="دروس المهارات وشاشة قراءة القصص")
     ap.add_argument("--quran", action="store_true", help="المرحلة القرآنية والعمل دون إنترنت")
     ap.add_argument("--garden", action="store_true", help="بساتين الموضوعات (حديقة الكلمات)")
+    ap.add_argument("--sentences", action="store_true", help="سلّم الجمل (المرحلة ج)")
     ap.add_argument("--show", action="store_true", help="متصفّح مرئي")
     args = ap.parse_args()
 
@@ -143,7 +147,9 @@ def main():
     try:
         if args.shots:
             out = Path(args.shots).resolve()
-            page, size = (("__review_shots.html", "1100,3050") if args.review
+            out.unlink(missing_ok=True)   # وإلا لعُدَّت لقطةُ تشغيلٍ سابق نجاحاً فوريّاً
+            page, size = (("__sentences_shots.html", "1100,3400") if args.sentences
+                          else ("__review_shots.html", "1100,3050") if args.review
                           else ("__garden_shots.html", "1100,5200") if args.garden
                           else ("__quran_shots.html", "1100,9400") if args.quran
                           else ("__story_shots.html", "1100,5400") if args.story
@@ -161,6 +167,7 @@ def main():
 
         page = ("__review.html" if args.review else "__story.html" if args.story
                 else "__quran.html" if args.quran else "__garden.html" if args.garden
+                else "__sentences.html" if args.sentences
                 else "__words.html" if args.words else "__test.html")
         proc = run_chrome(f"{base}/{page}", profile, ["--hide-scrollbars"], args.show)
         deadline = time.time() + args.timeout

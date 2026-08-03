@@ -7,6 +7,7 @@
 
 import { GROUPS, SKILLS, STORIES, QURAN, quranParts, bareLetters } from './curriculum.js';
 import { GARDENS } from './lexicon.js';
+import { ladderOf } from './sentences.js';
 
 const STORE_KEY = 'muallim.progress.v1';
 export const VERSION = 2;            // ١ = نجوم فقط (تُرقّى تلقائياً بلا فقد)
@@ -14,7 +15,7 @@ export const MAX_STARS = 3;
 export const WORDS_PART = 'words';   // عقدة لعبة الكلمات في آخر كل مجموعة
 
 /** أنواع التمارين المقيسة — أسماؤها ثابتة لأنها تُخزَّن في مفاتيح المهارات. */
-export const KINDS = { QUIZ: 'quiz', HARAKA: 'haraka', BUILD: 'build' };
+export const KINDS = { QUIZ: 'quiz', HARAKA: 'haraka', BUILD: 'build', ORDER: 'order' };
 
 /** تباعد ليتنر بالأيام: كل إجابة صحيحة ترفع الصندوق، والخطأ يعيده إلى الصفر. */
 export const BOX_DAYS = [0, 1, 2, 4, 8, 16];
@@ -137,8 +138,18 @@ export function gardenNodes(garden) {
 }
 
 /**
+ * عقد «سلّم الجمل» (الحزمة ٨): درجةٌ لكل عقدة، بعد باقات بستانها كلها —
+ * فالجملة لا تُعرض إلا وكلماتها كلها مدروسة (`sentences.js` يضمن موضعها).
+ */
+export function ladderNodes(ladder) {
+  return ladder.rungs.map((rung) => ({
+    id: `ladder:${rung.id}`, type: 'ladder', part: rung.id, garden: ladder.garden, rung,
+  }));
+}
+
+/**
  * الرحلة كاملةً بأقسامها بالترتيب: مجموعة ← ما بعدها من مهارات وقصص ← … ←
- * المرحلة القرآنية ← بساتين الموضوعات.
+ * المرحلة القرآنية ← (بستان ← سلّم جمله) × البساتين.
  */
 export function journey() {
   const out = [];
@@ -150,6 +161,10 @@ export function journey() {
   out.push({ kind: 'quran', id: 'quran', nodes: quranNodes() });
   for (const garden of GARDENS) {
     out.push({ kind: 'garden', id: `garden:${garden.id}`, garden, nodes: gardenNodes(garden) });
+    const ladder = ladderOf(garden.id);
+    if (ladder?.rungs.length) {
+      out.push({ kind: 'ladder', id: `ladder:${garden.id}`, garden, ladder, nodes: ladderNodes(ladder) });
+    }
   }
   return out;
 }
@@ -275,6 +290,20 @@ export function studiedLexicon() {
   for (const garden of GARDENS) {
     for (const bundle of garden.bundles) {
       if (isDone(`garden:${bundle.id}`)) out.push(...bundle.words);
+    }
+  }
+  return out;
+}
+
+/**
+ * جمل الدرجات التي أتمّها الطفل — مادّة مراجعة «رتّب الجملة» (الحزمة ٨).
+ * الدرجة المُنجَزة دليلُ قراءتها: لا تُفتح إلا بعد بستانها كله وما قبله.
+ */
+export function studiedSentences() {
+  const out = [];
+  for (const garden of GARDENS) {
+    for (const rung of ladderOf(garden.id)?.rungs || []) {
+      if (isDone(`ladder:${rung.id}`)) out.push(...rung.sentences);
     }
   }
   return out;
