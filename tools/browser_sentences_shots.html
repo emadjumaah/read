@@ -110,13 +110,21 @@ $$(order, '.tiles--words .tile').find((t) => t.textContent.trim() === ordered.wo
 // ٣) أكمل الجملة: فراغٌ وثلاث كلمات مصوّرة
 await driveTo(cell('٣ — أكمل الجملة', renderLadder(rung.id)), 'fill');
 
-// ٤) درجة من بستان آخر
+// ٤ و٥) الدرجة العليا: الجمل المتدرّجة (٤–٥ كلمات — الحزمة ٩أ)، بميكانيكيّتيها
+const top = LADDERS[0].rungs.at(-1);
+const len = (m) => top.sentences.find((s) => s.mechanic === m)?.words.length ?? 0;
+await driveTo(cell(`٤ — الدرجة العليا: اقرأ ونفّذ (${len('read')} كلمات)`,
+  renderLadder(top.id)), 'read', top.sentences);
+await driveTo(cell(`٥ — الدرجة العليا: أكمل الجملة (${len('fill')} كلمات)`,
+  renderLadder(top.id)), 'fill', top.sentences);
+
+// ٦) درجة من بستان آخر
 const other = LADDERS[4] ?? LADDERS[1];
 const otherRung = other.rungs[0];
-await driveTo(cell(`٤ — جمل ${other.garden.title}`, renderLadder(otherRung.id)),
+await driveTo(cell(`٦ — جمل ${other.garden.title}`, renderLadder(otherRung.id)),
   'order', otherRung.sentences);
 
-// ٥) الخريطة: البستان وسلّمه بعده
+// ٧) الخريطة: البستان وسلّمه بعده
 progress.reset();
 for (const node of progress.allNodes()) {
   if (node.id === `ladder:${rung.id}`) break;

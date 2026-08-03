@@ -345,22 +345,53 @@ SPECS = [
     ("صُورَةْ", "صُورَةْ~n مُلَوَّنَةْ~n فَوْقَ جِدَارْ~k غُرْفَةْ~p"),
 ]
 
+
+# ————— جملُ مثالٍ يملكها المولّد (حكم المدير في إقفال ٩أ: فكّ تكرار جملتين) —————
+#
+# جملةُ المثال لكل كلمة مادّةُ الحزمة ٧، وتبقى على حالها إلا ما استُثني هنا: كلمتان
+# كانتا **تتقاسمان جملةً واحدة** مع كلمتين أخريين، فيراها الطفل مرّتين في سلّمٍ واحد
+# (كلتاهما تُؤجَّل إلى بستان الألوان). فصارت لكلٍّ جملتُها، مشتقّةً كسائر المادة.
+#
+# «أَخْضَرْ»: اقترح المدير «الْوَرَقُ أَخْضَرْ» — وهي **جملةُ «وَرَقْ» نفسِها** في
+# الحزمة ٧، فتنقل التكرار ولا تفكّه (وكذلك «الْخِيَارُ أَخْضَرْ» جملةُ «خِيَارْ»).
+# فأخذت «حَقْلْ» مكانها: بستانُها الطبيعةُ السادس، فهي مدروسة قبل الألوان كالليمون،
+# وجملتُها «الْحَقْلُ وَاسِعْ» فلا تتقاطع. والحارس الجديد في الفاحص يردّ أيّ عودةٍ
+# إلى الحالة القديمة — وهو الذي أمسك اقتراحَ «الْوَرَقُ» قبل أن يُكتب.
+
+WORD_SPECS = {
+    "أَصْفَرْ": "لَيْمُونْ~n أَصْفَرْ",
+    "أَخْضَرْ": "حَقْلْ~n أَخْضَرْ",
+}
+
+
 # ————— البناء —————
+
+
+def compose(spec, bases, unknown):
+    """رموزٌ ← جملةٌ مشكولة. الرمزُ الذي لا أصلَ له يُسجَّل ويُترك كما هو."""
+    words = []
+    for token in spec.split():
+        try:
+            words.append(render(token, bases))
+        except KeyError as e:
+            unknown.append((str(e.args[0]), spec))
+            words.append(token)
+    return " ".join(words)
 
 
 def build(data):
     """من الرموز إلى جملٍ مشكولة — وأي كلمة أساسٍ غير معلَنة توقف البناء."""
     bases = all_bases(data)
-    out, unknown = [], []
-    for target, spec in SPECS:
-        words = []
-        for token in spec.split():
-            try:
-                words.append(render(token, bases))
-            except KeyError as e:
-                unknown.append((str(e.args[0]), spec))
-                words.append(token)
-        out.append({"text": " ".join(words), "word": target})
+    unknown = []
+    out = [{"text": compose(spec, bases, unknown), "word": target} for target, spec in SPECS]
+    return out, unknown
+
+
+def build_word_sentences(data):
+    """جملُ المثال التي يملكها المولّد: كلمةُ المعجم ← جملتُها المشتقّة."""
+    bases = all_bases(data)
+    unknown = []
+    out = {word: compose(spec, bases, unknown) for word, spec in WORD_SPECS.items()}
     return out, unknown
 
 
@@ -377,16 +408,21 @@ def merged_support(data, sentences):
 
 
 def with_sentences(data, sentences):
-    """نسخة من بيانات المعجم وفيها `sentences` بعد `words` مباشرةً (وترتيبٌ ثابت)."""
+    """نسخة من بيانات المعجم وفيها `sentences` بعد `words` مباشرةً (وترتيبٌ ثابت)،
+    وجملُ المثال التي يملكها المولّد مكتوبةً في كلماتها."""
+    owned, _unknown = build_word_sentences(data)
     out = {}
     for key, value in data.items():
         if key in (SUPPORT_FIELD, SENTENCE_FIELD):
             continue
-        out[key] = value
+        out[key] = ([{**w, "sentence": owned.get(w.get("word"), w.get("sentence"))} for w in value]
+                    if key == "words" else value)
         if key == "words":
             out[SENTENCE_FIELD] = sentences
     out.setdefault(SENTENCE_FIELD, sentences)
-    out[SUPPORT_FIELD] = merged_support(data, sentences)
+    # المساند يُشتقّ من **الجمل بعد التعديل** ومن المعلَن الأصلي معاً
+    out[SUPPORT_FIELD] = merged_support({**out, SUPPORT_FIELD: data.get(SUPPORT_FIELD) or []},
+                                        sentences)
     return out
 
 
@@ -462,6 +498,15 @@ def self_test(data):
     texts = [s["text"] for s in sentences]
     ok(len(set(texts)) == len(texts), "ولا جملة مكرَّرة")
 
+    owned, owned_unknown = build_word_sentences(data)
+    ok(not owned_unknown and set(owned) <= lex,
+       f"وجملُ المثال التي يملكها المولّد مشتقّةٌ من أصولٍ معلَنة ({len(owned)} جملة)")
+    others = [w["sentence"] for w in data["words"] if w["word"] not in WORD_SPECS]
+    clash = [f"{w}: {t}" for w, t in owned.items() if t in others or t in texts]
+    ok(not clash, "ولا تصادم جملةً أخرى في المنظومة" + (f" — {clash}" if clash else ""))
+    ok(all(bare(w) in bare(t) for w, t in owned.items()),
+       "وكلمتُها حاضرةٌ فيها")
+
     print(f"\n{fails} فشل" if fails else "\n✓ المشتقّ والمادّة سليمان")
     return 1 if fails else 0
 
@@ -479,12 +524,21 @@ def main():
 
     sentences, unknown = build(data)
     if args.check:
-        have = data.get("sentences")
-        if have == sentences and (data.get(SUPPORT_FIELD) or []) == merged_support(data, sentences):
-            print(f"✓ {len(sentences)} جملة في المعجم مطابقةٌ لخرج المولّد، والمساند كذلك")
+        want = with_sentences(data, sentences)
+        bad = [(w["word"], w["sentence"], WORD_SPECS[w["word"]])
+               for w in data.get("words", [])
+               if w.get("word") in WORD_SPECS
+               and w.get("sentence") != next(x["sentence"] for x in want["words"]
+                                             if x["word"] == w["word"])]
+        if (data.get(SENTENCE_FIELD) == sentences and not bad
+                and (data.get(SUPPORT_FIELD) or []) == want[SUPPORT_FIELD]):
+            print(f"✓ {len(sentences)} جملة في المعجم مطابقةٌ لخرج المولّد، "
+                  f"و{len(WORD_SPECS)} جملتا مثالٍ يملكهما، والمساند كذلك")
             sys.exit(0)
         print("✗ ملفّ المعجم يخالف خرج المولّد — شغّل --write")
-        for a, b in zip(have or [], sentences):
+        for word, have_s, spec in bad:
+            print(f"    جملة «{word}»: الملف «{have_s}» ≠ رموز المولّد «{spec}»")
+        for a, b in zip(data.get(SENTENCE_FIELD) or [], sentences):
             if a != b:
                 print(f"    الملف: {a}\n    المولّد: {b}")
                 break
@@ -494,9 +548,13 @@ def main():
     if status:
         sys.exit(status)
     if args.write:
-        LEXICON.write_text(dump(with_sentences(data, sentences)), encoding="utf-8")
+        out = with_sentences(data, sentences)
+        LEXICON.write_text(dump(out), encoding="utf-8")
+        owned, _ = build_word_sentences(data)
         print(f"كُتبت {len(sentences)} جملة في app/data/lexicon.json "
-              f"(والمساند {len(merged_support(data, sentences))} مفردة)")
+              f"(والمساند {len(out[SUPPORT_FIELD])} مفردة)")
+        for word, text in owned.items():
+            print(f"  جملةُ «{word}» صارت: {text}")
     else:
         for entry in sentences:
             print(f"  {len(entry['text'].split())}| {entry['text']}   ← {entry['word']}")

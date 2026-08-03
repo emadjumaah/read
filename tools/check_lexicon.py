@@ -418,14 +418,18 @@ def check(data: dict, letters: dict, known: set = None, quiet: bool = False) -> 
     # ٢و. الجمل المتدرجة (الحزمة ٩أ): ٣–٥ كلمات تُؤلَّف بمولّد مقيَّد
     # (`tools/make_sentences.py`) لا بيد — والفاحص يحكم عليها بقواعد الجمل نفسها،
     # ويزيد: هدفٌ من المعجم حاضرٌ في الجملة (هو صورتُها وفراغُ «أكمل الجملة»).
+    # لا جملتين متطابقتين في المنظومة كلها (حكم المدير في إقفال ٩أ): جملتان
+    # متطابقتان تقعان في سلّمٍ واحد فيقرأ الطفل الجملة نفسَها مرّتين، وتضيع إحدى
+    # الكلمتين بلا مثالٍ يخصّها. يُقاس على **جمل المثال والمتدرّجة معاً**.
     lex_by_word = {e.get("word"): e for e in words}
-    seen_sentences = set()
-    for e in words:                    # جملتان متطابقتان تُعرضان على الطفل مرّتين
+    seen_sentences = {}
+    for e in words:
         text = str(e.get("sentence", ""))
         if text in seen_sentences:
-            warnings.append(f"جملةُ «{e.get('word')}» تكرّرت نصّاً: «{text}» "
-                            "(مادّة الحزمة ٧ — تُراجَع من المدير)")
-        seen_sentences.add(text)
+            errors.append(f"[{e.get('theme', '?')}/«{e.get('word')}»]: جملتُها «{text}» "
+                          f"هي بعينها جملةُ «{seen_sentences[text]}» — لكل كلمةٍ مثالُها "
+                          "(جملتان متطابقتان تُعرضان على الطفل مرّتين في سلّمٍ واحد)")
+        seen_sentences.setdefault(text, e.get("word"))
     graded = {}
     for i, entry in enumerate(data.get(SENTENCE_FIELD) or [], 1):
         text = str(entry.get("text", "") or "").strip()
@@ -438,8 +442,8 @@ def check(data: dict, letters: dict, known: set = None, quiet: bool = False) -> 
             errors.append(f"{label}: حقل ناقص (المطلوب: text وword)")
             continue
         if text in seen_sentences:
-            errors.append(f"{label}: جملة مكرَّرة")
-        seen_sentences.add(text)
+            errors.append(f"{label}: جملة مكرَّرة — سبقت لـ«{seen_sentences[text]}»")
+        seen_sentences.setdefault(text, target or "متدرّجة")
 
         parts = text.split()
         if not LADDER_WORDS[0] <= len(parts) <= LADDER_WORDS[1]:
@@ -711,6 +715,14 @@ def self_test(letters: dict) -> int:
     ok("[جملة" not in run(ladder=[{"text": "مِفْتَاحُ الْبَابِ صَغِيرْ", "word": "مِفْتَاحْ"}]),
        "والهدف يُعرَف بجذعه ولو مضافاً بلا «ال» (مِفْتَاحُ ← مِفْتَاحْ)")
     ok("مكرَّرة" in runl([long_ok, dict(long_ok)]), "وجملةٌ متدرّجة مكرَّرة تُمسَك")
+
+    # الحارس الدائم (حكم المدير في إقفال ٩أ): كلمتان تتقاسمان جملةً واحدة.
+    # هذه هي **الحالة القديمة بعينها** («الْمَوْزُ أَصْفَرْ» لـ«مَوْزْ» و«أَصْفَرْ»)،
+    # فلو أُعيدت يوماً ردّها الفاحصُ خطأً لا تنبيهاً.
+    twin = {**good, "word": "مِصْبَاحْ", "root": "صبح", "emoji": "💡",
+            "tiles": syllabify("مِصْبَاحْ", letters), "sentence": good["sentence"]}
+    ok("هي بعينها جملةُ" in run(words=[dict(good), twin]),
+       "وكلمتان تتقاسمان جملةَ مثالٍ واحدة تُمسَكان (الحالة التي أُقفلت في ٩أ)")
     ok("مكرَّرة" in run(ladder=[{"text": good["sentence"], "word": "مِفْتَاحْ"}]),
        "وتكرارُ جملةِ كلمةٍ في المتدرّجة يُمسَك (لا تُعرض على الطفل مرّتين)")
     ok("حقول زائدة" in runl([{**long_ok, "mechanic": "read"}]),

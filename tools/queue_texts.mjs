@@ -2,6 +2,7 @@
 //
 //   node tools/queue_texts.mjs           # عرض الناقص فقط (لا يكتب شيئاً)
 //   node tools/queue_texts.mjs --add     # إضافته إلى tools/audio_queue.json
+//   node tools/queue_texts.mjs --prune   # إسقاط المنتظِر الذي لم يعد يُنطق
 //
 // جلسات التطوير لا تشغّل المولّد ولا تلمس app/audio/ — تضيف نصوصها هنا فقط.
 // المصادر: دروس المهارات والقصص والمرحلة القرآنية في app/js/curriculum.js،
@@ -16,7 +17,7 @@
 // بصوت قارئ متقن لا بمولّد (METHOD §٥.٦) — تُجلب تسجيلاً بـ`fetch_recitation.py`،
 // ويرفض `check_decodable.py` صراحةً أن يُولَّد لها صوت.
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, renameSync, writeFileSync } from 'node:fs';
 
 const ROOT = new URL('../', import.meta.url);
 const QUEUE = new URL('tools/audio_queue.json', ROOT);
@@ -113,15 +114,65 @@ if (missing.length) {
   for (const [text, cat] of missing) console.log(`  + ${text}   (${cat})`);
 }
 
+/**
+ * كتابةٌ ذرّية بنمط `mark_done` في المولّد: ملفٌّ مؤقّت ثم استبدال، **وإعادةُ قراءةٍ
+ * قُبيل الكتابة** — فالمصرِّف عمليةٌ حيّة قد تُحوِّل مدخلاً إلى `done` بين قراءتنا
+ * وكتابتنا، فلا نكتب لقطةً قديمة فوق عمله. التعديل يُبنى على ما في القرص لا على ما
+ * في الذاكرة، ولا يُلمَس مدخلٌ `done` أبداً.
+ */
+function rewriteQueue(edit) {
+  const disk = JSON.parse(readFileSync(QUEUE, 'utf8'));
+  const next = edit(disk);
+  const tmp = new URL('tools/audio_queue.json.tmp', ROOT);
+  writeFileSync(tmp, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
+  renameSync(tmp, QUEUE);
+  return next;
+}
+
 if (process.argv.includes('--add') && missing.length) {
-  queue.push(...missing.map(([text, category]) => ({
+  const added = missing.map(([text, category]) => ({
     text,
     category,
     requestedBy: REQUESTED_BY,
     priority: 100,
     status: 'pending',
     doneAt: null,
-  })));
-  writeFileSync(QUEUE, `${JSON.stringify(queue, null, 2)}\n`, 'utf8');
+  }));
+  rewriteQueue((disk) => {
+    const known = new Set(disk.map((e) => e.text));
+    return [...disk, ...added.filter((e) => !known.has(e.text))];
+  });
   console.log(`\nأُضيف ${missing.length} نصاً إلى tools/audio_queue.json`);
+}
+
+// ————— التقليم: إسقاط المنتظِر الذي لم يعد يُنطق —————
+//
+// تغييرُ تناوب الميكانيكيات (بدخول جملٍ جديدة تتغيّر قسمةُ الدرجات) ينقل جملاً من
+// «رتّب» إلى غيرها، فكلماتُها المصفوفة لا تُنقر بعد اليوم — وتصريفُها إهدارٌ للحصة.
+// والتقليم **محصورٌ حصراً**: `pending` فقط (لا يُمَسّ `done` ولا ملفٌّ مولَّد)، وما ليس
+// في حاجة اليوم، **وما ليس من نصوص المنهج** — ونصوصُ المنهج تُعرَف بوجودها في الفهرس
+// (`manifest.json` = نصوص المنهج + منجَز القائمة)، فلا يمسّ التقليمُ نظائرَ «زَيْ» و«يْ».
+
+if (process.argv.includes('--prune')) {
+  const keep = new Set([...wanted.keys(), ...have]);
+  const dead = queue.filter((e) => (e.status ?? 'pending') !== 'done' && !keep.has(e.text));
+  const deadTexts = new Set(dead.map((e) => e.text));
+
+  if (!dead.length) {
+    console.log('\nالتقليم: لا مدخل منتظِراً خارج الحاجة — القائمة نظيفة.');
+  } else {
+    const byWho = {};
+    for (const e of dead) byWho[e.requestedBy] = (byWho[e.requestedBy] || 0) + 1;
+    console.log(`\nالتقليم: ${dead.length} مدخلاً منتظِراً لم يعد يُنطق `
+      + `(${Object.entries(byWho).map(([w, n]) => `${w}: ${n}`).join('، ')})`);
+    for (const e of dead) console.log(`  − ${e.text}   (${e.category} · ${e.requestedBy})`);
+
+    const before = queue.length;
+    const next = rewriteQueue((disk) => disk.filter(
+      (e) => !((e.status ?? 'pending') !== 'done' && deadTexts.has(e.text))));
+    const kept = next.filter((e) => deadTexts.has(e.text));
+    console.log(`\nحُذف ${before - next.length} مدخلاً من tools/audio_queue.json `
+      + `(بقي ${next.length})`
+      + (kept.length ? ` — واستُبقي ${kept.length} صُرِّف أثناء العمل` : ''));
+  }
 }
