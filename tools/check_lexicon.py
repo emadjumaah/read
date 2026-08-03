@@ -20,7 +20,12 @@
   ٦) **موضع الجملة في السلّم**: أبعدُ بستانٍ تنتمي إليه كلمةٌ من كلماتها — فجملةٌ تستعمل
      كلمةً من بستان لاحق تُؤجَّل إلى درجاته ولا تُعرض على طفل لم يبلغها (`sentences.js`
      يبني السلّم على هذه القاعدة نفسها، و`tools/test_sentences.mjs` يحرسها من جهته).
-  ٧) تغطية الصوت: كل منطوق له ملف مولَّد أو مكان في قائمة الانتظار (تنبيه لا خطأ).
+  ٧) **الجمل المتدرّجة** (الحزمة ٩أ): حقل `sentences` — ٣–٥ كلمات لكل جملة، بقواعد
+     الجمل نفسِها، وزيادةً: هدفٌ من المعجم حاضرٌ فيها (هو صورتُها وفراغُ «أكمل الجملة»)،
+     ولا تكرارَ لجملةٍ سابقة، ولا حقلَ زائد. وتُؤلَّف بـ`tools/make_sentences.py` لا بيد.
+     **ولا يحكم هذا الفاحص في المعنى ولا المطابقة** — تلك مراجعةُ المدير بالعين، وهي
+     ثالثةُ خطّ الإنتاج (توليد ← فحص ← عين) لا زائدةٌ عليه.
+  ٨) تغطية الصوت: كل منطوق له ملف مولَّد أو مكان في قائمة الانتظار (تنبيه لا خطأ).
 
 الاستعمال:
     python3 tools/check_lexicon.py                 # أخطاء + تنبيهات
@@ -28,6 +33,10 @@
     python3 tools/check_lexicon.py --fill-tiles    # يكتب المقاطع المشتقّة في الملف
     python3 tools/check_lexicon.py --fill-support  # يكتب معجم الجمل المساند في الملف
     python3 tools/check_lexicon.py --self-test     # فحص الفاحص: هل يمسك المخالفات؟
+
+المطابقة في كل ما سبق **بالجذع** (`stem`): كلمةُ المعجم تُعرَف معرَّفةً مُعرَبة
+(«الْغُرْفَةُ» ← «غُرْفَةْ»)، والمفردةُ المساندة تُعرَف بصورتها في الجملة
+(«الصَّغِيرَةُ» ← «صَغِيرْ») — فيبقى المعلَن معجمَ أصولٍ يُراجَع لا جدولَ صرف.
 
 يخرج بـ ١ عند وجود خطأ واحد على الأقل، وبـ ٠ إن مرّ الفحص.
 """
@@ -70,6 +79,8 @@ ROOT_LETTERS = (3, 4)      # الجذر العربي ثلاثيّ أو رباع�
 FIELDS = ("word", "tiles", "root", "theme", "emoji", "sentence")
 
 SUPPORT_FIELD = "support"  # معجم الجمل المساند: ما ليس كلمةَ معجمٍ ولا كلمةَ منهج
+SENTENCE_FIELD = "sentences"   # الجمل المتدرجة (٣–٥ كلمات) — الحزمة ٩أ
+LADDER_WORDS = (3, 5)          # طول الجملة المتدرجة: أطولُ من جملة الكلمة (كلمتان)
 AL_RE = re.compile(r"^اْ?لْ?(.+)$")        # «الْ» التعريف (والشمسية بلا سكون)
 TAIL_RE = re.compile(r"[ً-ِْ]+$")     # علامة الإعراب الأخيرة (لا الشدّة)
 
@@ -213,20 +224,34 @@ def theme_id(themes: list, place: int) -> str:
     return themes[place].get("id", "?") if 0 <= place < len(themes) else "?"
 
 
+def all_sentences(data: dict) -> list:
+    """كل جمل الملف: جملةُ المثال لكل كلمة (الحزمة ٧) + الجمل المتدرجة (الحزمة ٩أ)."""
+    out = [str(w.get("sentence", "")) for w in data.get("words", [])]
+    out += [str(s.get("text", "")) for s in (data.get(SENTENCE_FIELD) or [])]
+    return [t for t in out if t]
+
+
 def support_texts(data: dict, known: set) -> list:
     """معجم الجمل المساند مشتقّاً من الجمل نفسها: ما ليس كلمةَ معجمٍ ولا كلمةَ منهج.
 
     يُكتب في الملف ليصير **معلَناً مراجَعاً**: أيّ جملةٍ جديدة تأتي بمفردة خارجه
     يرفضها الفاحص حتى تُضاف بمراجعةٍ صريحة (لا تتسلّل مفردة إلى طفل بلا قرار).
+
+    والمطابقة **بالجذع** كما تُطابَق كلمةُ المعجم: المفردة المعلَنة موقوفةً («صَغِيرْ»)
+    تغطّي صورَها في الجملة («الصَّغِيرَةُ»، «تَنَامُ»)، فيبقى المعلَن معجمَ أصولٍ
+    يُراجَع بالعين لا جدولَ صرفٍ ينتفخ بكل حالة إعراب.
     """
     stems = {stem(w.get("word", "")) for w in data.get("words", [])}
+    declared = {}
+    for text in data.get(SUPPORT_FIELD) or []:
+        declared.setdefault(stem(text), text)
     out = set()
-    for entry in data.get("words", []):
-        for part in str(entry.get("sentence", "")).split():
+    for sentence in all_sentences(data):
+        for part in sentence.split():
             root_stem = stem(part)
             if root_stem in stems or bare(root_stem) in known or bare(part) in known:
                 continue
-            out.add(part)
+            out.add(declared.get(root_stem, part))
     return sorted(out)
 
 
@@ -255,12 +280,37 @@ def check(data: dict, letters: dict, known: set = None, quiet: bool = False) -> 
                       "شغّل --fill-support ثم راجع ما يضيفه كلمةً كلمة")
         support = []
     support_set = set(support)
+    # المطابقة بالجذع كما في كلمة المعجم: «صَغِيرْ» المعلَنة تغطّي «الصَّغِيرَةُ»
+    # و«تَنَامْ» تغطّي «تَنَامُ» — فالمعلَن معجمُ أصولٍ يُراجَع، لا جدولُ صرف.
+    support_by_stem = {}
+    for text in support:
+        support_by_stem.setdefault(stem(text), text)
     used_support = set()
     # جذع كل كلمة معجم ← موضع بستانها (به يُعرف أوّلُ موضعٍ تصلح فيه الجملة)
     lex_place = {}
     for entry in words:
         lex_place.setdefault(stem(entry.get("word", "")), theme_place(themes, entry.get("theme")))
     deferred = []
+
+    def sentence_place(parts_, base_place, label):
+        """موضعُ جملةٍ في السلّم، وتسجيلُ خطأِ كلِّ مفردةٍ خارج المعلَن.
+
+        القاعدة المُقرّة (الحزمة ٨): الجملة تظهر في **أوّل موضعٍ تكتمل فيه كلماتها**،
+        فأبعدُ بستانٍ تنتمي إليه كلمةٌ منها هو موضعُها.
+        """
+        place = base_place
+        for part in parts_:
+            root_stem = stem(part)
+            if root_stem in lex_place:
+                place = max(place, lex_place[root_stem])
+            elif bare(root_stem) in known or bare(part) in known:
+                pass                     # كلمة درسها في المنهج نفسه
+            elif root_stem in support_by_stem:
+                used_support.add(support_by_stem[root_stem])
+            else:
+                errors.append(f"{label}: «{part}» في الجملة ليست كلمةَ معجمٍ ولا منهجٍ "
+                              f"ولا في «{SUPPORT_FIELD}» (شغّل --fill-support بعد مراجعتها)")
+        return place
 
     # ١. البنية العامة
     if not isinstance(size, int) or size < 3:
@@ -360,22 +410,60 @@ def check(data: dict, letters: dict, known: set = None, quiet: bool = False) -> 
 
         # ٢هـ. معجم الجملة وموضعها في السلّم (الحزمة ٨): لا كلمة خارج المدروس،
         # والجملة تُؤجَّل إلى أبعد بستانٍ تنتمي إليه كلمةٌ من كلماتها.
-        place = theme_place(themes, entry["theme"])
-        for part in parts:
-            root_stem = stem(part)
-            if root_stem in lex_place:
-                place = max(place, lex_place[root_stem])
-            elif bare(root_stem) in known or bare(part) in known:
-                pass                     # كلمة درسها في المنهج نفسه
-            elif part in support_set:
-                used_support.add(part)
-            else:
-                errors.append(f"{label}: «{part}» في الجملة ليست كلمةَ معجمٍ ولا منهجٍ "
-                              f"ولا في «{SUPPORT_FIELD}» (شغّل --fill-support بعد مراجعتها)")
-        if place != theme_place(themes, entry["theme"]):
+        base = theme_place(themes, entry["theme"])
+        place = sentence_place(parts, base, label)
+        if place != base:
             deferred.append((word, entry["theme"], theme_id(themes, place)))
 
-    # ٢و. معجم الجمل المساند: معلَنٌ كلُّه مستعمَل (لا مفردة ميتة تمرّ بلا مراجعة)
+    # ٢و. الجمل المتدرجة (الحزمة ٩أ): ٣–٥ كلمات تُؤلَّف بمولّد مقيَّد
+    # (`tools/make_sentences.py`) لا بيد — والفاحص يحكم عليها بقواعد الجمل نفسها،
+    # ويزيد: هدفٌ من المعجم حاضرٌ في الجملة (هو صورتُها وفراغُ «أكمل الجملة»).
+    lex_by_word = {e.get("word"): e for e in words}
+    seen_sentences = set()
+    for e in words:                    # جملتان متطابقتان تُعرضان على الطفل مرّتين
+        text = str(e.get("sentence", ""))
+        if text in seen_sentences:
+            warnings.append(f"جملةُ «{e.get('word')}» تكرّرت نصّاً: «{text}» "
+                            "(مادّة الحزمة ٧ — تُراجَع من المدير)")
+        seen_sentences.add(text)
+    graded = {}
+    for i, entry in enumerate(data.get(SENTENCE_FIELD) or [], 1):
+        text = str(entry.get("text", "") or "").strip()
+        target = str(entry.get("word", "") or "").strip()
+        label = f"[جملة {i}/«{text or '?'}»]"
+        extra = sorted(set(entry) - {"text", "word"})
+        if extra:
+            errors.append(f"{label}: حقول زائدة: {'، '.join(extra)}")
+        if not text or not target:
+            errors.append(f"{label}: حقل ناقص (المطلوب: text وword)")
+            continue
+        if text in seen_sentences:
+            errors.append(f"{label}: جملة مكرَّرة")
+        seen_sentences.add(text)
+
+        parts = text.split()
+        if not LADDER_WORDS[0] <= len(parts) <= LADDER_WORDS[1]:
+            errors.append(f"{label}: {len(parts)} كلمة (المتدرّجة "
+                          f"{LADDER_WORDS[0]}–{LADDER_WORDS[1]} كلمات)")
+        for part in parts:
+            errors += text_errors(part, label, taught, letters, allowed)
+        graded[len(parts)] = graded.get(len(parts), 0) + 1
+
+        item = lex_by_word.get(target)
+        if item is None:
+            errors.append(f"{label}: هدفها «{target}» ليس كلمةَ معجم (لا صورة له)")
+            continue
+        # الهدف حاضرٌ بجذعه، أو بياء الإضافة عليه («أُخْتْ» ← «أُخْتِي») كما يتعرّفه
+        # `blankIndex` في `app/js/sentences.js` — وهما وجهان لقاعدة واحدة.
+        if not {stem(target), stem(target) + "ِي"} & {stem(p) for p in parts}:
+            errors.append(f"{label}: هدفها «{target}» غير حاضرٍ فيها "
+                          "(هو صورتُها وفراغُ «أكمل الجملة»)")
+        base = theme_place(themes, item.get("theme"))
+        place = sentence_place(parts, base, label)
+        if place != base:
+            deferred.append((text, item.get("theme"), theme_id(themes, place)))
+
+    # ٢ز. معجم الجمل المساند: معلَنٌ كلُّه مستعمَل (لا مفردة ميتة تمرّ بلا مراجعة)
     idle = sorted(support_set - used_support)
     if idle:
         errors.append(f"[{SUPPORT_FIELD}] {len(idle)} مفردة معلَنة لا تستعملها جملة: "
@@ -419,7 +507,10 @@ def check(data: dict, letters: dict, known: set = None, quiet: bool = False) -> 
           f"(جاهز: {len(audio_texts & have)})")
     print("  " + " · ".join(f"{t.get('emoji', '')}{t.get('title', '?')}: "
                             f"{by_theme.get(t.get('id'), 0)}" for t in themes))
-    print(f"الجمل: {len(words)} | معجمها المساند: {len(support_set)} مفردة "
+    ladder = data.get(SENTENCE_FIELD) or []
+    print(f"الجمل: {len(words)} من كلمتين + {len(ladder)} متدرّجة ("
+          + "، ".join(f"{n}: {c}" for n, c in sorted(graded.items())) + ") "
+          f"| معجمها المساند: {len(support_set)} مفردة "
           f"| مؤجَّلة إلى بستان لاحق: {len(deferred)}"
           + (" (" + "، ".join(f"«{w}» {a}←{b}" for w, a, b in deferred[:4])
              + ("…" if len(deferred) > 4 else "") + ")" if deferred else ""))
@@ -450,7 +541,7 @@ def dump(data: dict) -> str:
     j = lambda v: json.dumps(v, ensure_ascii=False)
     lines = ["{"]
     for key, value in data.items():
-        if key in ("themes", "words", SUPPORT_FIELD):
+        if key in ("themes", "words", SENTENCE_FIELD, SUPPORT_FIELD):
             lines.append(f"  {j(key)}: [")
             rows = [f"    {j(v)}" for v in value]
             lines.append(",\n".join(rows))
@@ -537,9 +628,10 @@ def self_test(letters: dict) -> int:
             "theme": "t", "emoji": "🔑", "sentence": "الْمِفْتَاحُ صَغِيرْ"}
     known = taught_words()
 
-    def run(entry_patch=None, words=None, support=("صَغِيرْ",), themes=(theme,)):
+    def run(entry_patch=None, words=None, support=("صَغِيرْ",), themes=(theme,), ladder=()):
         entry = {**good, **(entry_patch or {})}
         data = {"bundleSize": 1, "themes": list(themes),
+                SENTENCE_FIELD: list(ladder),
                 SUPPORT_FIELD: list(support),
                 "words": words if words is not None else [entry]}
         buf = io.StringIO()
@@ -600,6 +692,41 @@ def self_test(letters: dict) -> int:
                support=["صَغِيرْ", "فِي"], themes=(theme, late))
     ok("مؤجَّلة إلى بستان لاحق: 1" in both,
        "وجملةٌ تستعمل كلمةً من بستان لاحق تُؤجَّل إلى درجاته (لا تُعرض قبل تعلّمها)")
+
+    # ٤. الجمل المتدرّجة (الحزمة ٩أ): ٣–٥ كلمات، هدفُها كلمةُ معجمٍ حاضرةٌ فيها
+    long_ok = {"text": "الْمِفْتَاحُ الصَّغِيرُ فِي الْبَابْ", "word": "مِفْتَاحْ"}
+
+    def runl(ladder):     # جملةٌ متدرّجة فيها «فِي» ⇒ تُعلَن في المساند وإلا رُفضت
+        return run(ladder=ladder, support=("صَغِيرْ", "فِي"))
+
+    ok("[جملة" not in runl([long_ok]), "جملة متدرّجة سليمة لا يُسجَّل عليها خطأ")
+    ok("كلمة (المتدرّجة" in run(ladder=[{**long_ok, "text": "الْمِفْتَاحُ صَغِيرْ"}]),
+       "وجملةٌ من كلمتين في المتدرّجة تُمسَك (مادّتها ٣–٥)")
+    ok("بلا حركة" in run(ladder=[{**long_ok, "text": "المفتاح الصغير في الباب"}]),
+       "وجملةٌ غير مشكولة تُمسَك")
+    ok("ليس كلمةَ معجم" in runl([{**long_ok, "word": "مِصْبَاحْ"}]),
+       "وهدفٌ ليس كلمةَ معجمٍ يُمسَك (لا صورة له في «اقرأ ونفّذ»)")
+    ok("غير حاضرٍ فيها" in runl([{**long_ok, "text": "الْبَابُ الصَّغِيرُ فِي الدَّارْ"}]),
+       "وهدفٌ غائبٌ عن جملته يُمسَك (لا فراغَ لـ«أكمل الجملة»)")
+    ok("[جملة" not in run(ladder=[{"text": "مِفْتَاحُ الْبَابِ صَغِيرْ", "word": "مِفْتَاحْ"}]),
+       "والهدف يُعرَف بجذعه ولو مضافاً بلا «ال» (مِفْتَاحُ ← مِفْتَاحْ)")
+    ok("مكرَّرة" in runl([long_ok, dict(long_ok)]), "وجملةٌ متدرّجة مكرَّرة تُمسَك")
+    ok("مكرَّرة" in run(ladder=[{"text": good["sentence"], "word": "مِفْتَاحْ"}]),
+       "وتكرارُ جملةِ كلمةٍ في المتدرّجة يُمسَك (لا تُعرض على الطفل مرّتين)")
+    ok("حقول زائدة" in runl([{**long_ok, "mechanic": "read"}]),
+       "وحقلٌ زائد يُمسَك (الميكانيكية موضعٌ في السلّم لا بيانٌ مكتوب)")
+    ok("ليست كلمةَ معجمٍ" in runl([{**long_ok, "text": "الْمِفْتَاحُ الْجَدِيدُ فِي الْبَابْ"}]),
+       "ومفردةٌ خارج المعلَن في جملةٍ متدرّجة تُمسَك كما في جملة الكلمة")
+    ok("[جملة" not in runl([{**long_ok, "text": "الْبَابُ الصَّغِيرُ فِي الْمِفْتَاحْ"}]),
+       "— ولا يحكم الفاحص في المعنى: «الْبَابُ فِي الْمِفْتَاحْ» تمرّ عليه، "
+       "وردُّها مراجعةُ المدير بالعين (وهي ثالثةُ خطّ الإنتاج لا زائدةٌ عليه)")
+
+    ok(support_texts({"words": [good], SENTENCE_FIELD: [], SUPPORT_FIELD: ["صَغِيرْ"]},
+                     known) == ["صَغِيرْ"],
+       "والمساند المشتقّ يُبقي المعلَن الموقوف مكانَ صورته في الجملة (الصَّغِيرُ ← صَغِيرْ)")
+    ok(set(support_texts({"words": [good], SENTENCE_FIELD: [long_ok], SUPPORT_FIELD: []}, known))
+       == {"الصَّغِيرُ", "صَغِيرْ", "فِي"},
+       "وما لا معلَنَ له يُقترح بصورته ليُراجَع بالعين قبل إعلانه (الصَّغِيرُ)")
 
     print(f"\n{fails} فشل" if fails else "\n✓ الفاحص والمقطِّع يمسكان المخالفات كلها")
     return 1 if fails else 0

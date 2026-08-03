@@ -25,9 +25,9 @@ globalThis.localStorage = {
 
 const { GROUPS, SKILLS, QURAN, bareLetters, wordSkill, skillExamples } =
   await import(new URL('curriculum.js', APP));
-const { GARDENS, WORDS } = await import(new URL('lexicon.js', APP));
+const { GARDENS, GRADED, WORDS } = await import(new URL('lexicon.js', APP));
 const {
-  LADDERS, RUNGS, SENTENCES, MECHANICS, RUNG_MAX, stemOf, ladderOf, rungById,
+  LADDERS, RUNGS, SENTENCES, MECHANICS, RUNG_MAX, ORDER_MAX_WORDS, stemOf, ladderOf, rungById,
   orderPool, ladderTexts,
 } = await import(new URL('sentences.js', APP));
 const { buildBoard, starsForGame } = await import(new URL('words.js', APP));
@@ -46,8 +46,9 @@ function rng(seed) {
 
 // ————— ١. بنية السلّم —————
 
-ok(SENTENCES.length === WORDS.length,
-  `السلّم: ${SENTENCES.length} جملة في ${RUNGS.length} درجة على ${LADDERS.length} بساتين`);
+ok(SENTENCES.length === WORDS.length + GRADED.length && GRADED.length >= 150,
+  `السلّم: ${SENTENCES.length} جملة في ${RUNGS.length} درجة على ${LADDERS.length} بساتين `
+  + `(${WORDS.length} من كلمتين + ${GRADED.length} متدرّجة)`);
 ok(new Set(SENTENCES.map((s) => s.id)).size === SENTENCES.length,
   'كل جملة مرة واحدة في السلّم كله (لا تتكرّر ولا تسقط)');
 ok(RUNGS.every((r) => r.sentences.length && r.sentences.length <= RUNG_MAX),
@@ -101,7 +102,9 @@ ok(!p.isNodeUnlockedById(nodeIdOf(RUNGS[1].id)), 'والدرجة الثانية 
 // ————— ٣. لا كلمة خارج المدروس — بمقياس ترتيب الرحلة نفسه —————
 
 const data = JSON.parse(readFileSync(new URL('../app/data/lexicon.json', import.meta.url), 'utf8'));
-const support = new Set(data.support || []);
+// المطابقة بالجذع كما في `tools/check_lexicon.py`: المفردة المعلَنة موقوفةً («صَغِيرْ»)
+// تغطّي صورَها في الجملة («الصَّغِيرَةُ»)، فالمعلَن معجمُ أصولٍ لا جدولُ صرف.
+const support = new Map((data.support || []).map((t) => [stemOf(t), t]));
 const curriculum = new Set([
   ...GROUPS.flatMap((g) => g.words).map((w) => bareLetters(w.tiles.join(''))),
   ...SKILLS.flatMap(skillExamples).map((w) => bareLetters(w.say)),
@@ -129,7 +132,7 @@ for (const rung of RUNGS) {
       const stem = stemOf(word);
       if (known.has(stem)) continue;
       if (curriculum.has(bareLetters(stem)) || curriculum.has(bareLetters(word))) continue;
-      if (support.has(word)) { usedSupport.add(word); continue; }
+      if (support.has(stem)) { usedSupport.add(support.get(stem)); continue; }
       bad(`[${rung.id}] «${word}» في «${sentence.text}» خارج حصيلة الطفل عند هذه الدرجة`);
     }
   }
@@ -137,6 +140,8 @@ for (const rung of RUNGS) {
 ok(true, `لا كلمة خارج المدروس في السلّم كله (${checkedWords} كلمة مفحوصة بترتيب الرحلة)`);
 ok(usedSupport.size === support.size && support.size > 0,
   `والمعجم المساند المعلَن مستعمَل كلُّه (${usedSupport.size}/${support.size} مفردة)`);
+ok(support.size === (data.support || []).length,
+  'ولا مفردتان مساندتان بجذعٍ واحد (وإلا غطّت إحداهما الأخرى فبقيت ميتةً بلا كشف)');
 
 const deferred = SENTENCES.filter((s) => s.rung.garden.id !== s.target.theme);
 ok(deferred.length > 0 && deferred.every((s) => {
@@ -145,11 +150,37 @@ ok(deferred.length > 0 && deferred.every((s) => {
     || known.has(stemOf(w)));
 }), `وجملةٌ تستعمل كلمةً من بستان لاحق أُجِّلت إلى درجاته (${deferred.length} جملة)`);
 
-// ————— ٤. الميكانيكيات الثلاث بالتناوب —————
+// ————— ٤. التدرّج: كلمتان ← ثلاث ← أربع فخمس (بند الحزمة ٩أ) —————
 
+const lens = (rung) => rung.sentences.map((s) => s.words.length);
+const rising = LADDERS.filter((l) => l.rungs.every((r, i) => !i
+  || Math.max(...lens(r)) >= Math.max(...lens(l.rungs[i - 1]))));
+ok(rising.length === LADDERS.length,
+  `طولُ الجملة لا يقصر كلما صعد الطفل درجةً — في البساتين العشرة كلها `
+  + `(${LADDERS[0].rungs.map((r) => `${Math.min(...lens(r))}–${Math.max(...lens(r))}`).join(' ← ')} في ${LADDERS[0].id})`);
+
+const graded = LADDERS.filter((l) => l.rungs.some((r) => lens(r).every((n) => n === 2))
+  && l.rungs.some((r) => lens(r).some((n) => n === 3))
+  && l.rungs.some((r) => lens(r).every((n) => n >= 4)));
+ok(graded.length === LADDERS.length,
+  `ولكل بستان درجاتُ الكلمتين ثم الثلاث ثم الأربع فأكثر (${graded.length}/${LADDERS.length} بستان)`);
+ok(LADDERS.every((l) => l.rungs[0].sentences.every((s) => s.words.length === 2))
+  && LADDERS.every((l) => l.rungs.at(-1).sentences.some((s) => s.words.length >= 5)),
+  'وأولى درجاته كلمتان، وآخرتها تبلغ الخمس');
+ok(SENTENCES.filter((s) => s.words.length >= 4).length >= GRADED.length / 2
+  && SENTENCES.every((s) => s.words.length >= 2 && s.words.length <= 5),
+  `والمادّة كلها بين كلمتين وخمس (${[2, 3, 4, 5].map((n) => `${n}: ${SENTENCES.filter((s) => s.words.length === n).length}`).join('، ')})`);
+
+// ————— ٥. الميكانيكيات الثلاث بالتناوب —————
+
+ok(SENTENCES.every((s) => s.mechanic !== 'order' || s.words.length <= ORDER_MAX_WORDS),
+  `«رتّب الجملة» لا تتجاوز ${ORDER_MAX_WORDS} كلمات (ستُّ بلاطاتٍ تُرهق طفل السادسة)`);
+ok(RUNGS.every((r) => r.sentences.every((s, i) => i === 0 || r.sentences[i - 1].mechanic !== s.mechanic)),
+  'ولا تتجاور جملتان بميكانيكية واحدة');
 const cycle = RUNGS.every((r) => r.sentences.every((s, i) => i === 0
+  || s.words.length > ORDER_MAX_WORDS || r.sentences[i - 1].words.length > ORDER_MAX_WORDS
   || MECHANICS[(MECHANICS.indexOf(r.sentences[i - 1].mechanic) + 1) % 3] === s.mechanic));
-ok(cycle, 'الميكانيكيات تتناوب واحدةً بعد أخرى داخل كل درجة');
+ok(cycle, 'والدورة الثلاثية قائمةٌ حيث تصلح الثلاث (والطويلة تتخطّى «رتّب» وحدها)');
 const counts = Object.fromEntries(MECHANICS.map((m) => [m, SENTENCES.filter((s) => s.mechanic === m).length]));
 ok(MECHANICS.every((m) => counts[m] >= SENTENCES.length / 4),
   `والثلاث متوازنة في السلّم: لا واحدة دون ربع الجمل `

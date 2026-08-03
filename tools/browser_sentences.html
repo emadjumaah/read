@@ -213,12 +213,26 @@ async function playFill(sentence, { mistake = false, verbose = false } = {}) {
 }
 
 /** يلعب درجةً كاملةً بميكانيكياتها الثلاث — بأخطاء مقصودة معدودة. */
+/** كم كلمةً تعرضها الشاشة الآن؟ خاناتُ «رتّب»، أو أجزاءُ سطر الجملة في سواها. */
+function shownWords() {
+  const slots = $$('.slot--word');
+  if (slots.length) return slots.length;
+  const line = $('.sentence');
+  return line ? line.children.length : 0;
+}
+
+const shownMismatch = [];   // الشاشةُ تعرض غيرَ كلمات الجملة — يُبلَّغ مرّةً في الختام
+
 async function playRung(rung, { mistakes = [], verbose = false } = {}) {
   const plays = { read: playRead, order: playOrder, fill: playFill };
   const seen = new Set();
   for (let i = 0; i < rung.sentences.length; i++) {
     const sentence = rung.sentences[i];
     await waitFor(() => $$('.dot--now').length === 1, `الجملة ${i + 1}`);
+    await waitFor(() => shownWords() > 0, `سطر الجملة ${i + 1}`);
+    if (shownWords() !== sentence.words.length) {
+      shownMismatch.push(`${rung.id}/${i + 1}: ${shownWords()} ≠ ${sentence.words.length}`);
+    }
     const first = verbose && !seen.has(sentence.mechanic);
     seen.add(sentence.mechanic);
     await plays[sentence.mechanic](sentence, { mistake: mistakes.includes(i), verbose: first });
@@ -298,6 +312,34 @@ try {
   await waitFor(() => $('.station'), 'العودة للخريطة');
   ok($$('.station--ladder')[1].querySelectorAll('.node--done').length === 1,
     'والخريطة تُظهر الدرجة المُنجَزة في سلّمها');
+
+  // ————— ٤ب) التدرّج في متصفّح حقيقي: ٢ ← ٣ ← ٤/٥ في بستانين (بند الحزمة ٩أ) —————
+  const lens = (r) => r.sentences.map((s) => s.words.length);
+  for (const ladder of [LADDERS[0], LADDERS[1]]) {
+    const top = ladder.rungs.at(-1);
+    const mid = ladder.rungs.find((r) => Math.min(...lens(r)) === 3) || ladder.rungs.at(-2);
+    ok(Math.max(...lens(ladder.rungs[0])) === 2 && Math.min(...lens(top)) >= 4,
+      `سلّم ${ladder.garden.title}: أولى درجاته كلمتان (${arNum(ladder.rungs[0].sentences.length)} جمل) `
+      + `وآخرتها ${lens(top).join('،')} كلمات`);
+
+    for (const rung of [mid, top]) {
+      await seed(idsBefore(`ladder:${rung.id}`));
+      await goto(`#/ladder/${encodeURIComponent(rung.id)}`);
+      await waitFor(() => $('.ladder'), `شاشة الدرجة ${rung.id}`);
+      ok($('.pill').textContent.includes(`درجة ${arNum(rung.index)}`),
+        `درجة ${arNum(rung.index)} من ${ladder.garden.title}: `
+        + `${arNum(rung.sentences.length)} جمل من ${lens(rung).join('،')} كلمات — `
+        + rung.sentences.map((s) => MECHANIC_TITLES[s.mechanic]).join('، '));
+      if (rung === top) checkTargets(`درجة الجمل الطويلة (${ladder.garden.title})`);
+      await playRung(rung, {});
+      ok($$('.big-stars .on').length === 3 && stored().stars[`ladder:${rung.id}`] === 3,
+        `ولُعبت كاملةً بلا خطأ ⇒ ثلاث نجوم محفوظة`);
+    }
+  }
+  ok(shownMismatch.length === 0,
+    `وكل جملة عُرضت بكلماتها كلها على الشاشة${shownMismatch.length ? ' — ' + shownMismatch.join('، ') : ''}`);
+  ok(LADDERS.every((l) => l.rungs.at(-1).sentences.some((s) => s.words.length === 5)),
+    'وفي آخر درجةٍ من كل بستان جملةٌ من خمس كلمات');
 
   // ————— ٥) المراجعة تلقّفت مهارة الترتيب —————
   await goto('#/review');

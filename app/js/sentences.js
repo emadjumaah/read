@@ -1,9 +1,14 @@
-// «سلّم الجمل» — طبقة البيانات (الحزمة ٨ · ROADMAP §المرحلة ج).
+// «سلّم الجمل» — طبقة البيانات (الحزم ٨ و٩أ · ROADMAP §المرحلة ج).
 //
-// **المادّة مدّخرة من الحزمة ٧ ولا تُؤلَّف هنا**: لكل كلمة من كلمات المعجم جملةُ مثالٍ
-// مشكولةٌ مفحوصةُ المفكوكية في `app/data/lexicon.json`، كُتبت هناك ولم تُعرض ولا تُنطق
-// (قرار الحزمة ٧ الخامس: موضعها «سلّم الجمل»). هذا الملف يرتّبها سلّماً لا أكثر:
-// درجاتٍ بعد كل بستان، ولكل جملةٍ ميكانيكيتُها بالتناوب.
+// **المادّة كلها في `app/data/lexicon.json` ولا تُؤلَّف هنا**، وهي مصدران:
+//   ١) جملةُ مثالٍ لكل كلمة معجم (الحزمة ٧) — **كلمتان**، مدّخرةٌ مفحوصة؛
+//   ٢) **الجمل المتدرّجة** (الحزمة ٩أ) — ٣–٥ كلمات، تُؤلَّف بمولّد مقيَّد
+//      (`tools/make_sentences.py`) لا بيد، ويرفض `check_lexicon.py` ما خالف العقد.
+// هذا الملف يرتّبهما سلّماً لا أكثر: درجاتٍ بعد كل بستان، ولكل جملةٍ ميكانيكيتُها.
+//
+// **التدرّج داخل السلّم** (بند الحزمة ٩أ): جمل البستان تُرتَّب بالطول قبل تقسيمها
+// درجاتٍ — فالدرجات الأولى كلمتان، ثم ثلاث، ثم أربع وخمس. والترتيب **ثابتٌ** (فرزٌ
+// مستقرّ على الطول وحده)، فموضع كل جملة معروفٌ سلفاً كما تعرفه قائمة الصوت.
 //
 // **قاعدة موضع الجملة** (امتداد قاعدة الجلسة ٤ في مواضع دروس المهارات): الجملة تظهر
 // في أوّل موضعٍ تكون فيه كلماتها كلها مدروسة. فجملةٌ من بستان «البيت» تستعمل كلمةً من
@@ -14,13 +19,21 @@
 // فيُعرف سلفاً أيُّ نصٍّ سيُنطق — وعليه تُبنى قائمة الانتظار الصوتية بلا تخمين.
 
 import { bareLetters } from './curriculum.js';
-import { GARDENS, WORDS } from './lexicon.js';
+import { GARDENS, GRADED, WORDS } from './lexicon.js';
 
 /** أكثر ما تحمله الدرجة الواحدة من جمل — حلقةٌ في دقائق كالباقة (٢٥ جملة تُرهق طفلاً). */
 export const RUNG_MAX = 9;
 
 /** الميكانيكيات الثلاث بترتيب تناوبها (بند الحزمة ٨). */
 export const MECHANICS = ['read', 'order', 'fill'];
+
+/**
+ * أطولُ جملةٍ تُعطى ميكانيكية «رتّب» (الحزمة ٩أ): الترتيب يُقرأ كلمةً كلمة ثم تُوضع،
+ * وجملةُ خمسِ كلماتٍ تصير ستَّ بلاطاتٍ أو سبعاً — نشاطٌ يُرهق طفل السادسة ويُطيل
+ * الدرجة. فالطويلة تدور بين «اقرأ ونفّذ» و«أكمل الجملة»، وهما عين ما تُحسنه:
+ * سياقٌ أطول ⇒ جوابٌ **مقروءٌ** لا مخمَّن (وهي علّة تأليف هذه المادة أصلاً).
+ */
+export const ORDER_MAX_WORDS = 3;
 
 export const MECHANIC_TITLES = {
   read: 'اقرأ ونفّذ',
@@ -60,10 +73,21 @@ for (const word of WORDS) {
   if (!stemGarden.has(stem)) stemGarden.set(stem, gardenIndex.get(word.theme) ?? 0);
 }
 
-/** موضع الجملة: أبعدُ بستانٍ تنتمي إليه كلمةٌ من كلماتها (وبستانُها أدناه). */
-function placeOf(entry) {
-  let place = gardenIndex.get(entry.theme) ?? 0;
-  for (const token of sentenceWords(entry.sentence)) {
+/**
+ * مادّة السلّم موحَّدةً من مصدريها: جملةُ كلِّ كلمةٍ (كلمتان) ثم الجملُ المتدرّجة
+ * (٣–٥). لكلٍّ نصُّها وهدفُها — والهدف صورةُ الجملة وفراغُ «أكمل الجملة».
+ */
+// المعرّف بنيويّ لا نصّي: نصّان في الحزمة ٧ متطابقان («الْمَوْزُ أَصْفَرْ» جملةُ
+// «مَوْزْ» و«أَصْفَرْ» معاً)، فالنصّ لا يصلح معرّفاً — والفاحص ينبّه عليهما.
+const MATERIAL = [
+  ...WORDS.map((word) => ({ id: word.word, text: word.sentence, target: word })),
+  ...GRADED.map((entry, i) => ({ id: `graded:${i + 1}`, ...entry })),
+].filter((item) => item.text && item.target);
+
+/** موضع الجملة: أبعدُ بستانٍ تنتمي إليه كلمةٌ من كلماتها (وبستانُ هدفها أدناه). */
+function placeOf(item) {
+  let place = gardenIndex.get(item.target.theme) ?? 0;
+  for (const token of sentenceWords(item.text)) {
     const garden = stemGarden.get(stemOf(token));
     if (garden !== undefined && garden > place) place = garden;
   }
@@ -86,36 +110,42 @@ function chunk(list, max) {
  * موضع الكلمة المصوَّرة في جملتها — هي فراغ «أكمل الجملة» وصاحبة صورتها.
  * تُطابَق بجذعها، وإلا فبما بُني عليه («أُخْتْ» ← «أُخْتِي» بياء الإضافة).
  */
-function blankIndex(entry, words) {
-  const stem = stemOf(entry.word);
+function blankIndex(target, words) {
+  const stem = stemOf(target.word);
   const exact = words.findIndex((w) => stemOf(w) === stem);
   return exact >= 0 ? exact : words.findIndex((w) => stemOf(w).startsWith(stem));
 }
 
+// جمل كل بستان مرتَّبةً **بالطول** — به يتدرّج سلّمه: كلمتان ← ثلاث ← أربع فخمس.
+// الفرز مستقرّ، فالمتساويات تبقى بترتيب مصدرها (لا عشوائية في موضع جملة).
 const byPlace = GARDENS.map(() => []);
-for (const entry of WORDS) byPlace[placeOf(entry)]?.push(entry);
+for (const item of MATERIAL) byPlace[placeOf(item)]?.push(item);
+for (const list of byPlace) list.sort((a, b) => sentenceWords(a.text).length - sentenceWords(b.text).length);
 
 let serial = 0;   // ترتيب الدرجة في السلّم كله — به تدور الميكانيكيات فلا تبدأ الدرجات كلها بواحدة
 
 /**
  * السلالم: سلّمٌ لكل بستان، ودرجاته عقدٌ على الخريطة بعد باقاته.
- * كل درجة: جملٌ لكل واحدة ميكانيكيتها ({read, order, fill} بالتناوب).
+ * كل درجة: جملٌ لكل واحدة ميكانيكيتها ({read, order, fill} بالتناوب) — والدورة
+ * **تتخطّى «رتّب» في الجملة الطويلة** (≥٤ كلمات) فتبقى دورةَ اثنتين هناك. وبهذا
+ * لا تتجاور جملتان بميكانيكية واحدة أبداً: العدّاد يتقدّم عند كل جملة.
  */
 export const LADDERS = GARDENS.map((garden, index) => {
   const ladder = { id: garden.id, garden, rungs: [] };
   ladder.rungs = chunk(byPlace[index], RUNG_MAX).map((slice, i) => {
     const rung = { id: `${garden.id}:${i + 1}`, index: i + 1, garden, ladder, sentences: [] };
-    const start = serial++;
-    rung.sentences = slice.map((entry, k) => {
-      const words = sentenceWords(entry.sentence);
+    let turn = serial++;
+    rung.sentences = slice.map((item) => {
+      const words = sentenceWords(item.text);
+      while (MECHANICS[turn % MECHANICS.length] === 'order' && words.length > ORDER_MAX_WORDS) turn++;
       return {
-        id: entry.word,
+        id: item.id,
         rung,
-        target: entry,
-        text: entry.sentence,
+        target: item.target,
+        text: item.text,
         words,
-        blank: blankIndex(entry, words),
-        mechanic: MECHANICS[(start + k) % MECHANICS.length],
+        blank: blankIndex(item.target, words),
+        mechanic: MECHANICS[turn++ % MECHANICS.length],
       };
     });
     return rung;

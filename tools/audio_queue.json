@@ -6582,5 +6582,2173 @@
     "priority": 100,
     "status": "pending",
     "doneAt": null
+  },
+  {
+    "text": "السَّاعَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "السِّكِّينُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "حَادَّةْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقِدْرُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "سَاخِنْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمِكْنَسَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْغُرْفَةْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الصَّابُونُ فِي الْحَمَّامْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَاءُ فِي الْكُوبْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْوِسَادَةُ فَوْقَ السَّرِيرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "السَّاعَةُ فَوْقَ الْجِدَارْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "فَوْقَ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْجِدَارْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمِكْنَسَةُ خَلْفَ الْبَابْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقِدْرُ فِي الْمَطْبَخْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمِفْتَاحُ تَحْتَ الْوِسَادَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْوِسَادَةْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "التِّلْفَازُ أَمَامَ الْمَقْعَدْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمِلْعَقَةُ الصَّغِيرَةُ فِي الصَّحْنْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمِصْبَاحُ الْمُنِيرُ فَوْقَ الْخِزَانَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمِرْوَحَةُ تَدُورُ فِي الْغُرْفَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "السَّلَّةُ الْكَبِيرَةُ تَحْتَ الْمَقْعَدْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحَدِيقَةُ الْوَاسِعَةُ خَلْفَ الْبَيْتْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "السِّكِّينُ الْحَادَّةُ فِي خِزَانَةِ الْمَطْبَخْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "مِفْتَاحُ الْبَيْتِ تَحْتَ وِسَادَةِ السَّرِيرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمِظَلَّةُ الْمَفْتُوحَةُ أَمَامَ بَابِ الْبَيْتْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أَخِي",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الرَّجُلُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمُهَنْدِسُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "يَبْنِي",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْعَجُوزُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "يَمْشِي",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْأُسْرَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "خَالِي",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أَبِي يَقْرَأُ الْكِتَابْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أُمِّي تَغْسِلُ الصَّحْنْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الضَّيْفُ عِنْدَ الْبَابْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "عِنْدَ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْجَارُ أَمَامَ الدَّارْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "النَّجَّارُ يَصْنَعُ الْمَقْعَدْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمُهَنْدِسُ يَبْنِي الْجِدَارْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْأُسْرَةُ فِي الْحَدِيقَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحَفِيدُ يُسَاعِدُ الْجَدَّةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "جَدِّي يَجْلِسُ فِي الْحَدِيقَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الطِّفْلُ يَنَامُ فِي السَّرِيرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أُخْتِي تَجْلِسُ فَوْقَ الْمَقْعَدْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الرَّجُلُ الْكَبِيرُ يَفْتَحُ الْبَابْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الصَّيَّادُ الصَّبُورُ عِنْدَ الْبَحْرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "صَدِيقِي الْمَاهِرُ يَرْسُمُ فِي الْغُرْفَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "جَدَّةُ الطِّفْلِ تَجْلِسُ فَوْقَ الْمَقْعَدْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْعَجُوزُ الطَّيِّبُ يَجْلِسُ أَمَامَ الْبَابْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "رَأْسِي",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "فَمِي",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "قَدَمِي",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "وَجْهِي",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "صَوْتِي",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الصِّحَّةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "غَالِيَةْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "النَّوْمُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "مُرِيحْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْأَسْنَانُ فِي الْفَمْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْأَسْنَانُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْفَمْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشَّعْرُ فَوْقَ الرَّأْسْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشَّعْرُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الرَّأْسْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْعَرَقُ فِي الْوَجْهْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الدَّمْعُ فِي الْعَيْنْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحُقْنَةُ فِي الذِّرَاعْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحُقْنَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الذِّرَاعْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الطَّبِيبُ يُعَالِجُ الْمَرَضْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْأُذُنُ تَسْمَعُ الصَّوْتْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الدَّمُ فِي الْقَلْبْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الدَّمُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقَلْبْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْأَسْنَانُ النَّظِيفَةُ فِي الْفَمْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أُذُنِي تَسْمَعُ صَوْتَ أُمِّي",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الطَّبِيبُ يَنْظُرُ فِي الْأُذُنْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحُقْنَةُ السَّرِيعَةُ فِي الذِّرَاعْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْعَظْمُ الصُّلْبُ تَحْتَ الْكَتِفْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الطَّبِيبُ الْمَاهِرُ يَنْظُرُ فِي أَسْنَانِي",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحُقْنَةُ السَّرِيعَةُ تُعَالِجُ الْمَرَضَ الصَّعْبْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الطَّبِيبُ الطَّيِّبُ يَنْظُرُ فِي ضِرْسِي",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشُّورْبَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "سَاخِنَةْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْفَرَاوِلَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الطَّمَاطِمُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشَّايُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشُّوكُولَاتَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "حُلْوَةْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْخُبْزُ فِي السَّلَّةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْعَصِيرُ فِي الْكُوبْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "اللَّحْمُ فِي الْقِدْرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "اللَّحْمُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقِدْرْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الزُّبْدَةُ فَوْقَ الْخُبْزْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمِلْحُ فِي الشُّورْبَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أُمِّي تَطْبُخُ السَّمَكْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "تَطْبُخُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أَخِي يَأْكُلُ الْمَوْزْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "جَدِّي يَشْرَبُ الْقَهْوَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "التُّفَّاحَةُ الْحَمْرَاءُ فِي الصَّحْنْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشُّورْبَةُ السَّاخِنَةُ فِي الْقِدْرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْبَطِّيخُ الْكَبِيرُ فَوْقَ الْمَقْعَدْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أُخْتِي تَأْكُلُ الْكَعْكَ اللَّذِيذْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أُمِّي تَطْبُخُ الْفُولَ السَّاخِنْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أُخْتِي تَقْطِفُ الْفَرَاوِلَةَ فِي الْحَدِيقَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْخَبَّازُ الْمَاهِرُ يَصْنَعُ الْخُبْزَ السَّاخِنْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "التَّاجِرُ الْكَرِيمُ يَبِيعُ الْبُرْتُقَالَ الْحُلْوْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحِصَانُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "النَّمِرُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "يَجْرِي",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "التِّمْسَاحُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "خَطِيرْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الطَّاوُوسُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "مُلَوَّنْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْعُصْفُورُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "يُغَرِّدْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْفَرَاشَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "مُلَوَّنَةْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْعَنْكَبُوتُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَاعِزُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "يَأْكُلْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الدُّلْفِينُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "يَسْبَحْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقِطَّةُ تَشْرَبُ الْحَلِيبْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْأَرْنَبُ يَأْكُلُ الْجَزَرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقِرْدُ يَأْكُلُ الْمَوْزْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقِرْدُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "يَأْكُلُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَوْزْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "النَّحْلَةُ فَوْقَ الْوَرْدَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَاعِزُ يَأْكُلُ التِّينْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحِصَانُ أَمَامَ الدَّارْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أَمَامَ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْفَأْرُ تَحْتَ الْمَقْعَدْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْعُصْفُورُ فَوْقَ النَّافِذَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "السِّنْجَابُ يَقْفِزُ فَوْقَ الشَّجَرَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْبَطَّةُ تَسْبَحُ فِي الْمَاءْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقِطَّةُ الصَّغِيرَةُ فِي السَّلَّةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْفَرَاشَةُ الْمُلَوَّنَةُ فَوْقَ الْوَرْدَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الدُّلْفِينُ يَسْبَحُ فِي الْبَحْرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْبُومَةُ الْكَبِيرَةُ تَنْظُرُ مِنَ النَّافِذَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْعُصْفُورُ الصَّغِيرُ يُغَرِّدُ فَوْقَ الشَّجَرَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "السُّلَحْفَاةُ الصَّبُورَةُ تَمْشِي أَمَامَ الْبَابْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقَمَرُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "مُنِيرْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الثَّلْجُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الزَّهْرَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْبَرْقُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "لَامِعْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْجَزِيرَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقَمَرُ فَوْقَ الْجَبَلْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الزَّهْرَةُ فِي الْحَدِيقَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الثَّلْجُ فَوْقَ الْجَبَلْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْجَبَلْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "النَّخْلَةُ فِي الْجَزِيرَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْكَهْفُ فِي الْجَبَلْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْجَذْرُ تَحْتَ الرَّمْلْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الرَّمْلْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الرَّمْلُ عِنْدَ الْبَحْرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْوَرَقُ فَوْقَ الْعُشْبْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْعُشْبُ النَّاعِمُ فِي الْحَقْلْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "النَّخْلَةُ الْعَالِيَةُ فِي الْجَزِيرَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْكَهْفُ الْمُظْلِمُ فِي الْجَبَلْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الرِّيحُ الْقَوِيَّةُ فَوْقَ الْبَحْرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحَجَرُ الصُّلْبُ تَحْتَ التُّرَابْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشَّلَّالُ الْجَمِيلُ يَنْزِلُ فِي النَّهْرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الظَّلَامُ الْحَالِكُ فِي كَهْفِ الْجَبَلْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْعَاصِفَةُ الْقَوِيَّةُ تَحْمِلُ الرَّمْلَ الْكَثِيرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الدَّفْتَرُ فِي الْحَقِيبَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أُخْتِي تَقْرَأُ الْقِصَّةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أُخْتِي",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "تَقْرَأُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقِصَّةْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمِمْحَاةُ فِي الْمَقْلَمَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْخَرِيطَةُ فَوْقَ الْجِدَارْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْجَرَسُ فِي الْمَدْرَسَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْجَرَسُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَدْرَسَةْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْوَاجِبُ فِي الدَّفْتَرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الطَّبَاشِيرُ فَوْقَ اللَّوْحْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشَّهَادَةُ فِي الْحَقِيبَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشَّهَادَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحَقِيبَةْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمُعَلِّمُ يَكْتُبُ فَوْقَ اللَّوْحْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "التِّلْمِيذُ يَجْلِسُ فِي الْمَكْتَبَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمِسْطَرَةُ الطَّوِيلَةُ فِي الْمَقْلَمَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحَقِيبَةُ الثَّقِيلَةُ فَوْقَ الْمَقْعَدْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "التِّلْمِيذُ الْمَاهِرُ يَرْسُمُ النَّخْلَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "التِّلْمِيذُ الْمُجْتَهِدُ يَقْرَأُ الْقِصَّةَ الْجَمِيلَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "مُعَلِّمُ الْمَدْرَسَةِ يَشْرَحُ الْحِسَابَ السَّهْلْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَكْتَبَةُ الْكَبِيرَةُ أَمَامَ حَدِيقَةِ الْمَدْرَسَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمِعْطَفُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقُفَّازُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "نَاعِمْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْخَاتَمُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "التَّاجُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْإِبْرَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الصُّوفُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْجَيْبُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الطَّاقِيَّةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقَمِيصُ فِي الْخِزَانَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْجَزْمَةُ تَحْتَ السَّرِيرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْخَاتَمُ فِي الْمِحْفَظَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمِحْفَظَةْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقُبَّعَةُ فَوْقَ الرَّأْسْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْخَيْطُ فِي الْإِبْرَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الصُّوفُ فِي الصُّنْدُوقْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الصُّنْدُوقْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "النَّعْلُ تَحْتَ الْمَقْعَدْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الرَّبْطَةُ فَوْقَ الْقَمِيصْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْجَوْرَبُ الصَّغِيرُ فِي الْحَقِيبَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الصُّنْدُوقُ الثَّقِيلُ فَوْقَ الْخِزَانَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْوِشَاحُ الطَّوِيلُ فَوْقَ الْمَقْعَدْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقُفَّازُ النَّاعِمُ فِي الْجَيْبْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "جَدِّي يَلْبَسُ النَّظَّارَةَ الْجَدِيدَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أُخْتِي تَغْسِلُ الْفُسْتَانَ فِي الْحَمَّامْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "مِحْفَظَةُ أُمِّي فَوْقَ خِزَانَةِ الْغُرْفَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْجَزْمَةُ السَّوْدَاءُ الْجَدِيدَةُ تَحْتَ السَّرِيرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "السَّيَّارَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "سَرِيعَةْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الطَّيَّارَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "عَالِيَةْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشَّارِعُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَطَارُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَتْحَفُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الطَّرِيقُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الصَّيْدَلِيَّةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "النَّفَقُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحَافِلَةُ فِي الْمَحَطَّةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَحَطَّةْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "السَّفِينَةُ فِي الْبَحْرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْجِسْرُ فَوْقَ النَّهْرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الطَّيَّارَةُ فَوْقَ السَّحَابْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "السَّحَابْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْقَارِبُ فِي النَّهْرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَسْجِدُ أَمَامَ السُّوقْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْخَبَّازُ فِي الْمَخْبَزْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْخَبَّازُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَخْبَزْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "النَّفَقُ تَحْتَ الْجِسْرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أُمِّي تَشْتَرِي مِنَ السُّوقْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "أَخِي يَرْكَبُ الدَّرَّاجَةَ الْجَدِيدَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَتْحَفُ الْجَمِيلُ أَمَامَ الْمَلْعَبْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْفَلَّاحُ يَزْرَعُ فِي الْمَزْرَعَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "السَّيَّارَةُ تَقِفُ أَمَامَ الْمَطْعَمْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الطَّبِيبُ الْمَاهِرُ يَعْمَلُ فِي الْعِيَادَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحَافِلَةُ الْكَبِيرَةُ تَقِفُ فِي الْمَحَطَّةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْبُرْجُ الْمُرْتَفِعُ أَمَامَ مَحَطَّةِ الْقِطَارْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْكُرَةُ فِي الْمَلْعَبْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْكُرَةُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَلْعَبْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الدُّمْيَةُ فَوْقَ السَّرِيرْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الطَّبْلُ فِي الْمَلْعَبْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "النَّرْدُ فَوْقَ الْمَقْعَدْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "النَّرْدُ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمَقْعَدْ",
+    "category": "story_word",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْهَدِيَّةُ فِي الصُّنْدُوقْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الصُّورَةُ فَوْقَ الْجِدَارْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الشَّمْعَةُ فِي الْغُرْفَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحَاسُوبُ فَوْقَ الْمَكْتَبْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْبَالُونُ الْأَحْمَرُ فَوْقَ الشَّجَرَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْمُكَعَّبُ الْأَزْرَقُ تَحْتَ الْمَقْعَدْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْأُرْجُوحَةُ الْعَالِيَةُ فِي الْحَدِيقَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْكَأْسُ اللَّامِعَةُ فَوْقَ الْخِزَانَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الْحَبْلُ الطَّوِيلُ فِي الصُّنْدُوقْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "التِّلْمِيذُ الْمُجْتَهِدُ يَحْفَظُ النَّشِيدَ الْجَمِيلْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "جَدِّي يَضَعُ الْعُودَ فِي الْخِزَانَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
+  },
+  {
+    "text": "الصُّورَةُ الْمُلَوَّنَةُ فَوْقَ جِدَارِ الْغُرْفَةْ",
+    "category": "sentence",
+    "requestedBy": "session-9a",
+    "priority": 100,
+    "status": "pending",
+    "doneAt": null
   }
 ]

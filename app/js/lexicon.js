@@ -60,6 +60,16 @@ export const GARDENS = (DATA.themes || []).map((theme) => {
   return garden;
 });
 
+/**
+ * **الجمل المتدرّجة** (٣–٥ كلمات — الحزمة ٩أ): مادّةٌ مستقلّة عن جملة الكلمة الواحدة
+ * (كلمتان)، بها يتدرّج سلّم الجمل فعلاً كما أرادت الخارطة §المرحلة ج.
+ * تُؤلَّف بمولّد مقيَّد (`tools/make_sentences.py`) لا تُكتب بيد، ويحرسها الفاحص.
+ * `word` هدفُ الجملة: كلمةُ معجمٍ حاضرةٌ فيها — صورتُها وفراغُ «أكمل الجملة».
+ */
+export const GRADED = (DATA.sentences || [])
+  .map((entry) => ({ text: entry.text, target: WORDS.find((w) => w.word === entry.word) }))
+  .filter((entry) => entry.text && entry.target);
+
 export const gardenById = (id) => GARDENS.find((g) => g.id === id) || null;
 
 export const bundleById = (id) => GARDENS.flatMap((g) => g.bundles).find((b) => b.id === id) || null;
