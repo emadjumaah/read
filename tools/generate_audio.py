@@ -20,6 +20,7 @@
 import argparse
 import asyncio
 import base64
+import collections
 import datetime
 import hashlib
 import json
@@ -38,6 +39,7 @@ CURRICULUM = ROOT / "app" / "js" / "curriculum.js"
 OUT_DIR = ROOT / "app" / "audio"
 ENV_FILE = ROOT / ".env"
 QUEUE_FILE = ROOT / "tools" / "audio_queue.json"
+RECITATIONS_FILE = ROOT / "tools" / "recitations.json"   # يكتبه tools/fetch_recitation.py
 TODAY = datetime.date.today().isoformat()
 
 HARAKAT = {"fatha": "َ", "kasra": "ِ", "damma": "ُ"}
@@ -45,6 +47,17 @@ HARAKAT = {"fatha": "َ", "kasra": "ِ", "damma": "ُ"}
 GEMINI_HOST = "https://generativelanguage.googleapis.com"
 DEFAULT_MODEL = "gemini-3.1-flash-tts-preview"
 DEFAULT_VOICE = "Sulafat"          # اختيار المالك بالأذن (٢ أغسطس ٢٠٢٦) بعد صفحة المفاضلة
+
+# ————— سياسة النماذج الثلاثة (docs/AUDIO_QUEUE.md — قرار المالك ٤ أغسطس ٢٠٢٦) —————
+# ثلاث حصص مستقلة بنفس الصوت Sulafat، والتقسيم **بالمحتوى** كي لا يقع اختلاف مسحة
+# صوتية داخل التمرين الواحد. نفاد حصة نموذج لا يوقف النموذجين الآخرين.
+MODEL_CORE = "gemini-3.1-flash-tts-preview"      # نواة المرحلة أ + العاجل (١٠٠/يوم)
+MODEL_LEXICON = "gemini-2.5-flash-preview-tts"   # كلمات المعجم ومقاطعها (١٠٠/يوم)
+MODEL_SENTENCE = "gemini-2.5-pro-preview-tts"    # الجمل الطويلة وحدها (٥٠/يوم)
+LEXICON_SOURCES = {"session-7"}                  # الجلسات التي مادتها معجم «حديقة الكلمات»
+URGENT_PRIORITY = 10                             # إصلاح عيب مسموع: يذهب للنموذج الأمتن
+EMPTY_STREAK_LIMIT = 3                           # استجابات متتابعة بلا صوت ← تنحية النموذج
+APPROVAL_FILE = ROOT / "tools" / "model_approval.json"
 
 # تعليمة الأداء تُكتب قبل النص فتوجّه الأداء ولا تُنطق (سلوك مثبَّت في Gemini TTS).
 STYLE = {
@@ -132,23 +145,22 @@ class QuotaExhausted(TTSError):
         self.seconds = seconds
 
 
-_MIN_INTERVAL = 0.0     # ثوانٍ بين طلب وآخر (يضبطها --rpm)
-_LAST_REQUEST = 0.0
+_MIN_INTERVAL = 0.0        # ثوانٍ بين طلبين لنفس النموذج (يضبطها --rpm)
+_LAST_REQUEST = {}         # نموذج ← وقت آخر طلب له (حدّ الدقيقة لكل نموذج على حدة)
 
 
 def set_rpm(rpm: float) -> None:
-    """سقف الطلبات في الدقيقة — أدنى من حدّ النموذج كي لا تُحرق محاولات على 429."""
+    """سقف الطلبات في الدقيقة **لكل نموذج** — دون حدّه كي لا تُحرق محاولات على 429."""
     global _MIN_INTERVAL
     _MIN_INTERVAL = 60.0 / rpm if rpm > 0 else 0.0
 
 
-def _pace() -> None:
-    global _LAST_REQUEST
+def _pace(model: str = "") -> None:
     if _MIN_INTERVAL:
-        wait = _LAST_REQUEST + _MIN_INTERVAL - time.monotonic()
+        wait = _LAST_REQUEST.get(model, 0.0) + _MIN_INTERVAL - time.monotonic()
         if wait > 0:
             time.sleep(wait)
-    _LAST_REQUEST = time.monotonic()
+    _LAST_REQUEST[model] = time.monotonic()
 
 
 def parse_429(body: str) -> tuple[bool, int]:
@@ -173,8 +185,12 @@ def parse_429(body: str) -> tuple[bool, int]:
     return per_day, seconds
 
 
+class EmptyAudio(TTSError):
+    """استجابة ٢٠٠ بلا صوت (finishReason: OTHER) — عيب النموذج في نصّ بعينه."""
+
+
 def gemini_pcm(text: str, style: str, model: str, voice: str, api_key: str,
-               retries: int = 5) -> tuple[bytes, int]:
+               retries: int = 5, empty_retries: int = 2) -> tuple[bytes, int]:
     """يعيد (PCM خام 16-bit little-endian، معدّل العيّنات). يعيد المحاولة عند 429/5xx.
 
     `style` تعليمة الأداء التي تسبق النص (لا تُنطق) — انظر STYLE.
@@ -192,13 +208,14 @@ def gemini_pcm(text: str, style: str, model: str, voice: str, api_key: str,
     url = f"{GEMINI_HOST}/v1beta/models/{model}:generateContent"
     delay = 2.0
     last = None
+    empty = 0
     for attempt in range(retries):
         req = urllib.request.Request(url, data=body, method="POST", headers={
             "Content-Type": "application/json",
             "x-goog-api-key": api_key,
         })
         try:
-            _pace()
+            _pace(model)
             with urllib.request.urlopen(req, timeout=180) as resp:
                 payload = json.loads(resp.read().decode("utf-8"))
             return extract_audio(payload)
@@ -218,9 +235,15 @@ def gemini_pcm(text: str, style: str, model: str, voice: str, api_key: str,
                 raise last
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
             last = TTSError(f"{type(e).__name__}: {e}")
+        except EmptyAudio as e:
+            # استجابة ٢٠٠ بلا صوت: غير حتمية فتُعاد المحاولة — لكن **مرّتين فقط**،
+            # لأن كل محاولة طلبٌ يُخصم من حصة اليوم (تُحرق ٥ محاولات على نصّ عصيّ
+            # فتضيع عشرات الطلبات كما وقع في تصريف ٣ أغسطس).
+            last = e
+            empty += 1
+            if empty >= empty_retries:
+                raise
         except TTSError as e:
-            # استجابة ٢٠٠ بلا صوت (finishReason: OTHER) — تقع على النصوص القصيرة جداً
-            # وهي غير حتمية، فتُعاد المحاولة كما يُعاد على 429.
             last = e
         if attempt < retries - 1:
             time.sleep(delay)
@@ -245,7 +268,7 @@ def extract_audio(payload: dict) -> tuple[bytes, int]:
             chunks.append(base64.b64decode(inline["data"]))
     if not chunks:
         reason = payload.get("promptFeedback") or payload.get("candidates") or payload
-        raise TTSError(f"لا صوت في الاستجابة: {json.dumps(reason, ensure_ascii=False)[:300]}")
+        raise EmptyAudio(f"لا صوت في الاستجابة: {json.dumps(reason, ensure_ascii=False)[:200]}")
     return b"".join(chunks), rate
 
 
@@ -365,12 +388,28 @@ def write_manifest(manifest: dict) -> None:
     print(f"الفهرس: {OUT_DIR / 'manifest.json'} ({len(manifest)} نصاً)")
 
 
+def recitation_texts() -> dict:
+    """تلاوات قارئ متقن جلبها tools/fetch_recitation.py — ملفات لا يولّدها المولّد.
+
+    بيانها مستقل عن `manifest.json` عمداً: الفهرس بيان الأصوات المولّدة، ونصّ
+    المصحف ممنوع منه (METHOD §٥.٦ و`docs/AUDIO_QUEUE.md`).
+    """
+    if not RECITATIONS_FILE.exists():
+        return {}
+    try:
+        data = json.loads(RECITATIONS_FILE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    return {e["text"]: f"{e['surah']:03d}:{e['ayah']:03d}" for e in data if e.get("text")}
+
+
 def verify(texts: dict, pending: dict | None = None, min_bytes: int = 1500) -> int:
     """تحقّق ختامي: لكل نص متوقَّع ملف، ولا ملف يتيم، ولا ملف أصغر من الحد المعقول.
 
     `pending` = نصوص قائمة الانتظار التي لم تُصرَّف بعد: غيابها متوقَّع لا خطأ.
     """
     pending = pending or {}
+    recitations = recitation_texts()
     problems = []
     keys = {key_for(t) for t in texts}
     on_disk = {p.stem for p in OUT_DIR.glob("*.mp3")}
@@ -380,10 +419,17 @@ def verify(texts: dict, pending: dict | None = None, min_bytes: int = 1500) -> i
             problems.append(f"ناقص: {t}")
         elif p.stat().st_size < min_bytes:
             problems.append(f"صغير جداً ({p.stat().st_size}B): {t}")
-    for orphan in sorted(on_disk - keys - {key_for(t) for t in pending}):
+    for t, ref in recitations.items():
+        p = OUT_DIR / f"{key_for(t)}.mp3"
+        if not p.exists():
+            problems.append(f"تلاوة ناقصة ({ref})")
+    known = keys | {key_for(t) for t in pending} | {key_for(t) for t in recitations}
+    for orphan in sorted(on_disk - known):
         problems.append(f"يتيم (لا نصّ له في المنهج ولا في القائمة): {orphan}.mp3")
 
     print(f"\nالتحقّق الختامي: {len(texts)} نصاً متوقَّعاً، {len(on_disk)} ملفاً على القرص.")
+    if recitations:
+        print(f"  🎧 {len(recitations)} تلاوةً بصوت قارئ (خارج الفهرس عمداً — لا تولَّد).")
     if pending:
         print(f"  ⏳ {len(pending)} نصاً في قائمة الانتظار لم يُصرَّف بعد (غيابها متوقَّع).")
     for p in problems:
@@ -457,6 +503,105 @@ def expected_texts() -> tuple[dict, dict]:
     return texts, queue_texts(queue, "pending")
 
 
+def load_approval() -> dict:
+    """حالة إجازة النماذج بالأذن (يقرّها المالك) — نموذج ← معلومات الإجازة."""
+    if not APPROVAL_FILE.exists():
+        return {}
+    try:
+        return json.loads(APPROVAL_FILE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+
+
+def set_approval(model: str, approved: bool, note: str = "") -> None:
+    data = load_approval()
+    data[model] = {"approved": approved, "decidedAt": TODAY, "note": note}
+    APPROVAL_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+                             encoding="utf-8")
+    print(f"{'أُجيز' if approved else 'رُفض'} {model} (بتاريخ {TODAY}).")
+
+
+def is_approved(model: str) -> bool:
+    return bool(load_approval().get(model, {}).get("approved"))
+
+
+HARAKA_CHARS = "ًٌٍَُِّْـ"
+SHADDA = "ّ"
+
+
+def bare(text: str) -> str:
+    """الهيكل الحرفي وحده: تُفكّ الشدّة حرفين ثم تُزال الحركات والفراغات."""
+    out = []
+    for ch in text:
+        if ch == SHADDA and out:
+            out.append(out[-1])          # حرف مشدّد = حرفان
+        elif ch not in HARAKA_CHARS and not ch.isspace():
+            out.append(ch)
+    return "".join(out)
+
+
+def atomic_words(queue: list) -> set:
+    """كلمات القائمة التي لها مقطع مصفوف معها — تُسمع متجاورة فتلزمها وحدة النموذج.
+
+    الكشف بالهيكل الحرفي: «سُكَّرْ» ← «سككر»، ومقطعها «سُكْ كَرْ» ← «سككر».
+    """
+    # المقطع وحده دليل على وحدة ذرية — والحرف المفرد بحركته تمرينٌ لا بلاطة،
+    # ولو عُدَّ دليلاً لطابق كلَّ كلمة فيها ذلك الحرف.
+    syllables = [(e.get("requestedBy"), bare(e["text"])) for e in queue
+                 if e.get("category") == "syllable" and len(bare(e["text"])) >= 2]
+    out = set()
+    for e in queue:
+        if e.get("category") not in ("word", "story_word"):
+            continue
+        skeleton = bare(e["text"])
+        if any(src == e.get("requestedBy") and syl in skeleton for src, syl in syllables):
+            out.add(e["text"])
+    return out
+
+
+def is_atomic(entry: dict, atomic: set | None = None) -> bool:
+    """أجزء من وحدة ذرية (كلمة ومقاطعها تُسمع متجاورة)؟ مادة المعجم كلها كذلك."""
+    if entry.get("requestedBy") in LEXICON_SOURCES:
+        return True
+    if entry.get("category") in ("syllable", "letter_haraka"):
+        return True                      # المقطع يُسمع مع كلمته دائماً
+    return entry["text"] in (atomic or set())
+
+
+def route_model(entry: dict, lexicon_ok: bool | None = None, atomic: set | None = None) -> str:
+    """أي نموذج يولّد هذا المدخل؟ (سياسة النماذج الثلاثة — التقسيم بالمحتوى)
+
+    القاعدة الذرية محفوظة بوجهين: مادة المعجم كلها من نموذج واحد (توجيهها بالمصدر
+    لا بالفئة)، وكلُّ مقطعٍ أو كلمةٍ لها مقطع مصفوف معها تبقى على نموذج النواة —
+    وهو نموذج أصوات المنهج كلها — فلا تتجاور في تمرين واحد مسحتان صوتيتان.
+    """
+    if entry.get("model"):                       # تعيين صريح من المدير يعلو على القاعدة
+        return entry["model"]
+    if lexicon_ok is None:
+        lexicon_ok = is_approved(MODEL_LEXICON)
+    if entry.get("priority", 100) <= URGENT_PRIORITY:
+        return MODEL_CORE                        # إصلاح عيب مسموع: الأمتن المجرَّب
+    if entry.get("category") == "sentence":
+        return MODEL_SENTENCE                    # الجمل الطويلة وحدها
+    if entry.get("requestedBy") in LEXICON_SOURCES:
+        # المعجم محبوس حتى إجازة المالك بالأذن؛ قبلها لا يُصرَّف بنموذج آخر
+        # كي لا تختلف مسحة الصوت داخل لعبة التركيب.
+        return MODEL_LEXICON if lexicon_ok else ""
+    if is_atomic(entry, atomic):
+        return MODEL_CORE                        # وحدة ذرية خارج المعجم: نموذج المنهج
+    # كلمة مفردة غير ذرية: 3.1 هو الأصل، فإن كان مشغولاً بالتبديل ولم يُجَز المعجم
+    # فحصة 2.5-flash تذهب إليها (البند «د» من قرار المدير).
+    return MODEL_CORE if lexicon_ok else MODEL_LEXICON
+
+
+def plan_queue(queue: list, lexicon_ok: bool | None = None) -> list:
+    """[(الفهرس، المدخل، النموذج)] بترتيب التصريف — والمحبوس نموذجه ''."""
+    if lexicon_ok is None:
+        lexicon_ok = is_approved(MODEL_LEXICON)
+    atomic = atomic_words(queue)
+    return [(i, e, route_model(e, lexicon_ok, atomic)) for i, e in queue_pending(queue)]
+
+
 def style_for(entry: dict) -> str:
     hint = (entry.get("style_hint") or "").strip()
     if hint:
@@ -464,37 +609,84 @@ def style_for(entry: dict) -> str:
     return STYLE[entry.get("category", "word")]
 
 
-def drain_queue(model: str, voice: str, api_key: str, dry_run: bool = False) -> int:
-    """تصريف القائمة بالترتيب على حصة اليوم — يتوقف نظيفاً عند نفاد الحصة."""
+def short_model(model: str) -> str:
+    return model.replace("gemini-", "").replace("-preview", "").replace("-tts", "")
+
+
+def drain_queue(model: str | None, voice: str, api_key: str, dry_run: bool = False,
+                only_model: str = "") -> int:
+    """تصريف القائمة بالترتيب على حصص اليوم الثلاث (سياسة النماذج الثلاثة).
+
+    `model` غير الفارغ يفرض نموذجاً واحداً على كل المدخلات (تجاوز يدوي).
+    `only_model` يقصر التصريف على ما يوجَّه إلى نموذج بعينه.
+    نفاد حصة نموذج يوقفه وحده ويمضي التصريف ببقية النماذج.
+    """
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     queue = load_queue()
-    pending = queue_pending(queue)
-    if not pending:
+    lexicon_ok = is_approved(MODEL_LEXICON)
+    plan = plan_queue(queue, lexicon_ok)
+    if model:                                   # تجاوز صريح: نموذج واحد للكل
+        plan = [(i, e, model) for i, e, _m in plan]
+    if only_model:
+        plan = [(i, e, m) for i, e, m in plan if m == only_model]
+
+    if not plan:
         print("قائمة الانتظار فارغة — لا شيء يُصرَّف.")
         return 0
 
-    print(f"قائمة الانتظار: {len(pending)} نصاً منتظِراً من {len(queue)}.")
+    held = [p for p in plan if not p[2]]
+    plan = [p for p in plan if p[2]]
+    by_model = collections.Counter(m for _i, _e, m in plan)
+    print(f"قائمة الانتظار: {len(queue_pending(queue))} منتظِراً من {len(queue)}.")
+    for m, n in by_model.most_common():
+        print(f"  · {short_model(m)}: {n} نصاً")
+    if held:
+        print(f"  · محبوس حتى إجازة المالك ({short_model(MODEL_LEXICON)}): {len(held)} نصاً")
+
     made = failed = 0
-    for n, (idx, entry) in enumerate(pending, 1):
+    done_by_model = collections.Counter()
+    exhausted = {}                              # نموذج ← ثوانٍ حتى تجدد حصته
+    empty_streak = collections.Counter()        # إخفاقات «بلا صوت» متتابعة لكل نموذج
+    for n, (idx, entry, m) in enumerate(plan, 1):
+        if m in exhausted:                      # حصته نفدت أو تدهورت — لا طلب آخر عليها
+            continue
         text = entry["text"]
         cat = entry.get("category", "word")
         path = OUT_DIR / f"{key_for(text)}.mp3"
-        label = f"[{n}/{len(pending)}] {text} ({CATEGORY_AR[cat]}، أولوية {entry.get('priority', 100)})"
+        label = (f"[{n}/{len(plan)}] {text} ({CATEGORY_AR[cat]}، أولوية "
+                 f"{entry.get('priority', 100)}) · {short_model(m)}")
         if dry_run:
             print(f"  ⟶ {label} → {path.name}")
             made += 1
             continue
         try:
-            pcm, rate = gemini_pcm(text, style_for(entry), model, voice, api_key)
+            pcm, rate = gemini_pcm(text, style_for(entry), m, voice, api_key)
             pcm_to_mp3(pcm, rate, path)
-            queue[idx]["status"] = "done"
-            queue[idx]["doneAt"] = TODAY
-            save_queue(queue)                 # بعد كل نصّ: انقطاعٌ لا يفقد تقدّماً
+            queue[idx].update(status="done", doneAt=TODAY, model=m)
+            save_queue(queue)                   # بعد كل نصّ: انقطاعٌ لا يفقد تقدّماً
             made += 1
+            done_by_model[m] += 1
+            empty_streak[m] = 0
             print(f"  ✓ {label} → {path.name} {path.stat().st_size // 1024}KB")
         except QuotaExhausted as e:
-            print(f"\n  ⏸ {e}  (صُرِّف {made} وبقي {len(pending) - made})", file=sys.stderr)
-            print(f"RETRY_AFTER_SECONDS={e.seconds}")
-            break
+            exhausted[m] = e.seconds
+            print(f"\n  ⏸ {short_model(m)}: {e}", file=sys.stderr)
+            if len(exhausted) >= len(by_model):
+                print("  كل الحصص نفدت — يتوقف التصريف.", file=sys.stderr)
+                break
+            print(f"  يواصل ببقية النماذج ({len(by_model) - len(exhausted)} باقية).",
+                  file=sys.stderr)
+        except EmptyAudio as e:
+            failed += 1
+            empty_streak[m] += 1
+            print(f"  ✗ {label}: {e}", file=sys.stderr)
+            if empty_streak[m] >= EMPTY_STREAK_LIMIT:
+                # نموذج بدأ يردّ بلا صوت متتابعاً: يُنحّى هذه الجولة بدل حرق بقية حصته.
+                exhausted[m] = 3600
+                print(f"  ⏸ {short_model(m)}: {EMPTY_STREAK_LIMIT} استجابات متتابعة بلا صوت "
+                      f"— يُنحّى هذه الجولة صوناً لحصته.", file=sys.stderr)
+                if len(exhausted) >= len(by_model):
+                    break
         except Exception as e:  # noqa: BLE001
             failed += 1
             print(f"  ✗ {label}: {e}", file=sys.stderr)
@@ -503,11 +695,116 @@ def drain_queue(model: str, voice: str, api_key: str, dry_run: bool = False) -> 
         print(f"\nسيُصرَّف: {made} (تجربة جافّة — لم يُطلب شيء)")
         return 0
 
-    texts, _ = expected_texts()
-    write_manifest({key_for(t): t for t in texts})
-    left = len(queue_pending(load_queue()))
-    print(f"\nتم التصريف: {made} مولّد، {failed} فشل، {left} ما زال منتظِراً.")
+    write_manifest(manifest_map())
+    if exhausted:
+        print(f"RETRY_AFTER_SECONDS={min(exhausted.values())}")
+    left = plan_queue(load_queue(), lexicon_ok)
+    left_by_model = collections.Counter(short_model(m) or "محبوس" for _i, _e, m in left)
+    print(f"\nتم التصريف: {made} مولّد، {failed} فشل، {len(left)} ما زال منتظِراً.")
+    if done_by_model:
+        print("  المولَّد: " + "، ".join(f"{short_model(m)}: {n}"
+                                          for m, n in done_by_model.most_common()))
+    if left_by_model:
+        print("  المتبقي: " + "، ".join(f"{m}: {n}" for m, n in left_by_model.most_common()))
     return failed
+
+
+# ————————————————————————— إجازة نموذج (مفاضلة مصغّرة) —————————————————————————
+
+# ٣ نصوص من جنس ما سيولّده المرشَّح فعلاً (كلمة، مقطع، كلمة أطول) — وتُختار من
+# النصوص التي لها ملف 3.1 جاهز، فلا تُنفَق حصة النواة على المقارنة.
+AUDITION_TRIO = [("بابا", "word"), ("بَا", "syllable"), ("حليب", "word")]
+
+
+def run_model_audition(out_dir: Path, api_key: str, candidate: str, voice: str,
+                       force: bool) -> int:
+    """٣ طلبات على المرشَّح، ويُقابَل بملفات النواة الجاهزة + صفحة مقارنة بالأذن."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    models = [candidate, MODEL_CORE]
+    rows, failed = [], 0
+    archive = ROOT / "archive" / "audio-edge"
+    for text, cat in AUDITION_TRIO:
+        # جانب النواة: الملف الموجود في app/audio إن كان قد بُدِّل فعلاً إلى Sulafat
+        core_src = OUT_DIR / f"{key_for(text)}.mp3"
+        core_name = f"{short_model(MODEL_CORE)}__{key_for(text)}.mp3"
+        if core_src.exists() and not is_same_as(core_src, archive):
+            shutil.copy2(core_src, out_dir / core_name)
+            rows.append((MODEL_CORE, text, cat, core_name, core_src.stat().st_size))
+        else:
+            print(f"  ! لا ملف نواة مبدَّل لـ«{text}» — يُعرض عمود المرشَّح وحده",
+                  file=sys.stderr)
+
+        # جانب المرشَّح: الطلب الوحيد لكل نصّ
+        name = f"{short_model(candidate)}__{key_for(text)}.mp3"
+        path = out_dir / name
+        if path.exists() and not force:
+            rows.append((candidate, text, cat, name, path.stat().st_size))
+            continue
+        try:
+            pcm, rate = gemini_pcm(text, STYLE[cat], candidate, voice, api_key)
+            pcm_to_mp3(pcm, rate, path)
+            rows.append((candidate, text, cat, name, path.stat().st_size))
+            print(f"  ✓ {short_model(candidate)} · {text}")
+        except Exception as e:  # noqa: BLE001
+            failed += 1
+            print(f"  ✗ {short_model(candidate)} · {text}: {e}", file=sys.stderr)
+
+    write_model_audition_page(out_dir, rows, models, candidate, voice)
+    print(f"\nالمفاضلة المصغّرة: {len(rows)} ملفاً، {failed} فشل.")
+    print(f"افتحها: .venv/bin/python -m http.server 8020 -d {out_dir} → http://127.0.0.1:8020/")
+    print(f"وبعد سماع المالك:  .venv/bin/python tools/generate_audio.py "
+          f"--approve-model {candidate}   (أو --reject-model)")
+    return failed
+
+
+def write_model_audition_page(out_dir: Path, rows, models, candidate: str, voice: str) -> None:
+    by = {(m, t): (n, s) for m, t, _c, n, s in rows}
+    body = []
+    for text, cat in AUDITION_TRIO:
+        cells = []
+        for model in models:
+            hit = by.get((model, text))
+            cells.append(f'<td><button data-src="{hit[0]}">▶ {short_model(model)}</button>'
+                         f'<small>{hit[1] // 1024}KB</small></td>' if hit
+                         else '<td class="miss">—</td>')
+        body.append(f'<tr><th>{text}<small>{CATEGORY_AR[cat]}</small></th>{"".join(cells)}</tr>')
+    html = f"""<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>إجازة نموذج — {short_model(candidate)} مقابل {short_model(MODEL_CORE)}</title>
+<style>
+ body {{ font-family:"Noto Naskh Arabic","Geeza Pro",serif; margin:2rem; background:#faf7f2; color:#241f1a }}
+ h1 {{ font-size:1.35rem }}
+ p.note {{ background:#fff3d6; padding:.8rem 1rem; border-radius:.6rem; max-width:52rem; line-height:1.9 }}
+ table {{ border-collapse:collapse; margin-top:1rem }}
+ th, td {{ border:1px solid #ddd2c2; padding:.6rem .9rem; text-align:center; background:#fff }}
+ th {{ background:#f0e8db; font-size:1.15rem }}
+ th small {{ display:block; font-weight:normal; color:#8a7a66; font-size:.72rem }}
+ button {{ font-size:1rem; padding:.4rem .9rem; cursor:pointer; border:1px solid #c9bba6;
+           border-radius:.45rem; background:#fdfaf4; font-family:inherit }}
+ button.playing {{ background:#2f7d4f; color:#fff }}
+ td small {{ display:block; color:#a1937f; font-size:.65rem; font-family:system-ui }}
+ code {{ background:#efe7da; padding:.15rem .4rem; border-radius:.3rem; font-size:.85rem }}
+</style></head><body>
+<h1>إجازة نموذج: {short_model(candidate)} مقابل {short_model(MODEL_CORE)}</h1>
+<p class="note">الصوت واحد في الاثنين ({voice}) والنصّ واحد — الفرق في النموذج وحده.
+اسمع كل صفّ مرّتين: هل تختلف المسحة الصوتية اختلافاً يُسمَع لو تجاورت الكلمة ومقطعها في اللعبة؟
+<br>إن أجزتَه صُرِّفت به كلمات المعجم (٣٤٠ نصاً) على حصته المستقلة، وإلا بقي للجُمل الفائضة فقط.
+<br>القرار يُسجَّل بـ<code>--approve-model</code> أو <code>--reject-model</code>.</p>
+<table><thead><tr><th>النص</th><th>المرشَّح</th><th>النواة</th></tr></thead>
+<tbody>{"".join(body)}</tbody></table>
+<script>
+let cur = null, btn = null;
+document.addEventListener('click', (e) => {{
+  const b = e.target.closest('button[data-src]'); if (!b) return;
+  if (cur) cur.pause();
+  if (btn) btn.classList.remove('playing');
+  cur = new Audio(b.dataset.src); btn = b; b.classList.add('playing');
+  cur.onended = () => b.classList.remove('playing');
+  cur.play();
+}});
+</script></body></html>"""
+    (out_dir / "index.html").write_text(html, encoding="utf-8")
 
 
 # ————————————————————————— المفاضلة —————————————————————————
@@ -646,6 +943,17 @@ def main():
                     help="سقف الطلبات في الدقيقة (افتراضي ٨ — دون حدّ النموذج ١٠)")
     ap.add_argument("--from-queue", action="store_true",
                     help="تصريف tools/audio_queue.json بالأولوية فالأقدمية (docs/AUDIO_QUEUE.md)")
+    ap.add_argument("--only-model", default="",
+                    help="مع --from-queue: اقتصر على ما يوجَّه إلى هذا النموذج")
+    ap.add_argument("--route-report", action="store_true",
+                    help="خريطة توجيه القائمة على النماذج الثلاثة بلا أي طلب")
+    ap.add_argument("--model-audition", action="store_true",
+                    help="إجازة نموذج: ٣ نصوص متطابقة عليه وعلى نموذج النواة + صفحة مقارنة")
+    ap.add_argument("--candidate-model", default=MODEL_LEXICON, help="النموذج المرشَّح للإجازة")
+    ap.add_argument("--approve-model", metavar="MODEL", nargs="?", const=MODEL_LEXICON,
+                    help="تسجيل إجازة المالك لنموذج (بعد سماعه)")
+    ap.add_argument("--reject-model", metavar="MODEL", nargs="?", const=MODEL_LEXICON,
+                    help="تسجيل رفض المالك لنموذج")
     ap.add_argument("--queue-status", action="store_true",
                     help="عرض حالة القائمة ونصوصها المنتظِرة (JSON) بلا أي طلب")
     ap.add_argument("--verify-only", action="store_true", help="تحقّق ختامي بلا توليد")
@@ -663,7 +971,26 @@ def main():
         archive_current(ROOT / args.archive_current)
         return
 
+    if args.approve_model or args.reject_model:
+        set_approval(args.approve_model or args.reject_model, bool(args.approve_model))
+        return
+
     texts, pending = expected_texts()
+    if args.route_report:
+        queue = load_queue()
+        lexicon_ok = is_approved(MODEL_LEXICON)
+        plan = plan_queue(queue, lexicon_ok)
+        counts = collections.Counter(short_model(m) or "محبوس حتى الإجازة" for _i, _e, m in plan)
+        print(f"توجيه {len(plan)} نصاً منتظِراً "
+              f"({short_model(MODEL_LEXICON)}: {'مُجاز' if lexicon_ok else 'غير مُجاز بعد'}):")
+        for m, n in counts.most_common():
+            print(f"  · {m}: {n}")
+        by_cat = collections.Counter(
+            (short_model(m) or "محبوس", e.get("category", "word")) for _i, e, m in plan)
+        for (m, cat), n in sorted(by_cat.items()):
+            print(f"      {m} ← {CATEGORY_AR[cat]}: {n}")
+        return
+
     if args.queue_status:
         queue = load_queue()
         waiting = queue_pending(queue)
@@ -677,13 +1004,22 @@ def main():
     api_key = read_env_key()
     engine = args.engine or ("gemini" if api_key else "edge")
 
+    if args.model_audition:
+        if not api_key:
+            sys.exit("المفاضلة تحتاج GEMINI_API_KEY في البيئة أو .env")
+        set_rpm(args.rpm)
+        sys.exit(1 if run_model_audition(ROOT / "scratch" / "model_audition", api_key,
+                                         args.candidate_model, args.tts_voice, args.force) else 0)
+
     if args.from_queue:
         if not api_key:
             sys.exit("التصريف يحتاج GEMINI_API_KEY في البيئة أو .env")
         set_rpm(args.rpm)
-        print(f"تصريف القائمة · النموذج {args.model} · الصوت {args.tts_voice} "
-              f"· ≤{args.rpm:g} طلب/دقيقة")
-        failed = drain_queue(args.model, args.tts_voice, api_key, args.dry_run)
+        # بلا --model صريح: التوجيه بالمحتوى (سياسة النماذج الثلاثة)
+        forced = args.model if args.model != DEFAULT_MODEL else None
+        print(f"تصريف القائمة · {'النموذج ' + forced if forced else 'توجيه بالمحتوى'} "
+              f"· الصوت {args.tts_voice} · ≤{args.rpm:g} طلب/دقيقة لكل نموذج")
+        failed = drain_queue(forced, args.tts_voice, api_key, args.dry_run, args.only_model)
         if args.dry_run:
             return
         texts, pending = expected_texts()

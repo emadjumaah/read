@@ -30,15 +30,18 @@ def sandbox(entries):
     tmp = Path(tempfile.mkdtemp())
     gen.OUT_DIR = tmp / "audio"
     gen.QUEUE_FILE = tmp / "audio_queue.json"
+    gen.RECITATIONS_FILE = tmp / "recitations.json"   # لا تلاوات في البيئة المعزولة
     gen.QUEUE_FILE.write_text(json.dumps(entries, ensure_ascii=False), encoding="utf-8")
     return tmp
 
 
-def stub(calls, fail_on=None, quota_on=None):
+def stub(calls, fail_on=None, quota_on=None, empty_on=()):
     def fake(text, style, *a, **k):
         calls.append((text, style))
         if text == quota_on:
             raise gen.QuotaExhausted(1234)
+        if text in empty_on:
+            raise gen.EmptyAudio("لا صوت في الاستجابة")
         if text == fail_on:
             raise gen.TTSError("خطأ مصطنع")
         return b"\x00\x01" * 24000, 24000
@@ -47,6 +50,7 @@ def stub(calls, fail_on=None, quota_on=None):
 
 def main():
     real_out, real_queue, real_tts = gen.OUT_DIR, gen.QUEUE_FILE, gen.gemini_pcm
+    real_recit = gen.RECITATIONS_FILE
 
     # ————— ١. الترتيب والحالة والفهرس —————
     print("تصريف كامل:")
@@ -112,7 +116,76 @@ def main():
     ok(problems == 0, "التحقّق: وجود ملف المُصرَّف يكفي، والمنتظِر لا يُعدّ نقصاً ولا يتيماً")
     shutil.rmtree(tmp)
 
+    # ————— ٤. سياسة النماذج الثلاثة: التوجيه بالمحتوى مع حفظ الوحدة الذرية —————
+    print("توجيه النماذج:")
+    entries = [
+        {"text": "جملة طويلة فيها شرح قاعدة.", "category": "sentence", "requestedBy": "session-4"},
+        {"text": "سُكَّرْ", "category": "word", "requestedBy": "session-4"},
+        {"text": "سُكْ كَرْ", "category": "syllable", "requestedBy": "session-4"},
+        {"text": "مَاءْ", "category": "word", "requestedBy": "session-6"},
+        {"text": "غُرْفَةْ", "category": "word", "requestedBy": "session-7"},
+        {"text": "فَةْ", "category": "syllable", "requestedBy": "session-7"},
+        {"text": "زَيْ", "category": "syllable", "requestedBy": "manager", "priority": 10},
+        {"text": "بَابٌ", "category": "word", "requestedBy": "session-4"},
+    ]
+    atomic = gen.atomic_words(entries)
+    route = lambda e, ok: gen.route_model(e, ok, atomic)  # noqa: E731
+
+    ok(route(entries[0], False) == gen.MODEL_SENTENCE, "الجملة الطويلة ← 2.5-pro")
+    ok(route(entries[6], False) == gen.MODEL_CORE, "أولوية ≤١٠ (إصلاح مسموع) ← نموذج النواة")
+    ok(route(entries[4], False) == "" and route(entries[5], False) == "",
+       "المعجم محبوس كلّه قبل الإجازة (لا يُصرَّف بنموذج آخر)")
+    ok(route(entries[4], True) == gen.MODEL_LEXICON and route(entries[5], True) == gen.MODEL_LEXICON,
+       "بعد الإجازة: كلمة المعجم ومقطعها على نموذج واحد (وحدة ذرية)")
+    ok("سُكَّرْ" in atomic, "كشف الذرّية بالهيكل الحرفي: سُكَّرْ ↔ سُكْ كَرْ")
+    ok("بَابٌ" not in atomic, "لا ذرّية زائفة من حرف مفرد بحركته")
+    ok(route(entries[1], False) == route(entries[2], False) == gen.MODEL_CORE,
+       "الكلمة الذرّية ومقطعها خارج المعجم ← نموذج النواة معاً")
+    ok(route(entries[3], False) == gen.MODEL_LEXICON,
+       "كلمة مفردة غير ذرّية ← حصة 2.5-flash قبل الإجازة (البند د)")
+    ok(route(entries[3], True) == gen.MODEL_CORE, "وبعد الإجازة تعود لنموذج النواة")
+    ok(route({"text": "س", "category": "word", "model": "x-model"}, False) == "x-model",
+       "التعيين الصريح في المدخل يعلو على القاعدة")
+
+    # ————— ٥. نفاد حصة نموذج لا يوقف الآخرين —————
+    print("استقلال الحصص:")
+    tmp = sandbox([
+        {"text": "جملة أولى طويلة.", "category": "sentence", "requestedBy": "session-4",
+         "priority": 100, "status": "pending", "doneAt": None},
+        {"text": "جملة ثانية طويلة.", "category": "sentence", "requestedBy": "session-4",
+         "priority": 100, "status": "pending", "doneAt": None},
+        {"text": "قِطَارْ", "category": "story_word", "requestedBy": "session-4",
+         "priority": 100, "status": "pending", "doneAt": None},
+    ])
+    calls = []
+    stub(calls, quota_on="جملة أولى طويلة.")
+    gen.drain_queue(None, "Sulafat", "k")
+    queue = gen.load_queue()
+    done = {e["text"]: e.get("model") for e in queue if e["status"] == "done"}
+    ok("قِطَارْ" in done, "نفاد حصة 2.5-pro لم يوقف تصريف نموذج آخر")
+    ok(all(e["status"] == "pending" for e in queue if e["category"] == "sentence"),
+       "جمل النموذج الذي نفدت حصته تبقى منتظِرة")
+    ok(len([t for t, _ in calls if t.startswith("جملة")]) == 1,
+       "لا محاولة ثانية على النموذج الذي نفدت حصته")
+    ok(done.get("قِطَارْ") == gen.MODEL_LEXICON, "النموذج المستعمل يُسجَّل في المدخل")
+    shutil.rmtree(tmp)
+
+    # ————— ٦. نموذج بدأ يردّ بلا صوت: يُنحّى بدل حرق بقية حصته —————
+    print("صون الحصة من الاستجابات الفارغة:")
+    words = ["أَلِفْ", "بَاءْ", "تَاءْ", "ثَاءْ", "جِيمْ"]
+    tmp = sandbox([{"text": w, "category": "story_word", "requestedBy": "session-4",
+                    "priority": 100, "status": "pending", "doneAt": None} for w in words])
+    calls = []
+    stub(calls, empty_on=set(words))
+    gen.drain_queue(None, "Sulafat", "k")
+    ok(len(calls) == gen.EMPTY_STREAK_LIMIT,
+       f"يتوقف بعد {gen.EMPTY_STREAK_LIMIT} استجابات فارغة متتابعة ({len(calls)} طلباً لا {len(words)})")
+    ok(all(e["status"] == "pending" for e in gen.load_queue()),
+       "كلها تبقى منتظِرة لجولة أخرى")
+    shutil.rmtree(tmp)
+
     gen.OUT_DIR, gen.QUEUE_FILE, gen.gemini_pcm = real_out, real_queue, real_tts
+    gen.RECITATIONS_FILE = real_recit
     print(f"\n{len(PASS)}/{len(PASS) + len(FAIL)} تحقّقاً ناجحاً")
     return 1 if FAIL else 0
 
