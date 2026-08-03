@@ -128,24 +128,23 @@ def main():
         {"text": "زَيْ", "category": "syllable", "requestedBy": "manager", "priority": 10},
         {"text": "بَابٌ", "category": "word", "requestedBy": "session-4"},
     ]
-    atomic = gen.atomic_words(entries)
-    route = lambda e, ok: gen.route_model(e, ok, atomic)  # noqa: E731
+    route = gen.route_model
 
-    ok(route(entries[0], False) == gen.MODEL_SENTENCE, "الجملة الطويلة ← 2.5-pro")
-    ok(route(entries[6], False) == gen.MODEL_CORE, "أولوية ≤١٠ (إصلاح مسموع) ← نموذج النواة")
-    ok(route(entries[4], False) == "" and route(entries[5], False) == "",
-       "المعجم محبوس كلّه قبل الإجازة (لا يُصرَّف بنموذج آخر)")
-    ok(route(entries[4], True) == gen.MODEL_LEXICON and route(entries[5], True) == gen.MODEL_LEXICON,
-       "بعد الإجازة: كلمة المعجم ومقطعها على نموذج واحد (وحدة ذرية)")
-    ok("سُكَّرْ" in atomic, "كشف الذرّية بالهيكل الحرفي: سُكَّرْ ↔ سُكْ كَرْ")
-    ok("بَابٌ" not in atomic, "لا ذرّية زائفة من حرف مفرد بحركته")
-    ok(route(entries[1], False) == route(entries[2], False) == gen.MODEL_CORE,
-       "الكلمة الذرّية ومقطعها خارج المعجم ← نموذج النواة معاً")
-    ok(route(entries[3], False) == gen.MODEL_LEXICON,
-       "كلمة مفردة غير ذرّية ← حصة 2.5-flash قبل الإجازة (البند د)")
-    ok(route(entries[3], True) == gen.MODEL_CORE, "وبعد الإجازة تعود لنموذج النواة")
-    ok(route({"text": "س", "category": "word", "model": "x-model"}, False) == "x-model",
+    ok(route(entries[0], True) == gen.MODEL_SENTENCE, "الجملة الطويلة ← 2.5-pro")
+    ok(route(entries[6], True) == gen.MODEL_CORE, "أولوية ≤١٠ (إصلاح مسموع) ← نموذج النواة")
+    ok(route(entries[2], True) == route(entries[5], True) == gen.MODEL_CORE,
+       "كل المقاطع على 3.1 أياً كان مصدرها (معجم أو غيره)")
+    ok(route({"text": "بً", "category": "letter_haraka", "requestedBy": "session-7"}, True)
+       == gen.MODEL_CORE, "الحرف بحركته على 3.1 كذلك — 2.5 عاجز عن القصير")
+    ok(route(entries[1], True) == route(entries[4], True) == gen.MODEL_LEXICON,
+       "الكلمة الكاملة (معجماً كانت أو غيره) ← 2.5-flash بعد الإجازة")
+    ok(route(entries[3], True) == gen.MODEL_LEXICON, "الكلمة الإملائية المفردة ← 2.5-flash")
+    ok(route(entries[4], False) == "" and route(entries[5], False) == gen.MODEL_CORE,
+       "قبل الإجازة: الكلمة محبوسة والمقطع يمضي على 3.1")
+    ok(route({"text": "س", "category": "word", "model": "x-model"}, True) == "x-model",
        "التعيين الصريح في المدخل يعلو على القاعدة")
+    ok(route(entries[1], True) != route(entries[2], True),
+       "الذرّية بصيغتها المعدَّلة: المقاطع موحّدة على 3.1 والكلمة على 2.5")
 
     # ————— ٥. نفاد حصة نموذج لا يوقف الآخرين —————
     print("استقلال الحصص:")
@@ -168,6 +167,36 @@ def main():
     ok(len([t for t, _ in calls if t.startswith("جملة")]) == 1,
        "لا محاولة ثانية على النموذج الذي نفدت حصته")
     ok(done.get("قِطَارْ") == gen.MODEL_LEXICON, "النموذج المستعمل يُسجَّل في المدخل")
+    shutil.rmtree(tmp)
+
+    # ————— ٥ب. الكتابة دمجٌ لا استبدال: إضافات جلسة أخرى أثناء التصريف تبقى —————
+    print("الدمج أثناء التصريف:")
+    tmp = sandbox([
+        {"text": "أَوَّلْ", "category": "story_word", "requestedBy": "session-4",
+         "priority": 1, "status": "pending", "doneAt": None},
+        {"text": "ثَانْ", "category": "story_word", "requestedBy": "session-4",
+         "priority": 2, "status": "pending", "doneAt": None},
+    ])
+    calls = []
+
+    def racing(text, style, *a, **k):
+        """تحاكي جلسة تطوير تُضيف نصوصاً إلى الملف بينما التصريف جارٍ."""
+        calls.append(text)
+        if len(calls) == 1:
+            disk = gen.load_queue()
+            disk.append({"text": "وَافِدْ", "category": "story_word", "requestedBy": "session-8",
+                         "priority": 100, "status": "pending", "doneAt": None})
+            gen.save_queue(disk)
+        return b"\x00\x01" * 24000, 24000
+
+    gen.gemini_pcm = racing
+    gen.drain_queue(None, "Sulafat", "k")
+    after = gen.load_queue()
+    texts = [e["text"] for e in after]
+    ok("وَافِدْ" in texts, "النصّ الذي أُضيف أثناء التصريف لم يُمحَ (الدمج بدل الاستبدال)")
+    ok(len(after) == 3, f"لا فقدان ولا تكرار في الملف ({len(after)} مدخلات)")
+    ok([e["status"] for e in after[:2]] == ["done", "done"], "والمصروف سُجِّل done كالمعتاد")
+    ok(gen.load_queue()[2]["status"] == "pending", "والوافد الجديد يبقى منتظِراً لجولة تالية")
     shutil.rmtree(tmp)
 
     # ————— ٦. نموذج بدأ يردّ بلا صوت: يُنحّى بدل حرق بقية حصته —————

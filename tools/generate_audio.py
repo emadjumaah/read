@@ -57,6 +57,9 @@ MODEL_SENTENCE = "gemini-2.5-pro-preview-tts"    # الجمل الطويلة و�
 LEXICON_SOURCES = {"session-7"}                  # الجلسات التي مادتها معجم «حديقة الكلمات»
 URGENT_PRIORITY = 10                             # إصلاح عيب مسموع: يذهب للنموذج الأمتن
 EMPTY_STREAK_LIMIT = 3                           # استجابات متتابعة بلا صوت ← تنحية النموذج
+# «2.5 جيد للكلمات، ولا يعطي مقاطع» (حكم المالك السمعي ٤ أغسطس ٢٠٢٦):
+# كل نصّ قصير على نموذج النواة أياً كان مصدره، والكلمة الكاملة وحدها تذهب لـ2.5-flash.
+SHORT_CATEGORIES = ("syllable", "letter_haraka", "letter_name")
 APPROVAL_FILE = ROOT / "tools" / "model_approval.json"
 
 # تعليمة الأداء تُكتب قبل النص فتوجّه الأداء ولا تُنطق (سلوك مثبَّت في Gemini TTS).
@@ -472,8 +475,27 @@ def load_queue() -> list:
 
 
 def save_queue(queue: list) -> None:
-    QUEUE_FILE.write_text(json.dumps(queue, ensure_ascii=False, indent=2) + "\n",
-                          encoding="utf-8")
+    """كتابة ذرّية: ملف مؤقت ثم استبدال — فلا يقرأ أحدٌ ملفاً نصفَ مكتوب."""
+    tmp = QUEUE_FILE.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(queue, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    os.replace(tmp, QUEUE_FILE)
+
+
+def mark_done(text: str, model: str) -> None:
+    """تسجيل نصّ مُصرَّفاً **بدمج** لا باستبدال.
+
+    التصريف يستغرق دقائق، وجلسة تطوير قد تُضيف مئات النصوص أثناءه؛ فكتابة اللقطة
+    القديمة كاملةً كانت تمحو إضافاتها. لذلك تُعاد قراءة الملف عند كل تسجيل ويُعدَّل
+    فيه المدخل المطابق وحده (بنصّه)، ويبقى كل جديد على حاله.
+    """
+    disk = load_queue()
+    changed = False
+    for e in disk:
+        if e.get("text") == text and e.get("status", "pending") != "done":
+            e.update(status="done", doneAt=TODAY, model=model)
+            changed = True
+    if changed:
+        save_queue(disk)
 
 
 def queue_pending(queue: list) -> list:
@@ -525,81 +547,33 @@ def is_approved(model: str) -> bool:
     return bool(load_approval().get(model, {}).get("approved"))
 
 
-HARAKA_CHARS = "ًٌٍَُِّْـ"
-SHADDA = "ّ"
+def route_model(entry: dict, lexicon_ok: bool | None = None) -> str:
+    """أي نموذج يولّد هذا المدخل؟ (سياسة النماذج الثلاثة — حكم المالك ٤ أغسطس ٢٠٢٦)
 
-
-def bare(text: str) -> str:
-    """الهيكل الحرفي وحده: تُفكّ الشدّة حرفين ثم تُزال الحركات والفراغات."""
-    out = []
-    for ch in text:
-        if ch == SHADDA and out:
-            out.append(out[-1])          # حرف مشدّد = حرفان
-        elif ch not in HARAKA_CHARS and not ch.isspace():
-            out.append(ch)
-    return "".join(out)
-
-
-def atomic_words(queue: list) -> set:
-    """كلمات القائمة التي لها مقطع مصفوف معها — تُسمع متجاورة فتلزمها وحدة النموذج.
-
-    الكشف بالهيكل الحرفي: «سُكَّرْ» ← «سككر»، ومقطعها «سُكْ كَرْ» ← «سككر».
-    """
-    # المقطع وحده دليل على وحدة ذرية — والحرف المفرد بحركته تمرينٌ لا بلاطة،
-    # ولو عُدَّ دليلاً لطابق كلَّ كلمة فيها ذلك الحرف.
-    syllables = [(e.get("requestedBy"), bare(e["text"])) for e in queue
-                 if e.get("category") == "syllable" and len(bare(e["text"])) >= 2]
-    out = set()
-    for e in queue:
-        if e.get("category") not in ("word", "story_word"):
-            continue
-        skeleton = bare(e["text"])
-        if any(src == e.get("requestedBy") and syl in skeleton for src, syl in syllables):
-            out.add(e["text"])
-    return out
-
-
-def is_atomic(entry: dict, atomic: set | None = None) -> bool:
-    """أجزء من وحدة ذرية (كلمة ومقاطعها تُسمع متجاورة)؟ مادة المعجم كلها كذلك."""
-    if entry.get("requestedBy") in LEXICON_SOURCES:
-        return True
-    if entry.get("category") in ("syllable", "letter_haraka"):
-        return True                      # المقطع يُسمع مع كلمته دائماً
-    return entry["text"] in (atomic or set())
-
-
-def route_model(entry: dict, lexicon_ok: bool | None = None, atomic: set | None = None) -> str:
-    """أي نموذج يولّد هذا المدخل؟ (سياسة النماذج الثلاثة — التقسيم بالمحتوى)
-
-    القاعدة الذرية محفوظة بوجهين: مادة المعجم كلها من نموذج واحد (توجيهها بالمصدر
-    لا بالفئة)، وكلُّ مقطعٍ أو كلمةٍ لها مقطع مصفوف معها تبقى على نموذج النواة —
-    وهو نموذج أصوات المنهج كلها — فلا تتجاور في تمرين واحد مسحتان صوتيتان.
+    «2.5 جيد للكلمات، ولا يعطي مقاطع»: فكل قصير (مقطع/حرف بحركة/اسم حرف) على 3.1
+    **أياً كان مصدره**، والكلمة الكاملة المفردة على 2.5-flash، والجملة على 2.5-pro.
+    والذرّية بصيغتها المعدَّلة: المقاطع موحّدة كلها على نموذج واحد (3.1) فلا تتجاور
+    مسحتان داخل صفّ البلاطات نفسه، والكلمة الكاملة تنفرد بنموذجها.
     """
     if entry.get("model"):                       # تعيين صريح من المدير يعلو على القاعدة
         return entry["model"]
     if lexicon_ok is None:
         lexicon_ok = is_approved(MODEL_LEXICON)
+    if entry.get("category") in SHORT_CATEGORIES:
+        return MODEL_CORE                        # القصير كله على 3.1 — بلا استثناء
     if entry.get("priority", 100) <= URGENT_PRIORITY:
         return MODEL_CORE                        # إصلاح عيب مسموع: الأمتن المجرَّب
     if entry.get("category") == "sentence":
         return MODEL_SENTENCE                    # الجمل الطويلة وحدها
-    if entry.get("requestedBy") in LEXICON_SOURCES:
-        # المعجم محبوس حتى إجازة المالك بالأذن؛ قبلها لا يُصرَّف بنموذج آخر
-        # كي لا تختلف مسحة الصوت داخل لعبة التركيب.
-        return MODEL_LEXICON if lexicon_ok else ""
-    if is_atomic(entry, atomic):
-        return MODEL_CORE                        # وحدة ذرية خارج المعجم: نموذج المنهج
-    # كلمة مفردة غير ذرية: 3.1 هو الأصل، فإن كان مشغولاً بالتبديل ولم يُجَز المعجم
-    # فحصة 2.5-flash تذهب إليها (البند «د» من قرار المدير).
-    return MODEL_CORE if lexicon_ok else MODEL_LEXICON
+    # كلمة كاملة مفردة: 2.5-flash بعد إجازة المالك، وقبلها تبقى محبوسة
+    return MODEL_LEXICON if lexicon_ok else ""
 
 
 def plan_queue(queue: list, lexicon_ok: bool | None = None) -> list:
     """[(الفهرس، المدخل، النموذج)] بترتيب التصريف — والمحبوس نموذجه ''."""
     if lexicon_ok is None:
         lexicon_ok = is_approved(MODEL_LEXICON)
-    atomic = atomic_words(queue)
-    return [(i, e, route_model(e, lexicon_ok, atomic)) for i, e in queue_pending(queue)]
+    return [(i, e, route_model(e, lexicon_ok)) for i, e in queue_pending(queue)]
 
 
 def style_for(entry: dict) -> str:
@@ -647,7 +621,7 @@ def drain_queue(model: str | None, voice: str, api_key: str, dry_run: bool = Fal
     done_by_model = collections.Counter()
     exhausted = {}                              # نموذج ← ثوانٍ حتى تجدد حصته
     empty_streak = collections.Counter()        # إخفاقات «بلا صوت» متتابعة لكل نموذج
-    for n, (idx, entry, m) in enumerate(plan, 1):
+    for n, (_idx, entry, m) in enumerate(plan, 1):
         if m in exhausted:                      # حصته نفدت أو تدهورت — لا طلب آخر عليها
             continue
         text = entry["text"]
@@ -662,8 +636,7 @@ def drain_queue(model: str | None, voice: str, api_key: str, dry_run: bool = Fal
         try:
             pcm, rate = gemini_pcm(text, style_for(entry), m, voice, api_key)
             pcm_to_mp3(pcm, rate, path)
-            queue[idx].update(status="done", doneAt=TODAY, model=m)
-            save_queue(queue)                   # بعد كل نصّ: انقطاعٌ لا يفقد تقدّماً
+            mark_done(text, m)                  # دمجاً لا استبدالاً — وبعد كل نصّ
             made += 1
             done_by_model[m] += 1
             empty_streak[m] = 0
@@ -802,6 +775,114 @@ document.addEventListener('click', (e) => {{
   cur = new Audio(b.dataset.src); btn = b; b.classList.add('playing');
   cur.onended = () => b.classList.remove('playing');
   cur.play();
+}});
+</script></body></html>"""
+    (out_dir / "index.html").write_text(html, encoding="utf-8")
+
+
+# ————————————————————————— فحص الصمام (تجاور النموذجين) —————————————————————————
+
+LEXICON_FILE = ROOT / "app" / "data" / "lexicon.json"
+
+
+def seam_bundles() -> list:
+    """كلمات المعجم مع مقاطعها من مصدر الحقيقة (لا تُكتب هنا)."""
+    if not LEXICON_FILE.exists():
+        return []
+    data = json.loads(LEXICON_FILE.read_text(encoding="utf-8"))
+    words = data.get("words") or [w for t in data.get("themes", []) for w in t.get("words", [])]
+    return [w for w in words if w.get("word") and w.get("tiles")]
+
+
+def run_seam_audition(out_dir: Path, size: int = 5) -> int:
+    """صمام أمان السياسة: باقة كاملة تُسمع كما تُسمع في اللعبة — مقاطع 3.1 ثم كلمة 2.5.
+
+    لا يطلب شيئاً من الشبكة: ينسخ الملفات المولّدة فعلاً ويبني صفحة تشغيل متتابع،
+    فإن نشز الفرق بين المسحتين أُوقف المعجم على 2.5 فوراً.
+    """
+    queue = load_queue()
+    model_of = {e["text"]: e.get("model") for e in queue if e.get("status") == "done"}
+    ready = []
+    for w in seam_bundles():
+        parts = [w["word"], *w["tiles"]]
+        if all((OUT_DIR / f"{key_for(t)}.mp3").exists() for t in parts):
+            ready.append(w)
+        if len(ready) >= size:
+            break
+    if not ready:
+        print("لا باقة مكتملة الأصوات بعد — يُعاد الفحص بعد أول يوم تصريف.", file=sys.stderr)
+        return 1
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rows = []
+    for w in ready:
+        parts = []
+        for text in [*w["tiles"], w["word"]]:
+            name = f"{key_for(text)}.mp3"
+            shutil.copy2(OUT_DIR / name, out_dir / name)
+            parts.append({"text": text, "file": name,
+                          "model": short_model(model_of.get(text) or MODEL_CORE),
+                          "kind": "word" if text == w["word"] else "tile"})
+        rows.append({"word": w["word"], "emoji": w.get("emoji", ""), "parts": parts})
+
+    write_seam_page(out_dir, rows)
+    print(f"فحص الصمام: {len(rows)} باقة → {out_dir}/index.html")
+    print(f"افتحه: .venv/bin/python -m http.server 8030 -d {out_dir} → http://127.0.0.1:8030/")
+    return 0
+
+
+def write_seam_page(out_dir: Path, rows) -> None:
+    cards = []
+    for r in rows:
+        chips = "".join(
+            f'<button class="chip {p["kind"]}" data-src="{p["file"]}">{p["text"]}'
+            f'<small>{p["model"]}</small></button>' for p in r["parts"])
+        seq = json.dumps([p["file"] for p in r["parts"]], ensure_ascii=False)
+        cards.append(
+            f'<div class="card"><div class="head"><span class="emoji">{r["emoji"]}</span>'
+            f'<span class="w">{r["word"]}</span>'
+            f'<button class="play" data-seq=\'{seq}\'>▶ اسمعها كما في اللعبة</button></div>'
+            f'<div class="chips">{chips}</div></div>')
+    html = f"""<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>فحص الصمام — تجاور مقاطع 3.1 مع كلمة 2.5</title>
+<style>
+ body {{ font-family:"Noto Naskh Arabic","Geeza Pro",serif; margin:2rem; background:#faf7f2; color:#241f1a }}
+ h1 {{ font-size:1.35rem }}
+ p.note {{ background:#fff3d6; padding:.8rem 1rem; border-radius:.6rem; max-width:54rem; line-height:1.9 }}
+ .card {{ background:#fff; border:1px solid #ddd2c2; border-radius:.8rem; padding:1rem 1.2rem;
+          margin:1rem 0; max-width:54rem }}
+ .head {{ display:flex; align-items:center; gap:1rem; margin-bottom:.7rem }}
+ .emoji {{ font-size:1.8rem }}
+ .w {{ font-size:1.6rem; flex:1 }}
+ .chips {{ display:flex; gap:.5rem; flex-wrap:wrap; direction:rtl }}
+ button {{ font-family:inherit; cursor:pointer; border:1px solid #c9bba6; border-radius:.5rem;
+           background:#fdfaf4; padding:.5rem .9rem; font-size:1.15rem }}
+ .chip.word {{ background:#e8f1ea; border-color:#8fb79d }}
+ .chip small, .play small {{ display:block; font-size:.62rem; color:#8a7a66; font-family:system-ui }}
+ .play {{ font-size:.95rem }}
+ button.playing {{ background:#2f7d4f; color:#fff }}
+</style></head><body>
+<h1>فحص الصمام: هل تنشز المسحتان متجاورتين؟</h1>
+<p class="note">كل باقة تُسمع كما يسمعها الطفل في لعبة التركيب: <strong>المقاطع أولاً (3.1) ثم الكلمة كاملة (2.5-flash)</strong>.
+المطلوب حكمٌ واحد: هل يُحسّ الانتقال من المقاطع إلى الكلمة كأنه صوتان مختلفان؟
+<br>إن نشز — يُوقف المعجم على 2.5-flash فوراً ويُعاد إلى 3.1 على مهل الحصص.</p>
+{"".join(cards)}
+<script>
+let cur = null, btn = null;
+function one(src) {{
+  return new Promise((r) => {{ cur = new Audio(src); cur.onended = r; cur.onerror = r; cur.play(); }});
+}}
+document.addEventListener('click', async (e) => {{
+  const b = e.target.closest('button'); if (!b) return;
+  if (cur) cur.pause();
+  if (btn) btn.classList.remove('playing');
+  btn = b; b.classList.add('playing');
+  if (b.dataset.seq) {{
+    for (const f of JSON.parse(b.dataset.seq)) {{ await one(f); await new Promise(r => setTimeout(r, 200)); }}
+  }} else {{ await one(b.dataset.src); }}
+  b.classList.remove('playing');
 }});
 </script></body></html>"""
     (out_dir / "index.html").write_text(html, encoding="utf-8")
@@ -947,6 +1028,8 @@ def main():
                     help="مع --from-queue: اقتصر على ما يوجَّه إلى هذا النموذج")
     ap.add_argument("--route-report", action="store_true",
                     help="خريطة توجيه القائمة على النماذج الثلاثة بلا أي طلب")
+    ap.add_argument("--seam-audition", action="store_true",
+                    help="صمام السياسة: باقة كاملة (مقاطع 3.1 + كلمة 2.5) للسماع — بلا شبكة")
     ap.add_argument("--model-audition", action="store_true",
                     help="إجازة نموذج: ٣ نصوص متطابقة عليه وعلى نموذج النواة + صفحة مقارنة")
     ap.add_argument("--candidate-model", default=MODEL_LEXICON, help="النموذج المرشَّح للإجازة")
@@ -970,6 +1053,9 @@ def main():
     if args.archive_current:
         archive_current(ROOT / args.archive_current)
         return
+
+    if args.seam_audition:
+        sys.exit(run_seam_audition(ROOT / "scratch" / "seam_audition"))
 
     if args.approve_model or args.reject_model:
         set_approval(args.approve_model or args.reject_model, bool(args.approve_model))
