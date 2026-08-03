@@ -14,8 +14,9 @@
     "style_hint": null,
     "requestedBy": "manager-zayt-fix",
     "priority": 10,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "الفتحة قبل الألف تُمَدّ، والضمة قبل الواو، والكسرة قبل الياء.",
@@ -105,24 +106,27 @@
     "category": "letter_haraka",
     "requestedBy": "session-4",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "بٌ",
     "category": "letter_haraka",
     "requestedBy": "session-4",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "بٍ",
     "category": "letter_haraka",
     "requestedBy": "session-4",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "بَابٌ",
@@ -819,8 +823,9 @@
     "category": "letter_haraka",
     "requestedBy": "session-7",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "سَرِيرْ",
@@ -867,8 +872,9 @@
     "category": "letter_haraka",
     "requestedBy": "session-7",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "مِفْتَاحْ",
@@ -891,8 +897,9 @@
     "category": "letter_haraka",
     "requestedBy": "session-7",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "سَاعَةْ",
@@ -931,8 +938,9 @@
     "category": "letter_haraka",
     "requestedBy": "session-7",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "صَحْنْ",
@@ -987,8 +995,9 @@
     "category": "letter_haraka",
     "requestedBy": "session-7",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "كِي",
@@ -1075,8 +1084,9 @@
     "category": "letter_haraka",
     "requestedBy": "session-7",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "هَاتِفْ",
@@ -1379,8 +1389,9 @@
     "category": "letter_haraka",
     "requestedBy": "session-7",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "مُهَنْدِسْ",
@@ -1587,8 +1598,9 @@
     "category": "letter_haraka",
     "requestedBy": "session-7",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "كَتِفْ",
@@ -1619,8 +1631,9 @@
     "category": "letter_haraka",
     "requestedBy": "session-7",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "صَوْتْ",
@@ -1683,8 +1696,9 @@
     "category": "letter_haraka",
     "requestedBy": "session-7",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "حُقْنَةْ",
@@ -1731,8 +1745,9 @@
     "category": "letter_haraka",
     "requestedBy": "session-7",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "خُبْزْ",
@@ -2235,8 +2250,9 @@
     "category": "letter_haraka",
     "requestedBy": "session-7",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "مَاعِزْ",
@@ -2707,8 +2723,9 @@
     "category": "letter_haraka",
     "requestedBy": "session-7",
     "priority": 100,
-    "status": "pending",
-    "doneAt": null
+    "status": "done",
+    "doneAt": "2026-08-03",
+    "model": "antura-cc-by"
   },
   {
     "text": "خَرِيطَةْ",

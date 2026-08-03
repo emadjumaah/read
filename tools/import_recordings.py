@@ -129,6 +129,16 @@ def build_index(texts: dict) -> dict:
     return idx
 
 
+def known_texts() -> dict:
+    """كل نصّ يستعمله التطبيق: المنهج + قائمة الانتظار (مصروفها ومنتظِرها).
+
+    بلا نصوص القائمة كان التسجيل البشري لنصٍّ منتظِر يُعدّ «بلا مطابقة» فيُهمَل،
+    ثم يُنفَق عليه طلبُ توليد لا حاجة له.
+    """
+    texts, pending = gen.expected_texts()
+    return {**texts, **pending}
+
+
 def main():
     ap = argparse.ArgumentParser(description="استيراد تسجيلات بشرية")
     ap.add_argument("src", help="مجلد التسجيلات")
@@ -136,15 +146,18 @@ def main():
     ap.add_argument("--keep-generated", action="store_true",
                     help="بلا نسخ احتياطي للملف المولَّد المستبدَل")
     ap.add_argument("--backup-dir", default="archive/audio-generated")
+    ap.add_argument("--source", default="human-recording",
+                    help="ما يُسجَّل في مدخل القائمة بدل اسم النموذج (مصدر التسجيل)")
     args = ap.parse_args()
 
     src = Path(args.src).expanduser()
     if not src.is_dir():
         sys.exit(f"ليس مجلداً: {src}")
 
-    texts = gen.parse_curriculum(gen.CURRICULUM.read_text(encoding="utf-8"))
+    texts = known_texts()
     index = build_index(texts)
     backup = gen.ROOT / args.backup_dir
+    retired = 0
 
     done = skipped = failed = 0
     files = sorted(p for p in src.rglob("*") if p.suffix.lower() in AUDIO_EXT)
@@ -175,12 +188,21 @@ def main():
                     shutil.copy2(dest, backup / dest.name)
             gen.pcm_to_mp3(to_bytes(cut), rate, dest)
             done += 1
+            # نصٌّ كان ينتظر التوليد وقد صار له تسجيل بشري: يُقاعَد عن الحصة
+            if gen.mark_done(text, args.source):
+                retired += 1
             print(f"  ✓ «{text}» {secs:.2f}ث → {dest.name} ({dest.stat().st_size // 1024}KB)")
         except Exception as e:  # noqa: BLE001
             failed += 1
             print(f"  ✗ {path.name}: {e}", file=sys.stderr)
 
     print(f"\nتم: {done} مستورداً، {skipped} بلا مطابقة، {failed} فشل.")
+    if retired:
+        print(f"  ✓ {retired} نصاً قُوعد عن قائمة الانتظار (لن يُنفَق عليه طلب توليد)")
+    if done and not args.dry_run:
+        # الفهرس **لازم**: نصٌّ كان منتظِراً وصار له ملف لا يعرفه التطبيق حتى يدخل
+        # الفهرس، فيسقط إلى النطق الآلي وملفُّه حاضر على القرص.
+        gen.write_manifest(gen.manifest_map())
     if done and not args.dry_run:
         print("الفهرس لم يتغيّر (الأسماء هي الأسماء). راجع بالأذن عبر شاشة «فحص الأصوات» في ?dev=1")
     sys.exit(1 if failed else 0)

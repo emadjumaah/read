@@ -496,6 +496,7 @@ def mark_done(text: str, model: str) -> None:
             changed = True
     if changed:
         save_queue(disk)
+    return changed
 
 
 def queue_pending(queue: list) -> list:
